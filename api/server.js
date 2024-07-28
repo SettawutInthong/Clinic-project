@@ -38,15 +38,61 @@ app.post("/clinic/users", function (req, res) {
       const accessToken = generateToken();
 
       const updateSql = "UPDATE users SET accessToken = ? WHERE role_id = ?";
-      connection.execute(updateSql, [accessToken, user.Role_ID], function (err) {
-        if (err) {
-          return res.status(500).json({ error: err.message });
+      connection.execute(
+        updateSql,
+        [accessToken, user.Role_ID],
+        function (err) {
+          if (err) {
+            return res.status(500).json({ error: err.message });
+          }
+          res.json({ accessToken, user });
         }
-        res.json({ accessToken, user });
-      });
+      );
     } else {
       res.status(401).json({ error: "Invalid credentials" });
     }
+  });
+});
+
+app.get("/api/patient", function (req, res) {
+  const HN = req.query.HN;
+  const title = req.query.Title;
+  const first_name = req.query.First_Name;
+  const last_name = req.query.Last_Name;
+  const gender = req.query.Gender;
+
+  let params = [];
+  let sql = "SELECT * FROM patient WHERE 1=1";
+
+  if (HN) {
+    sql += " AND HN LIKE ?";
+    params.push("%" + HN + "%");
+  }
+  if (title) {
+    sql += " AND title LIKE ?";
+    params.push("%" + title + "%");
+  }
+  if (first_name) {
+    sql += " AND first_name LIKE ?";
+    params.push("%" + first_name + "%");
+  }
+  if (last_name) {
+    sql += " AND last_name LIKE ?";
+    params.push("%" + last_name + "%");
+  }
+  if (gender) {
+    sql += " AND gender LIKE ?";
+    params.push("%" + gender + "%");
+  }
+
+  connection.execute(sql, params, function (err, results) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    res.json({
+      data: results,
+    });
   });
 });
 
