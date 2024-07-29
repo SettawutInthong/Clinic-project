@@ -47,6 +47,8 @@ const NursePatient = () => {
   const [newTitle, setNewTitle] = useState("");
   const [newBirthdate, setNewBirthdate] = useState("");
   const [newPhone, setNewPhone] = useState("");
+  const [newAllergy, setNewAllergy] = useState("");
+  const [newDisease, setNewDisease] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [message, setMessage] = useState("");
   const [showTable, setShowTable] = useState(false);
@@ -105,6 +107,17 @@ const NursePatient = () => {
     fetchData();
   };
 
+  const resetForm = () => {
+    setNewTitle("");
+    setNewFirstName("");
+    setNewLastName("");
+    setNewBirthdate("");
+    setNewGender("");
+    setNewPhone("");
+    setNewDisease("");
+    setNewAllergy("");
+  };
+
   const AddPatient = async () => {
     try {
       const newPatient = {
@@ -114,12 +127,15 @@ const NursePatient = () => {
         Gender: newGender,
         Birthdate: newBirthdate,
         Phone: newPhone,
+        Disease: newDisease,
+        Allergy: newAllergy,
       };
 
       await axios.post("http://localhost:5000/api/patient", newPatient);
       fetchData();
       setShowPopup(false);
       setMessage("");
+      resetForm();
     } catch (error) {
       console.error("Error adding patient:", error);
       setMessage("เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วย");
@@ -294,7 +310,10 @@ const NursePatient = () => {
 
             <Dialog
               open={showPopup}
-              onClose={() => setShowPopup(false)}
+              onClose={() => {
+                setShowPopup(false);
+                resetForm();
+              }}
               aria-labelledby="form-dialog-title"
             >
               <DialogTitle
@@ -327,7 +346,7 @@ const NursePatient = () => {
                 <TextField
                   autoFocus
                   margin="dense"
-                  label="ชื่อ"
+                  label="กรอกชื่อ"
                   type="text"
                   fullWidth
                   value={newFirstName}
@@ -335,7 +354,7 @@ const NursePatient = () => {
                 />
                 <TextField
                   margin="dense"
-                  label="นามสกุล"
+                  label="กรอกนามสกุล"
                   type="text"
                   fullWidth
                   value={newLastName}
@@ -368,15 +387,37 @@ const NursePatient = () => {
                 </FormControl>
                 <TextField
                   margin="dense"
-                  label="หมายเลขโทรศัพท์"
+                  label="กรอกหมายเลขโทรศัพท์"
                   type="text"
                   fullWidth
                   value={newPhone}
                   onChange={(e) => setNewPhone(e.target.value)}
                 />
+                <TextField
+                  margin="dense"
+                  label="กรอกโรคประจำตัว"
+                  type="text"
+                  fullWidth
+                  value={newDisease}
+                  onChange={(e) => setNewDisease(e.target.value)}
+                />
+                <TextField
+                  margin="dense"
+                  label="กรอกยาที่แพ้"
+                  type="text"
+                  fullWidth
+                  value={newAllergy}
+                  onChange={(e) => setNewAllergy(e.target.value)}
+                />
               </DialogContent>
               <DialogActions>
-                <Button onClick={() => setShowPopup(false)} color="primary">
+                <Button
+                  onClick={() => {
+                    setShowPopup(false);
+                    resetForm();
+                  }}
+                  color="primary"
+                >
                   ยกเลิก
                 </Button>
                 <Button onClick={AddPatient} color="primary">
