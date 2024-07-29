@@ -95,6 +95,47 @@ app.get("/api/patient", function (req, res) {
     });
   });
 });
+app.get("/api/walkinqueue", function (req, res) {
+  const queue_id = req.query.Queue_ID;
+  const title = req.query.Title;
+  const first_name = req.query.First_Name;
+  const last_name = req.query.Last_Name;
+  const gender = req.query.Gender;
+
+  let params = [];
+  let sql = "SELECT * FROM walkinqueue WHERE 1=1";
+
+  if (queue_id) {
+    sql += " AND queue_id LIKE ?";
+    params.push("%" + queue_id + "%");
+  }
+  if (title) {
+    sql += " AND title LIKE ?";
+    params.push("%" + title + "%");
+  }
+  if (first_name) {
+    sql += " AND first_name LIKE ?";
+    params.push("%" + first_name + "%");
+  }
+  if (last_name) {
+    sql += " AND last_name LIKE ?";
+    params.push("%" + last_name + "%");
+  }
+  if (gender) {
+    sql += " AND gender LIKE ?";
+    params.push("%" + gender + "%");
+  }
+
+  connection.execute(sql, params, function (err, results) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    res.json({
+      data: results,
+    });
+  });
+});
 
 app.listen(5000, function () {
   console.log("CORS-enabled web server listening on port 5000");

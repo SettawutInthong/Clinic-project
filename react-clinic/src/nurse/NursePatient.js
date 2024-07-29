@@ -24,6 +24,7 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
+import { ButtonGroup } from "@mui/material";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(2),
@@ -124,6 +125,11 @@ const NursePatient = () => {
       setMessage("เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วย");
     }
   };
+  const PatientUpdate = async () => {};
+
+  const PatientDelete = async () => {};
+
+  const PatientView = async () => {};
 
   useEffect(() => {
     if (showTable) {
@@ -220,16 +226,18 @@ const NursePatient = () => {
                   variant="contained"
                   type="submit"
                   style={{ height: "40px" }}
+                  color="info"
                 >
                   ค้นหา
                 </Button>
               </form>
               <Button
                 variant="contained"
-                style={{ height: "40px" }}
+                style={{ height: "40px", width: "150px" }}
+                color="success"
                 onClick={() => setShowPopup(true)}
               >
-                เพิ่ม
+                <h1>+</h1>
               </Button>
             </Box>
 
@@ -261,7 +269,22 @@ const NursePatient = () => {
                         <TableCell>{row.First_Name}</TableCell>
                         <TableCell>{row.Last_Name}</TableCell>
                         <TableCell>{row.Gender}</TableCell>
-                        <TableCell></TableCell>
+                        <TableCell>
+                          <ButtonGroup
+                            color="primary"
+                            aria-label="outlined primary button group"
+                          >
+                            <Button onClick={() => PatientView(row.HN)}>
+                              ดู
+                            </Button>
+                            <Button onClick={() => PatientUpdate(row.HN)}>
+                              แก้ไข
+                            </Button>
+                            <Button onClick={() => PatientDelete(row.HN)}>
+                              ลบ
+                            </Button>
+                          </ButtonGroup>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

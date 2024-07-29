@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 const pages = [
   { title: "หน้าแรก", icon: "", to: "/nurse_dashboard" },
   { title: "รายชื่อผู้ป่วย", icon: "", to: "/nurse_patient" },
-  // { title: "คิว", icon: "", to: "/queue" },
+  { title: "คิว", icon: "", to: "/nurse_queue" },
 ];
 
 function NurseHeaderbar() {

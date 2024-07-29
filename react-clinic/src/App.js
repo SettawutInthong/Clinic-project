@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import NurseDashboard from "./nurse/NurseDashboard";
 import DoctorDashboard from "./doctor/DoctorDashboard";
 import NursePatient from "./nurse/NursePatient";
+import NurseQueue from "./nurse/NurseQueue";
 
 const App = () => {
   const token = localStorage.getItem("accessToken");
@@ -31,6 +32,7 @@ const App = () => {
             <Route path="/" element={<NurseDashboard />} />
             <Route path="/nurse_dashboard" element={<NurseDashboard />} />
             <Route path="/nurse_patient" element={<NursePatient />} />
+            <Route path="/nurse_queue" element={<NurseQueue />} />
           </>
         ) : userRole === 0 ? (
           <>
