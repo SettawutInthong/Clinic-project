@@ -388,9 +388,9 @@ const NursePatient = () => {
                     value={newBirthdate}
                     onChange={(date) => setNewBirthdate(date)}
                     inputFormat="dd/MM/yyyy"
-                    renderInput={(params) => (
-                      <TextField {...params} fullWidth margin="dense" />
-                    )}
+                    slotProps={{
+                      textField: { fullWidth: true, margin: "dense" },
+                    }}
                   />
                 </LocalizationProvider>
                 <FormControl
