@@ -25,6 +25,8 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import { ButtonGroup } from "@mui/material";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(2),
@@ -45,7 +47,7 @@ const NursePatient = () => {
   const [newLastName, setNewLastName] = useState("");
   const [newGender, setNewGender] = useState("");
   const [newTitle, setNewTitle] = useState("");
-  const [newBirthdate, setNewBirthdate] = useState("");
+  const [newBirthdate, setNewBirthdate] = useState(null);
   const [newPhone, setNewPhone] = useState("");
   const [newAllergy, setNewAllergy] = useState("");
   const [newDisease, setNewDisease] = useState("");
@@ -262,12 +264,24 @@ const NursePatient = () => {
                 <Table sx={{ minWidth: 650 }} aria-label="simple table">
                   <TableHead>
                     <TableRow>
-                      <TableCell>HN</TableCell>
-                      <TableCell>คำนำหน้า</TableCell>
-                      <TableCell>ชื่อ</TableCell>
-                      <TableCell>นามสกุล</TableCell>
-                      <TableCell>เพศ</TableCell>
-                      <TableCell>Actions</TableCell>
+                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                        HN
+                      </TableCell>
+                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                        คำนำหน้า
+                      </TableCell>
+                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                        ชื่อ
+                      </TableCell>
+                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                        นามสกุล
+                      </TableCell>
+                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                        เพศ
+                      </TableCell>
+                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                        Actions
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -281,11 +295,19 @@ const NursePatient = () => {
                         <TableCell component="th" scope="row">
                           {row.HN}
                         </TableCell>
-                        <TableCell>{row.Title}</TableCell>
-                        <TableCell>{row.First_Name}</TableCell>
-                        <TableCell>{row.Last_Name}</TableCell>
-                        <TableCell>{row.Gender}</TableCell>
-                        <TableCell>
+                        <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                          {row.Title}
+                        </TableCell>
+                        <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                          {row.First_Name}
+                        </TableCell>
+                        <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                          {row.Last_Name}
+                        </TableCell>
+                        <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                          {row.Gender}
+                        </TableCell>
+                        <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
                           <ButtonGroup
                             color="primary"
                             aria-label="outlined primary button group"
@@ -360,14 +382,17 @@ const NursePatient = () => {
                   value={newLastName}
                   onChange={(e) => setNewLastName(e.target.value)}
                 />
-                <TextField
-                  margin="dense"
-                  label="วันเกิด"
-                  type="text"
-                  fullWidth
-                  value={newBirthdate}
-                  onChange={(e) => setNewBirthdate(e.target.value)}
-                />
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DatePicker
+                    label="เลือกวันเกิด"
+                    value={newBirthdate}
+                    onChange={(date) => setNewBirthdate(date)}
+                    inputFormat="dd/MM/yyyy"
+                    renderInput={(params) => (
+                      <TextField {...params} fullWidth margin="dense" />
+                    )}
+                  />
+                </LocalizationProvider>
                 <FormControl
                   fullWidth
                   margin="dense"
