@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Table from "@mui/material/Table";
@@ -15,7 +15,6 @@ import Box from "@mui/material/Box";
 import { styled } from "@mui/material/styles";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
-import { Link } from "react-router-dom";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
@@ -113,7 +112,7 @@ const NursePatient = () => {
     setNewTitle("");
     setNewFirstName("");
     setNewLastName("");
-    setNewBirthdate("");
+    setNewBirthdate(null);
     setNewGender("");
     setNewPhone("");
     setNewDisease("");
@@ -143,7 +142,6 @@ const NursePatient = () => {
       setMessage("เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วย");
     }
   };
-  const PatientUpdate = async () => {};
 
   const PatientDelete = async () => {};
 
@@ -315,9 +313,6 @@ const NursePatient = () => {
                             <Button onClick={() => PatientView(row.HN)}>
                               ดู
                             </Button>
-                            <Button onClick={() => PatientUpdate(row.HN)}>
-                              แก้ไข
-                            </Button>
                             <Button onClick={() => PatientDelete(row.HN)}>
                               ลบ
                             </Button>
@@ -445,7 +440,13 @@ const NursePatient = () => {
                 >
                   ยกเลิก
                 </Button>
-                <Button onClick={AddPatient} color="primary">
+                <Button
+                  onClick={() => {
+                    AddPatient();
+                    resetForm();
+                  }}
+                  color="primary"
+                >
                   บันทึก
                 </Button>
               </DialogActions>
