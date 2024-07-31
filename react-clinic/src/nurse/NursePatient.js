@@ -49,12 +49,10 @@ const NursePatient = () => {
   const [newTitle, setNewTitle] = useState("");
   const [newBirthdate, setNewBirthdate] = useState(null);
   const [newPhone, setNewPhone] = useState("");
-  const [newAllergy, setNewAllergy] = useState("");
+  const [newallergy, setNewallergy] = useState("");
   const [newDisease, setNewDisease] = useState("");
-  const [allergies, setAllergies] = useState([]);
+  const [allergy, setAllergy] = useState([]);
   const [diseases, setDiseases] = useState([]);
-  const [selectedDisease, setSelectedDisease] = useState(null);
-  const [selectedAllergy, setSelectedAllergy] = useState(null);
   const [selectedHN, setSelectedHN] = useState("");
   const [addPopup, setAddPopup] = useState(false);
   const [viewPopup, setViewPopup] = useState(false);
@@ -116,32 +114,30 @@ const NursePatient = () => {
     setNewGender("");
     setNewPhone("");
     setNewDisease("");
-    setNewAllergy("");
+    setNewallergy("");
   };
 
   const AddPatient = async () => {
     try {
-      let gender = "";
-      if (newTitle === "ด.ช." || newTitle === "นาย") {
-        gender = "ชาย";
-      } else {
-        gender = "หญิง";
-      }
-
       const newPatient = {
         Title: newTitle,
         First_Name: newFirstName,
         Last_Name: newLastName,
-        Gender: gender,
-        Birthdate: newBirthdate
-          ? newBirthdate.toISOString().split("T")[0]
-          : null,
+        Gender: newGender,
+        Birthdate: newBirthdate,
         Phone: newPhone,
-        Disease_ID: newDisease ? newDisease.value : null,
-        Allergy_ID: newAllergy ? newAllergy.value : null,
+        Disease: newDisease.value,
+        allergy: newallergy.value,
       };
 
-      await axios.post("http://localhost:5000/api/patient", newPatient);
+      const response = await axios.post(
+        "http://localhost:5000/api/patient",
+        newPatient
+      );
+
+      const newHN = response.data.HN;
+      await axios.post("http://localhost:5000/api/walkinqueue", { HN: newHN });
+
       FetchData();
       setAddPopup(false);
       setMessage("");
@@ -186,8 +182,8 @@ const NursePatient = () => {
         setNewDisease(
           diseases.find((disease) => disease.value === patient.Disease_ID)
         );
-        setNewAllergy(
-          allergies.find((allergy) => allergy.value === patient.Allergy_ID)
+        setNewallergy(
+          allergy.find((allergy) => allergy.value === patient.allergy_ID)
         );
         setSelectedHN(HN);
         setEdit(false);
@@ -211,7 +207,7 @@ const NursePatient = () => {
           : null,
         Phone: newPhone,
         Disease: newDisease.value,
-        Allergy: newAllergy.value,
+        allergy: newallergy.value,
       };
 
       await axios.put(
@@ -228,17 +224,17 @@ const NursePatient = () => {
   };
 
   useEffect(() => {
-    const fetchAllergies = async () => {
+    const fetchallergy = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/allergies");
-        setAllergies(
+        const response = await axios.get("http://localhost:5000/api/allergy");
+        setAllergy(
           response.data.data.map((item) => ({
-            value: item.Allergy_ID,
-            label: item.Allergy_Details,
+            value: item.allergy_ID,
+            label: item.allergy_Details,
           }))
         );
       } catch (error) {
-        console.error("Error fetching allergies:", error);
+        console.error("Error fetching allergy:", error);
       }
     };
 
@@ -256,7 +252,7 @@ const NursePatient = () => {
       }
     };
 
-    fetchAllergies();
+    fetchallergy();
     fetchDiseases();
   }, []);
 
@@ -542,9 +538,9 @@ const NursePatient = () => {
                   </Box>
                   <Box style={{ flex: 1 }}>
                     <ReactSelect
-                      options={allergies}
-                      value={newAllergy}
-                      onChange={setNewAllergy}
+                      options={allergy}
+                      value={newallergy}
+                      onChange={setNewallergy}
                       placeholder="เลือกการแพ้ยา"
                     />
                   </Box>
@@ -672,9 +668,9 @@ const NursePatient = () => {
                   </Box>
                   <Box style={{ flex: 1 }}>
                     <ReactSelect
-                      options={allergies}
-                      value={newAllergy}
-                      onChange={setNewAllergy}
+                      options={allergy}
+                      value={newallergy}
+                      onChange={setNewallergy}
                       placeholder="เลือกการแพ้ยา"
                       isDisabled={!edit}
                     />

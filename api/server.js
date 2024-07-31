@@ -54,7 +54,7 @@ app.post("/clinic/users", function (req, res) {
   });
 });
 //-----------------------------------------------Nurse---------------------------------------------------------------
-
+//ค้นหารายชื่อผู้ป่วย
 app.get("/api/patient", function (req, res) {
   const HN = req.query.HN;
   const title = req.query.Title;
@@ -95,6 +95,7 @@ app.get("/api/patient", function (req, res) {
   });
 });
 
+//เพิ่มรายชื่อผู้ป่วย
 app.post("/api/patient", function (req, res) {
   const {
     Title,
@@ -152,6 +153,7 @@ app.post("/api/patient", function (req, res) {
   });
 });
 
+//ลบรายชื่อผู้ป่วย
 app.delete("/api/patient/:HN", function (req, res) {
   const HN = req.params.HN;
   const sql = "DELETE FROM patient WHERE HN = ?";
@@ -163,6 +165,7 @@ app.delete("/api/patient/:HN", function (req, res) {
   });
 });
 
+//ดูข้อมูลผู้ป่วย
 app.get("/api/patient/:HN", function (req, res) {
   const HN = req.params.HN;
   const sql = "SELECT * FROM patient WHERE HN = ?";
@@ -174,6 +177,7 @@ app.get("/api/patient/:HN", function (req, res) {
   });
 });
 
+//แก้ไขข้อมูลผู้ป่วย
 app.put("/api/patient/:HN", function (req, res) {
   const HN = req.params.HN;
   const { Title, First_Name, Last_Name, Gender, Birthdate, Phone } = req.body;
@@ -198,7 +202,8 @@ app.put("/api/patient/:HN", function (req, res) {
   );
 });
 
-app.get("/api/allergies", function (req, res) {
+//ดึงข้อมูล allergy
+app.get("/api/allergy", function (req, res) {
   const sql = "SELECT * FROM allergy";
   connection.execute(sql, function (err, results) {
     if (err) {
@@ -208,6 +213,7 @@ app.get("/api/allergies", function (req, res) {
   });
 });
 
+//ดึงข้อมูล diseases
 app.get("/api/diseases", function (req, res) {
   const sql = "SELECT * FROM chronic_disease";
   connection.execute(sql, function (err, results) {
@@ -215,6 +221,58 @@ app.get("/api/diseases", function (req, res) {
       return res.status(500).json({ error: err.message });
     }
     res.json({ data: results });
+  });
+});
+
+//เพิ่มคิวผู้ป่วย
+app.post("/api/walkinqueue", function (req, res) {
+  const { HN } = req.body;
+
+  const getMaxQueueID = "SELECT MAX(Queue_ID) as maxQueueID FROM walkinqueue";
+  connection.execute(getMaxQueueID, function (err, results) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    let newQueueID = 1;
+    if (results.length > 0 && results[0].maxQueueID !== null) {
+      newQueueID = results[0].maxQueueID + 1;
+    }
+
+    const addQueue = "INSERT INTO walkinqueue (Queue_ID, HN) VALUES (?, ?)";
+    connection.execute(addQueue, [newQueueID, HN], function (err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      res.status(201).json({ message: "เพิ่มผู้ป่วยเข้า walkinqueue สำเร็จ" });
+    });
+  });
+});
+
+//ดึงข้อมูลคิว
+app.get("/api/walkinqueue", function (req, res) {
+  const sql = `
+    SELECT w.Queue_ID, w.HN, p.Title, p.First_Name, p.Last_Name, p.Gender
+    FROM walkinqueue w
+    JOIN patient p ON w.HN = p.HN
+  `;
+  connection.execute(sql, function (err, results) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ data: results });
+  });
+});
+
+//ลบคิว
+app.delete("/api/walkinqueue/:HN", function (req, res) {
+  const HN = req.params.HN;
+  const sql = "DELETE FROM walkinqueue WHERE HN = ?";
+  connection.execute(sql, [HN], function (err) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ message: "ลบข้อมูลผู้ป่วยจากคิวสำเร็จ" });
   });
 });
 
