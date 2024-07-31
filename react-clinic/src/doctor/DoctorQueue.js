@@ -40,14 +40,13 @@ const DoctorQueue = () => {
   const [showTable, setShowTable] = useState(false);
   const navigate = useNavigate();
 
-  const ContainerStyled = styled(Container)({
-    marginTop: '20px',
-    marginBottom: '20px',
-  });
+  const ContainerStyled = styled(Container)(({ theme }) => ({
+    marginTop: theme.spacing(2),
+  }));
   
-  const PaperStyled = styled(Paper)({
-    padding: '20px',
-  });
+  const PaperStyled = styled(Paper)(({ theme }) => ({
+    padding: theme.spacing(2),
+  }));
 
   const fetchData = async () => {
     let url = `http://localhost:5000/api/patient`;
