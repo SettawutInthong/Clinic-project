@@ -472,13 +472,13 @@ const NursePatient = () => {
                             color="primary"
                             aria-label="outlined primary button group"
                           >
-                            <Button onClick={() => BookQueue(row.HN)}>
+                            <Button onClick={() => BookQueue(row.HN)} color="success">
                               จองคิว
                             </Button>
                             <Button onClick={() => ViewPatient(row.HN)}>
                               ดู
                             </Button>
-                            <Button onClick={() => DeletePatient(row.HN)}>
+                            <Button onClick={() => DeletePatient(row.HN)} color="error">
                               ลบ
                             </Button>
                           </ButtonGroup>
