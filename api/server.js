@@ -22,7 +22,9 @@ function generateToken() {
 app.post("/clinic/users", function (req, res) {
   const { username, password } = req.body;
   if (!username || !password) {
-    return res.status(400).json({ error: "จำเป็นต้องมีชื่อผู้ใช้และรหัสผ่าน" });
+    return res
+      .status(400)
+      .json({ error: "Username and password are required" });
   }
 
   const sql = "SELECT * FROM users WHERE username = ? AND password = ?";
@@ -47,7 +49,7 @@ app.post("/clinic/users", function (req, res) {
         }
       );
     } else {
-      res.status(401).json({ error: "ข้อมูลไม่ถูกต้อง" });
+      res.status(401).json({ error: "Invalid credentials" });
     }
   });
 });
@@ -93,45 +95,6 @@ app.get("/api/patient", function (req, res) {
     });
   });
 });
-
-app.post("/api/patient", function (req, res) {
-  const { Title, First_Name, Last_Name, Gender, Birthdate, Phone } = req.body;
-
-  const getMaxHN = "SELECT MAX(HN) as maxHN FROM patient";
-  connection.execute(getMaxHN, function (err, results) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-
-    let newHN = "HN001";
-    if (results.length > 0 && results[0].maxHN !== null) {
-      const maxHN = results[0].maxHN;
-      const numberPart = parseInt(maxHN.substring(2), 10);
-      const nextNumber = numberPart + 1;
-
-      if (nextNumber > 999) {
-        return res.status(500).json({ error: "Reached maximum HN limit" });
-      }
-      newHN = `HN${nextNumber.toString().padStart(3, "0")}`;
-    }
-
-    const addPatient =
-      "INSERT INTO patient (HN, Title, First_Name, Last_Name, Gender, Birthdate, Phone) VALUES (?, ?, ?, ?, ?, ?, ?)";
-    connection.execute(
-      addPatient,
-      [newHN, Title, First_Name, Last_Name, Gender, Birthdate, Phone],
-      function (err, results) {
-        if (err) {
-          return res.status(500).json({ error: err.message });
-        }
-        res
-          .status(201)
-          .json({ message: "เพิ่มรายชื่อผู้ป่วยสำเร็จ", HN: newHN });
-      }
-    );
-  });
-});
-
 app.get("/api/walkinqueue", function (req, res) {
   const queue_id = req.query.Queue_ID;
   const title = req.query.Title;

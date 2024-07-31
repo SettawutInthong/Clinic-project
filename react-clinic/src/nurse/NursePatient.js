@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Table from "@mui/material/Table";
@@ -15,6 +15,7 @@ import Box from "@mui/material/Box";
 import { styled } from "@mui/material/styles";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
+import { Link } from "react-router-dom";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
@@ -24,8 +25,6 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import { ButtonGroup } from "@mui/material";
-import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(2),
@@ -46,10 +45,8 @@ const NursePatient = () => {
   const [newLastName, setNewLastName] = useState("");
   const [newGender, setNewGender] = useState("");
   const [newTitle, setNewTitle] = useState("");
-  const [newBirthdate, setNewBirthdate] = useState(null);
+  const [newBirthdate, setNewBirthdate] = useState("");
   const [newPhone, setNewPhone] = useState("");
-  const [newAllergy, setNewAllergy] = useState("");
-  const [newDisease, setNewDisease] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [message, setMessage] = useState("");
   const [showTable, setShowTable] = useState(false);
@@ -108,17 +105,6 @@ const NursePatient = () => {
     fetchData();
   };
 
-  const resetForm = () => {
-    setNewTitle("");
-    setNewFirstName("");
-    setNewLastName("");
-    setNewBirthdate(null);
-    setNewGender("");
-    setNewPhone("");
-    setNewDisease("");
-    setNewAllergy("");
-  };
-
   const AddPatient = async () => {
     try {
       const newPatient = {
@@ -128,20 +114,18 @@ const NursePatient = () => {
         Gender: newGender,
         Birthdate: newBirthdate,
         Phone: newPhone,
-        Disease: newDisease,
-        Allergy: newAllergy,
       };
 
       await axios.post("http://localhost:5000/api/patient", newPatient);
       fetchData();
       setShowPopup(false);
       setMessage("");
-      resetForm();
     } catch (error) {
       console.error("Error adding patient:", error);
       setMessage("เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วย");
     }
   };
+  const PatientUpdate = async () => {};
 
   const PatientDelete = async () => {};
 
@@ -262,24 +246,12 @@ const NursePatient = () => {
                 <Table sx={{ minWidth: 650 }} aria-label="simple table">
                   <TableHead>
                     <TableRow>
-                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                        HN
-                      </TableCell>
-                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                        คำนำหน้า
-                      </TableCell>
-                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                        ชื่อ
-                      </TableCell>
-                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                        นามสกุล
-                      </TableCell>
-                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                        เพศ
-                      </TableCell>
-                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                        Actions
-                      </TableCell>
+                      <TableCell>HN</TableCell>
+                      <TableCell>คำนำหน้า</TableCell>
+                      <TableCell>ชื่อ</TableCell>
+                      <TableCell>นามสกุล</TableCell>
+                      <TableCell>เพศ</TableCell>
+                      <TableCell>Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -293,25 +265,20 @@ const NursePatient = () => {
                         <TableCell component="th" scope="row">
                           {row.HN}
                         </TableCell>
-                        <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.Title}
-                        </TableCell>
-                        <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.First_Name}
-                        </TableCell>
-                        <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.Last_Name}
-                        </TableCell>
-                        <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.Gender}
-                        </TableCell>
-                        <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                        <TableCell>{row.Title}</TableCell>
+                        <TableCell>{row.First_Name}</TableCell>
+                        <TableCell>{row.Last_Name}</TableCell>
+                        <TableCell>{row.Gender}</TableCell>
+                        <TableCell>
                           <ButtonGroup
                             color="primary"
                             aria-label="outlined primary button group"
                           >
                             <Button onClick={() => PatientView(row.HN)}>
                               ดู
+                            </Button>
+                            <Button onClick={() => PatientUpdate(row.HN)}>
+                              แก้ไข
                             </Button>
                             <Button onClick={() => PatientDelete(row.HN)}>
                               ลบ
@@ -327,10 +294,7 @@ const NursePatient = () => {
 
             <Dialog
               open={showPopup}
-              onClose={() => {
-                setShowPopup(false);
-                resetForm();
-              }}
+              onClose={() => setShowPopup(false)}
               aria-labelledby="form-dialog-title"
             >
               <DialogTitle
@@ -363,7 +327,7 @@ const NursePatient = () => {
                 <TextField
                   autoFocus
                   margin="dense"
-                  label="กรอกชื่อ"
+                  label="ชื่อ"
                   type="text"
                   fullWidth
                   value={newFirstName}
@@ -371,23 +335,20 @@ const NursePatient = () => {
                 />
                 <TextField
                   margin="dense"
-                  label="กรอกนามสกุล"
+                  label="นามสกุล"
                   type="text"
                   fullWidth
                   value={newLastName}
                   onChange={(e) => setNewLastName(e.target.value)}
                 />
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DatePicker
-                    label="เลือกวันเกิด"
-                    value={newBirthdate}
-                    onChange={(date) => setNewBirthdate(date)}
-                    inputFormat="dd/MM/yyyy"
-                    slotProps={{
-                      textField: { fullWidth: true, margin: "dense" },
-                    }}
-                  />
-                </LocalizationProvider>
+                <TextField
+                  margin="dense"
+                  label="วันเกิด"
+                  type="text"
+                  fullWidth
+                  value={newBirthdate}
+                  onChange={(e) => setNewBirthdate(e.target.value)}
+                />
                 <FormControl
                   fullWidth
                   margin="dense"
@@ -407,46 +368,18 @@ const NursePatient = () => {
                 </FormControl>
                 <TextField
                   margin="dense"
-                  label="กรอกหมายเลขโทรศัพท์"
+                  label="หมายเลขโทรศัพท์"
                   type="text"
                   fullWidth
                   value={newPhone}
                   onChange={(e) => setNewPhone(e.target.value)}
                 />
-                <TextField
-                  margin="dense"
-                  label="กรอกโรคประจำตัว"
-                  type="text"
-                  fullWidth
-                  value={newDisease}
-                  onChange={(e) => setNewDisease(e.target.value)}
-                />
-                <TextField
-                  margin="dense"
-                  label="กรอกยาที่แพ้"
-                  type="text"
-                  fullWidth
-                  value={newAllergy}
-                  onChange={(e) => setNewAllergy(e.target.value)}
-                />
               </DialogContent>
               <DialogActions>
-                <Button
-                  onClick={() => {
-                    setShowPopup(false);
-                    resetForm();
-                  }}
-                  color="primary"
-                >
+                <Button onClick={() => setShowPopup(false)} color="primary">
                   ยกเลิก
                 </Button>
-                <Button
-                  onClick={() => {
-                    AddPatient();
-                    resetForm();
-                  }}
-                  color="primary"
-                >
+                <Button onClick={AddPatient} color="primary">
                   บันทึก
                 </Button>
               </DialogActions>
