@@ -96,7 +96,16 @@ app.get("/api/patient", function (req, res) {
 });
 
 app.post("/api/patient", function (req, res) {
-  const { Title, First_Name, Last_Name, Gender, Birthdate, Phone } = req.body;
+  const {
+    Title,
+    First_Name,
+    Last_Name,
+    Gender,
+    Birthdate,
+    Phone,
+    Disease_ID,
+    Allergy_ID,
+  } = req.body;
 
   const getMaxHN = "SELECT MAX(HN) as maxHN FROM patient";
   connection.execute(getMaxHN, function (err, results) {
@@ -117,10 +126,20 @@ app.post("/api/patient", function (req, res) {
     }
 
     const addPatient =
-      "INSERT INTO patient (HN, Title, First_Name, Last_Name, Gender, Birthdate, Phone) VALUES (?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO patient (HN, Title, First_Name, Last_Name, Gender, Birthdate, Phone, Disease_ID, Allergy_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     connection.execute(
       addPatient,
-      [newHN, Title, First_Name, Last_Name, Gender, Birthdate, Phone],
+      [
+        newHN,
+        Title,
+        First_Name,
+        Last_Name,
+        Gender,
+        Birthdate,
+        Phone,
+        Disease_ID || null,
+        Allergy_ID || null,
+      ],
       function (err) {
         if (err) {
           return res.status(500).json({ error: err.message });
@@ -178,6 +197,27 @@ app.put("/api/patient/:HN", function (req, res) {
     }
   );
 });
+
+app.get("/api/allergies", function (req, res) {
+  const sql = "SELECT * FROM allergy";
+  connection.execute(sql, function (err, results) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ data: results });
+  });
+});
+
+app.get("/api/diseases", function (req, res) {
+  const sql = "SELECT * FROM chronic_disease";
+  connection.execute(sql, function (err, results) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ data: results });
+  });
+});
+
 //--------------------------------------------------------------------------------------------------------------
 
 // API สำหรับค้นหาผู้ป่วย

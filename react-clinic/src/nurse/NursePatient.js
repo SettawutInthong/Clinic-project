@@ -26,6 +26,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import { ButtonGroup } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import ReactSelect from "react-select";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(2),
@@ -50,10 +51,14 @@ const NursePatient = () => {
   const [newPhone, setNewPhone] = useState("");
   const [newAllergy, setNewAllergy] = useState("");
   const [newDisease, setNewDisease] = useState("");
+  const [allergies, setAllergies] = useState([]);
+  const [diseases, setDiseases] = useState([]);
+  const [selectedDisease, setSelectedDisease] = useState(null);
+  const [selectedAllergy, setSelectedAllergy] = useState(null);
+  const [selectedHN, setSelectedHN] = useState("");
   const [addPopup, setAddPopup] = useState(false);
   const [viewPopup, setViewPopup] = useState(false);
   const [deletePopup, setDeletePopup] = useState(false);
-  const [selectedHN, setSelectedHN] = useState("");
   const [edit, setEdit] = useState(false);
   const [message, setMessage] = useState("");
   const [showTable, setShowTable] = useState(false);
@@ -116,15 +121,24 @@ const NursePatient = () => {
 
   const AddPatient = async () => {
     try {
+      let gender = "";
+      if (newTitle === "ด.ช." || newTitle === "นาย") {
+        gender = "ชาย";
+      } else {
+        gender = "หญิง";
+      }
+
       const newPatient = {
         Title: newTitle,
         First_Name: newFirstName,
         Last_Name: newLastName,
-        Gender: newGender,
-        Birthdate: newBirthdate,
+        Gender: gender,
+        Birthdate: newBirthdate
+          ? newBirthdate.toISOString().split("T")[0]
+          : null,
         Phone: newPhone,
-        Disease: newDisease,
-        Allergy: newAllergy,
+        Disease_ID: newDisease ? newDisease.value : null,
+        Allergy_ID: newAllergy ? newAllergy.value : null,
       };
 
       await axios.post("http://localhost:5000/api/patient", newPatient);
@@ -169,8 +183,12 @@ const NursePatient = () => {
         setNewBirthdate(new Date(patient.Birthdate));
         setNewGender(patient.Gender);
         setNewPhone(patient.Phone);
-        setNewDisease(patient.Disease);
-        setNewAllergy(patient.Allergy);
+        setNewDisease(
+          diseases.find((disease) => disease.value === patient.Disease_ID)
+        );
+        setNewAllergy(
+          allergies.find((allergy) => allergy.value === patient.Allergy_ID)
+        );
         setSelectedHN(HN);
         setEdit(false);
         setViewPopup(true);
@@ -192,6 +210,8 @@ const NursePatient = () => {
           ? newBirthdate.toISOString().split("T")[0]
           : null,
         Phone: newPhone,
+        Disease: newDisease.value,
+        Allergy: newAllergy.value,
       };
 
       await axios.put(
@@ -206,6 +226,39 @@ const NursePatient = () => {
       setMessage("เกิดข้อผิดพลาดในการบันทึกข้อมูลผู้ป่วย");
     }
   };
+
+  useEffect(() => {
+    const fetchAllergies = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/allergies");
+        setAllergies(
+          response.data.data.map((item) => ({
+            value: item.Allergy_ID,
+            label: item.Allergy_Details,
+          }))
+        );
+      } catch (error) {
+        console.error("Error fetching allergies:", error);
+      }
+    };
+
+    const fetchDiseases = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/diseases");
+        setDiseases(
+          response.data.data.map((item) => ({
+            value: item.Disease_ID,
+            label: item.disease_name,
+          }))
+        );
+      } catch (error) {
+        console.error("Error fetching diseases:", error);
+      }
+    };
+
+    fetchAllergies();
+    fetchDiseases();
+  }, []);
 
   useEffect(() => {
     if (showTable) {
@@ -355,7 +408,11 @@ const NursePatient = () => {
                           "&:last-child td, &:last-child th": { border: 0 },
                         }}
                       >
-                        <TableCell component="th" scope="row">
+                        <TableCell
+                          style={{ flexGrow: 1, textAlign: "center" }}
+                          component="th"
+                          scope="row"
+                        >
                           {row.HN}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
@@ -454,24 +511,7 @@ const NursePatient = () => {
                     }}
                   />
                 </LocalizationProvider>
-                <FormControl
-                  fullWidth
-                  margin="dense"
-                  variant="outlined"
-                  size="small"
-                  style={{ width: "110px" }}
-                >
-                  <InputLabel>เลือกเพศ</InputLabel>
-                  <Select
-                    value={newGender}
-                    onChange={(e) => setNewGender(e.target.value)}
-                    label="เลือกเพศ"
-                  >
-                    <MenuItem value="- Unknown -">- Unknown -</MenuItem>
-                    <MenuItem value="ชาย">ชาย</MenuItem>
-                    <MenuItem value="หญิง">หญิง</MenuItem>
-                  </Select>
-                </FormControl>
+
                 <TextField
                   margin="dense"
                   label="กรอกหมายเลขโทรศัพท์"
@@ -480,22 +520,35 @@ const NursePatient = () => {
                   value={newPhone}
                   onChange={(e) => setNewPhone(e.target.value)}
                 />
-                <TextField
-                  margin="dense"
-                  label="กรอกโรคประจำตัว"
-                  type="text"
+                <FormControl
                   fullWidth
-                  value={newDisease}
-                  onChange={(e) => setNewDisease(e.target.value)}
-                />
-                <TextField
                   margin="dense"
-                  label="กรอกยาที่แพ้"
-                  type="text"
-                  fullWidth
-                  value={newAllergy}
-                  onChange={(e) => setNewAllergy(e.target.value)}
-                />
+                  variant="outlined"
+                  size="small"
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    gap: "10px",
+                  }}
+                >
+                  <Box style={{ flex: 1 }}>
+                    <ReactSelect
+                      placeholder="เลือกโรคประจำตัว"
+                      options={diseases}
+                      value={newDisease}
+                      onChange={setNewDisease}
+                    />
+                  </Box>
+                  <Box style={{ flex: 1 }}>
+                    <ReactSelect
+                      options={allergies}
+                      value={newAllergy}
+                      onChange={setNewAllergy}
+                      placeholder="เลือกการแพ้ยา"
+                    />
+                  </Box>
+                </FormControl>
               </DialogContent>
               <DialogActions>
                 <Button
@@ -586,25 +639,6 @@ const NursePatient = () => {
                     }}
                   />
                 </LocalizationProvider>
-                <FormControl
-                  fullWidth
-                  margin="dense"
-                  variant="outlined"
-                  size="small"
-                  style={{ width: "110px" }}
-                >
-                  <InputLabel>เพศ</InputLabel>
-                  <Select
-                    label="เพศ"
-                    value={newGender}
-                    onChange={(e) => setNewGender(e.target.value)}
-                    disabled={!edit}
-                  >
-                    <MenuItem value="- Unknown -">- Unknown -</MenuItem>
-                    <MenuItem value="ชาย">ชาย</MenuItem>
-                    <MenuItem value="หญิง">หญิง</MenuItem>
-                  </Select>
-                </FormControl>
                 <TextField
                   margin="dense"
                   label="หมายเลขโทรศัพท์"
@@ -614,6 +648,37 @@ const NursePatient = () => {
                   onChange={(e) => setNewPhone(e.target.value)}
                   disabled={!edit}
                 />
+                <FormControl
+                  fullWidth
+                  margin="dense"
+                  variant="outlined"
+                  size="small"
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    gap: "10px",
+                  }}
+                >
+                  <Box style={{ flex: 1 }}>
+                    <ReactSelect
+                      placeholder="เลือกโรคประจำตัว"
+                      options={diseases}
+                      value={newDisease}
+                      onChange={setNewDisease}
+                      isDisabled={!edit}
+                    />
+                  </Box>
+                  <Box style={{ flex: 1 }}>
+                    <ReactSelect
+                      options={allergies}
+                      value={newAllergy}
+                      onChange={setNewAllergy}
+                      placeholder="เลือกการแพ้ยา"
+                      isDisabled={!edit}
+                    />
+                  </Box>
+                </FormControl>
               </DialogContent>
               <DialogActions>
                 {edit ? (
