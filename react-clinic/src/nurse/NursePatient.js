@@ -50,36 +50,27 @@ const NursePatient = () => {
   const [newPhone, setNewPhone] = useState("");
   const [newAllergy, setNewAllergy] = useState("");
   const [newDisease, setNewDisease] = useState("");
-  const [AddPopup, setAddPopup] = useState(false);
+  const [addPopup, setAddPopup] = useState(false);
   const [viewPopup, setViewPopup] = useState(false);
   const [deletePopup, setDeletePopup] = useState(false);
   const [selectedHN, setSelectedHN] = useState("");
+  const [edit, setEdit] = useState(false);
   const [message, setMessage] = useState("");
   const [showTable, setShowTable] = useState(false);
   const navigate = useNavigate();
 
-  const fetchData = async () => {
-    let url = `http://localhost:5000/api/patient`;
+  const FetchData = async () => {
     const params = {};
-
-    if (searchHN) {
-      params.HN = searchHN;
-    }
-    if (searchTitle) {
-      params.Title = searchTitle;
-    }
-    if (searchFirstName) {
-      params.First_Name = searchFirstName;
-    }
-    if (searchLastName) {
-      params.Last_Name = searchLastName;
-    }
-    if (searchGender) {
-      params.Gender = searchGender;
-    }
+    if (searchHN) params.HN = searchHN;
+    if (searchTitle) params.Title = searchTitle;
+    if (searchFirstName) params.First_Name = searchFirstName;
+    if (searchLastName) params.Last_Name = searchLastName;
+    if (searchGender) params.Gender = searchGender;
 
     try {
-      const response = await axios.get(url, { params });
+      const response = await axios.get("http://localhost:5000/api/patient", {
+        params,
+      });
       setData(response.data.data);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -101,6 +92,7 @@ const NursePatient = () => {
   const SearchLastNameChange = (event) => {
     setSearchLastName(event.target.value);
   };
+
   const SearchGenderChange = (event) => {
     setSearchGender(event.target.value);
   };
@@ -108,10 +100,10 @@ const NursePatient = () => {
   const SearchSubmit = async (event) => {
     event.preventDefault();
     setShowTable(true);
-    fetchData();
+    FetchData();
   };
 
-  const resetForm = () => {
+  const ResetForm = () => {
     setNewTitle("");
     setNewFirstName("");
     setNewLastName("");
@@ -122,7 +114,7 @@ const NursePatient = () => {
     setNewAllergy("");
   };
 
-  const addPatient = async () => {
+  const AddPatient = async () => {
     try {
       const newPatient = {
         Title: newTitle,
@@ -136,25 +128,25 @@ const NursePatient = () => {
       };
 
       await axios.post("http://localhost:5000/api/patient", newPatient);
-      fetchData();
+      FetchData();
       setAddPopup(false);
       setMessage("");
-      resetForm();
+      ResetForm();
     } catch (error) {
       console.error("Error adding patient:", error);
       setMessage("เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วย");
     }
   };
 
-  const deletePatient = (HN) => {
+  const DeletePatient = (HN) => {
     setSelectedHN(HN);
     setDeletePopup(true);
   };
 
-  const confirmDeletePatient = async () => {
+  const ConfirmDeletePatient = async () => {
     try {
       await axios.delete(`http://localhost:5000/api/patient/${selectedHN}`);
-      fetchData();
+      FetchData();
       setDeletePopup(false);
       setMessage("");
     } catch (error) {
@@ -163,8 +155,9 @@ const NursePatient = () => {
     }
   };
 
-  const PatientView = async (HN) => {
+  const ViewPatient = async (HN) => {
     try {
+      ResetForm();
       const response = await axios.get(
         `http://localhost:5000/api/patient?HN=${HN}`
       );
@@ -178,6 +171,8 @@ const NursePatient = () => {
         setNewPhone(patient.Phone);
         setNewDisease(patient.Disease);
         setNewAllergy(patient.Allergy);
+        setSelectedHN(HN);
+        setEdit(false);
         setViewPopup(true);
       }
     } catch (error) {
@@ -186,9 +181,35 @@ const NursePatient = () => {
     }
   };
 
+  const EditPatient = async () => {
+    try {
+      const editPatient = {
+        Title: newTitle,
+        First_Name: newFirstName,
+        Last_Name: newLastName,
+        Gender: newGender,
+        Birthdate: newBirthdate
+          ? newBirthdate.toISOString().split("T")[0]
+          : null,
+        Phone: newPhone,
+      };
+
+      await axios.put(
+        `http://localhost:5000/api/patient/${selectedHN}`,
+        editPatient
+      );
+      FetchData();
+      setViewPopup(false);
+      setMessage("");
+    } catch (error) {
+      console.error("Error saving patient data:", error);
+      setMessage("เกิดข้อผิดพลาดในการบันทึกข้อมูลผู้ป่วย");
+    }
+  };
+
   useEffect(() => {
     if (showTable) {
-      fetchData();
+      FetchData();
     }
   }, [showTable]);
 
@@ -226,7 +247,7 @@ const NursePatient = () => {
                   label="กรอก HN"
                   variant="outlined"
                   size="small"
-                  onChange={SearchHNChange}
+                  onChange={(e) => setSearchHN(e.target.value)}
                   inputProps={{ maxLength: 5 }}
                   style={{ width: "100px" }}
                 />
@@ -241,6 +262,7 @@ const NursePatient = () => {
                     onChange={SearchTitleChange}
                     label="เลือกคำนำหน้า"
                   >
+                    <MenuItem value="- Unknown -">- Unknown -</MenuItem>
                     <MenuItem value="ด.ช.">ด.ช.</MenuItem>
                     <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
                     <MenuItem value="นาย">นาย</MenuItem>
@@ -252,13 +274,13 @@ const NursePatient = () => {
                   label="กรอกชื่อ"
                   variant="outlined"
                   size="small"
-                  onChange={SearchFirstNameChange}
+                  onChange={(e) => setSearchFirstName(e.target.value)}
                 />
                 <TextField
                   label="กรอกนามสกุล"
                   variant="outlined"
                   size="small"
-                  onChange={SearchLastNameChange}
+                  onChange={(e) => setSearchLastName(e.target.value)}
                 />
                 <FormControl
                   variant="outlined"
@@ -273,6 +295,7 @@ const NursePatient = () => {
                     size="small"
                     label="เลือกเพศ"
                   >
+                    <MenuItem value="- Unknown -">- Unknown -</MenuItem>
                     <MenuItem value="ชาย">ชาย</MenuItem>
                     <MenuItem value="หญิง">หญิง</MenuItem>
                   </Select>
@@ -290,7 +313,10 @@ const NursePatient = () => {
                 variant="contained"
                 style={{ height: "40px", width: "150px" }}
                 color="success"
-                onClick={() => setAddPopup(true)}
+                onClick={() => {
+                  ResetForm();
+                  setAddPopup(true);
+                }}
               >
                 <h1>+</h1>
               </Button>
@@ -349,10 +375,10 @@ const NursePatient = () => {
                             color="primary"
                             aria-label="outlined primary button group"
                           >
-                            <Button onClick={() => PatientView(row.HN)}>
+                            <Button onClick={() => ViewPatient(row.HN)}>
                               ดู
                             </Button>
-                            <Button onClick={() => deletePatient(row.HN)}>
+                            <Button onClick={() => DeletePatient(row.HN)}>
                               ลบ
                             </Button>
                           </ButtonGroup>
@@ -363,11 +389,12 @@ const NursePatient = () => {
                 </Table>
               </TableContainer>
             )}
+
             <Dialog
-              open={AddPopup}
+              open={addPopup}
               onClose={() => {
                 setAddPopup(false);
-                resetForm();
+                ResetForm();
               }}
               aria-labelledby="form-dialog-title"
             >
@@ -391,6 +418,7 @@ const NursePatient = () => {
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                   >
+                    <MenuItem value="- Unknown -">- Unknown -</MenuItem>
                     <MenuItem value="ด.ช.">ด.ช.</MenuItem>
                     <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
                     <MenuItem value="นาย">นาย</MenuItem>
@@ -439,6 +467,7 @@ const NursePatient = () => {
                     onChange={(e) => setNewGender(e.target.value)}
                     label="เลือกเพศ"
                   >
+                    <MenuItem value="- Unknown -">- Unknown -</MenuItem>
                     <MenuItem value="ชาย">ชาย</MenuItem>
                     <MenuItem value="หญิง">หญิง</MenuItem>
                   </Select>
@@ -472,7 +501,7 @@ const NursePatient = () => {
                 <Button
                   onClick={() => {
                     setAddPopup(false);
-                    resetForm();
+                    ResetForm();
                   }}
                   color="primary"
                 >
@@ -480,8 +509,8 @@ const NursePatient = () => {
                 </Button>
                 <Button
                   onClick={() => {
-                    addPatient();
-                    resetForm();
+                    AddPatient();
+                    ResetForm();
                   }}
                   color="primary"
                 >
@@ -489,6 +518,7 @@ const NursePatient = () => {
                 </Button>
               </DialogActions>
             </Dialog>
+
             <Dialog
               open={viewPopup}
               onClose={() => setViewPopup(false)}
@@ -509,7 +539,13 @@ const NursePatient = () => {
                   style={{ width: "140px" }}
                 >
                   <InputLabel>คำนำหน้า</InputLabel>
-                  <Select label="คำนำหน้า" value={newTitle} disabled>
+                  <Select
+                    label="คำนำหน้า"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    disabled={!edit}
+                  >
+                    <MenuItem value="- Unknown -">- Unknown -</MenuItem>
                     <MenuItem value="ด.ช.">ด.ช.</MenuItem>
                     <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
                     <MenuItem value="นาย">นาย</MenuItem>
@@ -523,28 +559,29 @@ const NursePatient = () => {
                   type="text"
                   fullWidth
                   value={newFirstName}
-                  disabled
+                  onChange={(e) => setNewFirstName(e.target.value)}
+                  disabled={!edit}
                 />
-
                 <TextField
                   margin="dense"
                   label="นามสกุล"
                   type="text"
                   fullWidth
                   value={newLastName}
-                  disabled
+                  onChange={(e) => setNewLastName(e.target.value)}
+                  disabled={!edit}
                 />
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <DatePicker
                     label="วันเกิด"
                     value={newBirthdate}
+                    onChange={(date) => setNewBirthdate(date)}
                     inputFormat="dd/MM/yyyy"
-                    readOnly
                     slotProps={{
                       textField: {
                         fullWidth: true,
                         margin: "dense",
-                        disabled: true,
+                        disabled: !edit,
                       },
                     }}
                   />
@@ -557,7 +594,13 @@ const NursePatient = () => {
                   style={{ width: "110px" }}
                 >
                   <InputLabel>เพศ</InputLabel>
-                  <Select label="เพศ" value={newGender} disabled>
+                  <Select
+                    label="เพศ"
+                    value={newGender}
+                    onChange={(e) => setNewGender(e.target.value)}
+                    disabled={!edit}
+                  >
+                    <MenuItem value="- Unknown -">- Unknown -</MenuItem>
                     <MenuItem value="ชาย">ชาย</MenuItem>
                     <MenuItem value="หญิง">หญิง</MenuItem>
                   </Select>
@@ -568,33 +611,31 @@ const NursePatient = () => {
                   type="text"
                   fullWidth
                   value={newPhone}
-                  disabled
-                />
-
-                <TextField
-                  margin="dense"
-                  label="โรคประจำตัว"
-                  type="text"
-                  fullWidth
-                  value={newDisease}
-                  disabled
-                />
-
-                <TextField
-                  margin="dense"
-                  label="ยาที่แพ้"
-                  type="text"
-                  fullWidth
-                  value={newAllergy}
-                  disabled
+                  onChange={(e) => setNewPhone(e.target.value)}
+                  disabled={!edit}
                 />
               </DialogContent>
               <DialogActions>
+                {edit ? (
+                  <>
+                    <Button onClick={() => setEdit(false)} color="primary">
+                      ยกเลิก
+                    </Button>
+                    <Button onClick={EditPatient} color="primary">
+                      บันทึก
+                    </Button>
+                  </>
+                ) : (
+                  <Button onClick={() => setEdit(true)} color="primary">
+                    แก้ไข
+                  </Button>
+                )}
                 <Button onClick={() => setViewPopup(false)} color="primary">
                   ปิด
                 </Button>
               </DialogActions>
             </Dialog>
+
             <Dialog
               open={deletePopup}
               onClose={() => setDeletePopup(false)}
@@ -610,7 +651,7 @@ const NursePatient = () => {
                 <Button onClick={() => setDeletePopup(false)} color="primary">
                   ยกเลิก
                 </Button>
-                <Button onClick={confirmDeletePatient} color="primary">
+                <Button onClick={ConfirmDeletePatient} color="primary">
                   ลบ
                 </Button>
               </DialogActions>

@@ -53,6 +53,7 @@ app.post("/clinic/users", function (req, res) {
     }
   });
 });
+//-----------------------------------------------Nurse---------------------------------------------------------------
 
 app.get("/api/patient", function (req, res) {
   const HN = req.query.HN;
@@ -90,9 +91,7 @@ app.get("/api/patient", function (req, res) {
       return res.status(500).json({ error: err.message });
     }
 
-    res.json({
-      data: results,
-    });
+    res.json({ data: results });
   });
 });
 
@@ -122,7 +121,7 @@ app.post("/api/patient", function (req, res) {
     connection.execute(
       addPatient,
       [newHN, Title, First_Name, Last_Name, Gender, Birthdate, Phone],
-      function (err, results) {
+      function (err) {
         if (err) {
           return res.status(500).json({ error: err.message });
         }
@@ -137,7 +136,7 @@ app.post("/api/patient", function (req, res) {
 app.delete("/api/patient/:HN", function (req, res) {
   const HN = req.params.HN;
   const sql = "DELETE FROM patient WHERE HN = ?";
-  connection.execute(sql, [HN], function (err, results) {
+  connection.execute(sql, [HN], function (err) {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -152,71 +151,52 @@ app.get("/api/patient/:HN", function (req, res) {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-    res.json({
-      data: results,
-    });
+    res.json({ data: results });
   });
 });
 
-app.get("/api/walkinqueue", function (req, res) {
-  const queue_id = req.query.Queue_ID;
-  const title = req.query.Title;
-  const first_name = req.query.First_Name;
-  const last_name = req.query.Last_Name;
-  const gender = req.query.Gender;
+app.put("/api/patient/:HN", function (req, res) {
+  const HN = req.params.HN;
+  const { Title, First_Name, Last_Name, Gender, Birthdate, Phone } = req.body;
 
-  let params = [];
-  let sql = "SELECT * FROM walkinqueue WHERE 1=1";
-
-  if (queue_id) {
-    sql += " AND queue_id LIKE ?";
-    params.push("%" + queue_id + "%");
-  }
-  if (title) {
-    sql += " AND title LIKE ?";
-    params.push("%" + title + "%");
-  }
-  if (first_name) {
-    sql += " AND first_name LIKE ?";
-    params.push("%" + first_name + "%");
-  }
-  if (last_name) {
-    sql += " AND last_name LIKE ?";
-    params.push("%" + last_name + "%");
-  }
-  if (gender) {
-    sql += " AND gender LIKE ?";
-    params.push("%" + gender + "%");
+  const birthdate = new Date(Birthdate);
+  if (isNaN(birthdate.getTime())) {
+    return res.status(400).json({ error: "Invalid Birthdate format" });
   }
 
-  connection.execute(sql, params, function (err, results) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
+  const sql =
+    "UPDATE patient SET Title = ?, First_Name = ?, Last_Name = ?, Gender = ?, Birthdate = ?, Phone = ? WHERE HN = ?";
+  connection.execute(
+    sql,
+    [Title, First_Name, Last_Name, Gender, birthdate, Phone, HN],
+    function (err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      res.json({ message: "แก้ไขข้อมูลผู้ป่วยสำเร็จ" });
     }
-
-    res.json({
-      data: results,
-    });
-  });
+  );
 });
+//--------------------------------------------------------------------------------------------------------------
 
 // API สำหรับค้นหาผู้ป่วย
-app.get('/api/patients', (req, res) => {
+app.get("/api/patients", (req, res) => {
   const { hn, firstName, lastName } = req.query; // รับค่าจาก query parameters
 
-  let sql = 'SELECT * FROM patient WHERE 1=1'; // เริ่มต้นด้วยเงื่อนไขที่เป็นจริงเสมอ
+  let sql = "SELECT * FROM patient WHERE 1=1"; // เริ่มต้นด้วยเงื่อนไขที่เป็นจริงเสมอ
   const values = [];
 
   if (hn) {
-    sql += ' AND HN LIKE ?';
+    sql += " AND HN LIKE ?";
     values.push(`%${hn}%`);
   }
   if (firstName) {
-    sql += ' AND First_Name LIKE ?';
+    sql += " AND First_Name LIKE ?";
     values.push(`%${firstName}%`);
   }
   if (lastName) {
-    sql += ' AND Last_Name LIKE ?';
+    sql += " AND Last_Name LIKE ?";
     values.push(`%${lastName}%`);
   }
 
@@ -225,7 +205,6 @@ app.get('/api/patients', (req, res) => {
     res.json(results);
   });
 });
-
 
 app.listen(5000, function () {
   console.log("CORS-enabled web server listening on port 5000");
