@@ -27,9 +27,11 @@ import { ButtonGroup } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import ReactSelect from "react-select";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
-  marginTop: theme.spacing(2),
+  marginTop: theme.spacing(10),
 }));
 
 const PaperStyled = styled(Paper)(({ theme }) => ({
@@ -58,9 +60,22 @@ const NursePatient = () => {
   const [viewPopup, setViewPopup] = useState(false);
   const [deletePopup, setDeletePopup] = useState(false);
   const [edit, setEdit] = useState(false);
+  const [queueData, setQueueData] = useState([]);
   const [message, setMessage] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarType, setSnackbarType] = useState("success");
   const [showTable, setShowTable] = useState(false);
   const navigate = useNavigate();
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
+  const showMessage = (message, type) => {
+    setMessage(message);
+    setSnackbarType(type);
+    setSnackbarOpen(true);
+  };
 
   const FetchData = async () => {
     const params = {};
@@ -140,11 +155,11 @@ const NursePatient = () => {
 
       FetchData();
       setAddPopup(false);
-      setMessage("");
+      showMessage("เพิ่มข้อมูลผู้ป่วยสำเร็จ");
       ResetForm();
     } catch (error) {
       console.error("Error adding patient:", error);
-      setMessage("เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วย");
+      showMessage("เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วย");
     }
   };
 
@@ -155,13 +170,14 @@ const NursePatient = () => {
 
   const ConfirmDeletePatient = async () => {
     try {
+      await axios.delete(`http://localhost:5000/api/walkinqueue/${selectedHN}`);
       await axios.delete(`http://localhost:5000/api/patient/${selectedHN}`);
       FetchData();
       setDeletePopup(false);
-      setMessage("");
+      showMessage("ลบข้อมูลผู้ป่วยสำเร็จ");
     } catch (error) {
       console.error("Error deleting patient:", error);
-      setMessage("เกิดข้อผิดพลาดในการลบข้อมูลผู้ป่วย");
+      showMessage("เกิดข้อผิดพลาดในการลบข้อมูลผู้ป่วย");
     }
   };
 
@@ -191,7 +207,7 @@ const NursePatient = () => {
       }
     } catch (error) {
       console.error("Error viewing patient:", error);
-      setMessage("เกิดข้อผิดพลาดในการดูข้อมูลผู้ป่วย");
+      showMessage("เกิดข้อผิดพลาดในการดูข้อมูลผู้ป่วย");
     }
   };
 
@@ -216,11 +232,27 @@ const NursePatient = () => {
       );
       FetchData();
       setViewPopup(false);
-      setMessage("");
+      showMessage("บันทึกข้อมูลผู้ป่วยสำเร็จ");
     } catch (error) {
       console.error("Error saving patient data:", error);
-      setMessage("เกิดข้อผิดพลาดในการบันทึกข้อมูลผู้ป่วย");
+      showMessage("เกิดข้อผิดพลาดในการบันทึกข้อมูลผู้ป่วย");
     }
+  };
+
+  const BookQueue = async (HN) => {
+    try {
+      await axios.post("http://localhost:5000/api/walkinqueue", { HN });
+      showMessage("จองคิวสำเร็จ");
+
+      setQueueData((prevQueueData) => [...prevQueueData, { HN }]);
+    } catch (error) {
+      console.error("Error booking queue:", error);
+      showMessage("เกิดข้อผิดพลาดในการจองคิว");
+    }
+  };
+
+  const isInQueue = (HN) => {
+    return queueData.some((queue) => queue.HN === HN);
   };
 
   useEffect(() => {
@@ -257,8 +289,20 @@ const NursePatient = () => {
   }, []);
 
   useEffect(() => {
+    const fetchQueueData = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/walkinqueue"
+        );
+        setQueueData(response.data.data);
+      } catch (error) {
+        console.error("Error fetching queue data:", error);
+      }
+    };
+
     if (showTable) {
       FetchData();
+      fetchQueueData();
     }
   }, [showTable]);
 
@@ -409,25 +453,28 @@ const NursePatient = () => {
                           component="th"
                           scope="row"
                         >
-                          {row.HN}
+                          {row.HN || "-"}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.Title}
+                          {row.Title || "-"}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.First_Name}
+                          {row.First_Name || "-"}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.Last_Name}
+                          {row.Last_Name || "-"}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.Gender}
+                          {row.Gender || "-"}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
                           <ButtonGroup
                             color="primary"
                             aria-label="outlined primary button group"
                           >
+                            <Button onClick={() => BookQueue(row.HN)}>
+                              จองคิว
+                            </Button>
                             <Button onClick={() => ViewPatient(row.HN)}>
                               ดู
                             </Button>
@@ -718,11 +765,23 @@ const NursePatient = () => {
                 </Button>
               </DialogActions>
             </Dialog>
-
-            {message && <p>{message}</p>}
           </div>
         </PaperStyled>
       </ContainerStyled>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={1500}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarType}
+          sx={{ width: "100%" }}
+        >
+          {message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

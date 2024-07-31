@@ -41,7 +41,7 @@ function NurseHeaderbar() {
   };
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: "#1A5319" }}>
+    <AppBar position="fixed" sx={{ backgroundColor: "#1A5319" }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <AdbIcon sx={{ display: { xs: "none", md: "flex" }, mr: 1 }} />
