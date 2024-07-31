@@ -132,6 +132,30 @@ app.post("/api/patient", function (req, res) {
   });
 });
 
+app.delete("/api/patient/:HN", function (req, res) {
+  const HN = req.params.HN;
+  const sql = "DELETE FROM patient WHERE HN = ?";
+  connection.execute(sql, [HN], function (err, results) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ message: "ลบข้อมูลผู้ป่วยสำเร็จ" });
+  });
+});
+
+app.get("/api/patient/:HN", function (req, res) {
+  const HN = req.params.HN;
+  const sql = "SELECT * FROM patient WHERE HN = ?";
+  connection.execute(sql, [HN], function (err, results) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({
+      data: results,
+    });
+  });
+});
+
 app.get("/api/walkinqueue", function (req, res) {
   const queue_id = req.query.Queue_ID;
   const title = req.query.Title;

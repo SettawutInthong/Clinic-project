@@ -50,7 +50,10 @@ const NursePatient = () => {
   const [newPhone, setNewPhone] = useState("");
   const [newAllergy, setNewAllergy] = useState("");
   const [newDisease, setNewDisease] = useState("");
-  const [showPopup, setShowPopup] = useState(false);
+  const [AddPopup, setAddPopup] = useState(false);
+  const [viewPopup, setViewPopup] = useState(false);
+  const [deletePopup, setDeletePopup] = useState(false);
+  const [selectedHN, setSelectedHN] = useState("");
   const [message, setMessage] = useState("");
   const [showTable, setShowTable] = useState(false);
   const navigate = useNavigate();
@@ -119,7 +122,7 @@ const NursePatient = () => {
     setNewAllergy("");
   };
 
-  const AddPatient = async () => {
+  const addPatient = async () => {
     try {
       const newPatient = {
         Title: newTitle,
@@ -134,7 +137,7 @@ const NursePatient = () => {
 
       await axios.post("http://localhost:5000/api/patient", newPatient);
       fetchData();
-      setShowPopup(false);
+      setAddPopup(false);
       setMessage("");
       resetForm();
     } catch (error) {
@@ -143,9 +146,45 @@ const NursePatient = () => {
     }
   };
 
-  const PatientDelete = async () => {};
+  const deletePatient = (HN) => {
+    setSelectedHN(HN);
+    setDeletePopup(true);
+  };
 
-  const PatientView = async () => {};
+  const confirmDeletePatient = async () => {
+    try {
+      await axios.delete(`http://localhost:5000/api/patient/${selectedHN}`);
+      fetchData();
+      setDeletePopup(false);
+      setMessage("");
+    } catch (error) {
+      console.error("Error deleting patient:", error);
+      setMessage("เกิดข้อผิดพลาดในการลบข้อมูลผู้ป่วย");
+    }
+  };
+
+  const PatientView = async (HN) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/patient?HN=${HN}`
+      );
+      const patient = response.data.data[0];
+      if (patient) {
+        setNewTitle(patient.Title);
+        setNewFirstName(patient.First_Name);
+        setNewLastName(patient.Last_Name);
+        setNewBirthdate(new Date(patient.Birthdate));
+        setNewGender(patient.Gender);
+        setNewPhone(patient.Phone);
+        setNewDisease(patient.Disease);
+        setNewAllergy(patient.Allergy);
+        setViewPopup(true);
+      }
+    } catch (error) {
+      console.error("Error viewing patient:", error);
+      setMessage("เกิดข้อผิดพลาดในการดูข้อมูลผู้ป่วย");
+    }
+  };
 
   useEffect(() => {
     if (showTable) {
@@ -251,7 +290,7 @@ const NursePatient = () => {
                 variant="contained"
                 style={{ height: "40px", width: "150px" }}
                 color="success"
-                onClick={() => setShowPopup(true)}
+                onClick={() => setAddPopup(true)}
               >
                 <h1>+</h1>
               </Button>
@@ -313,7 +352,7 @@ const NursePatient = () => {
                             <Button onClick={() => PatientView(row.HN)}>
                               ดู
                             </Button>
-                            <Button onClick={() => PatientDelete(row.HN)}>
+                            <Button onClick={() => deletePatient(row.HN)}>
                               ลบ
                             </Button>
                           </ButtonGroup>
@@ -324,11 +363,10 @@ const NursePatient = () => {
                 </Table>
               </TableContainer>
             )}
-
             <Dialog
-              open={showPopup}
+              open={AddPopup}
               onClose={() => {
-                setShowPopup(false);
+                setAddPopup(false);
                 resetForm();
               }}
               aria-labelledby="form-dialog-title"
@@ -433,7 +471,7 @@ const NursePatient = () => {
               <DialogActions>
                 <Button
                   onClick={() => {
-                    setShowPopup(false);
+                    setAddPopup(false);
                     resetForm();
                   }}
                   color="primary"
@@ -442,12 +480,138 @@ const NursePatient = () => {
                 </Button>
                 <Button
                   onClick={() => {
-                    AddPatient();
+                    addPatient();
                     resetForm();
                   }}
                   color="primary"
                 >
                   บันทึก
+                </Button>
+              </DialogActions>
+            </Dialog>
+            <Dialog
+              open={viewPopup}
+              onClose={() => setViewPopup(false)}
+              aria-labelledby="view-dialog-title"
+            >
+              <DialogTitle
+                id="view-dialog-title"
+                style={{ flexGrow: 1, textAlign: "center" }}
+              >
+                ดูข้อมูลผู้ป่วย
+              </DialogTitle>
+              <DialogContent>
+                <FormControl
+                  fullWidth
+                  margin="dense"
+                  variant="outlined"
+                  size="small"
+                  style={{ width: "140px" }}
+                >
+                  <InputLabel>คำนำหน้า</InputLabel>
+                  <Select label="คำนำหน้า" value={newTitle} disabled>
+                    <MenuItem value="ด.ช.">ด.ช.</MenuItem>
+                    <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
+                    <MenuItem value="นาย">นาย</MenuItem>
+                    <MenuItem value="นาง">นาง</MenuItem>
+                    <MenuItem value="นางสาว">นางสาว</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField
+                  margin="dense"
+                  label="ชื่อ"
+                  type="text"
+                  fullWidth
+                  value={newFirstName}
+                  disabled
+                />
+
+                <TextField
+                  margin="dense"
+                  label="นามสกุล"
+                  type="text"
+                  fullWidth
+                  value={newLastName}
+                  disabled
+                />
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DatePicker
+                    label="วันเกิด"
+                    value={newBirthdate}
+                    inputFormat="dd/MM/yyyy"
+                    readOnly
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        margin: "dense",
+                        disabled: true,
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
+                <FormControl
+                  fullWidth
+                  margin="dense"
+                  variant="outlined"
+                  size="small"
+                  style={{ width: "110px" }}
+                >
+                  <InputLabel>เพศ</InputLabel>
+                  <Select label="เพศ" value={newGender} disabled>
+                    <MenuItem value="ชาย">ชาย</MenuItem>
+                    <MenuItem value="หญิง">หญิง</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField
+                  margin="dense"
+                  label="หมายเลขโทรศัพท์"
+                  type="text"
+                  fullWidth
+                  value={newPhone}
+                  disabled
+                />
+
+                <TextField
+                  margin="dense"
+                  label="โรคประจำตัว"
+                  type="text"
+                  fullWidth
+                  value={newDisease}
+                  disabled
+                />
+
+                <TextField
+                  margin="dense"
+                  label="ยาที่แพ้"
+                  type="text"
+                  fullWidth
+                  value={newAllergy}
+                  disabled
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setViewPopup(false)} color="primary">
+                  ปิด
+                </Button>
+              </DialogActions>
+            </Dialog>
+            <Dialog
+              open={deletePopup}
+              onClose={() => setDeletePopup(false)}
+              aria-labelledby="delete-dialog-title"
+            >
+              <DialogTitle id="delete-dialog-title">ยืนยันการลบ</DialogTitle>
+              <DialogContent>
+                <Typography>
+                  คุณแน่ใจหรือว่าต้องการลบข้อมูลผู้ป่วยรายนี้
+                </Typography>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setDeletePopup(false)} color="primary">
+                  ยกเลิก
+                </Button>
+                <Button onClick={confirmDeletePatient} color="primary">
+                  ลบ
                 </Button>
               </DialogActions>
             </Dialog>
