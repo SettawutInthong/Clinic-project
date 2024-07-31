@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 const pages = [
   { title: "หน้าแรก", icon: "", to: "/doctor_dashboard" },
   { title: "รายชื่อผู้ป่วย", icon: "", to: "/patient" },
-  { title: "คิว", icon: "", to: "/queue" },
+  { title: "คิว", icon: "", to: "/doctor_queue" },
 ];
 
 function DoctorHeader() {
