@@ -229,8 +229,8 @@ const NursePatient = () => {
         const response = await axios.get("http://localhost:5000/api/allergy");
         setAllergy(
           response.data.data.map((item) => ({
-            value: item.allergy_ID,
-            label: item.allergy_Details,
+            value: item.Allergy_ID,
+            label: item.Allergy_Details,
           }))
         );
       } catch (error) {
