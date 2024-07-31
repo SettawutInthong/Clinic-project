@@ -137,6 +137,33 @@ app.get("/api/walkinqueue", function (req, res) {
   });
 });
 
+// API สำหรับค้นหาผู้ป่วย
+app.get('/api/patients', (req, res) => {
+  const { hn, firstName, lastName } = req.query; // รับค่าจาก query parameters
+
+  let sql = 'SELECT * FROM patient WHERE 1=1'; // เริ่มต้นด้วยเงื่อนไขที่เป็นจริงเสมอ
+  const values = [];
+
+  if (hn) {
+    sql += ' AND HN LIKE ?';
+    values.push(`%${hn}%`);
+  }
+  if (firstName) {
+    sql += ' AND First_Name LIKE ?';
+    values.push(`%${firstName}%`);
+  }
+  if (lastName) {
+    sql += ' AND Last_Name LIKE ?';
+    values.push(`%${lastName}%`);
+  }
+
+  connection.query(sql, values, (error, results) => {
+    if (error) throw error;
+    res.json(results);
+  });
+});
+
+
 app.listen(5000, function () {
   console.log("CORS-enabled web server listening on port 5000");
 });
