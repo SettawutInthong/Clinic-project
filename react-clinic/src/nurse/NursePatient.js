@@ -626,6 +626,7 @@ const NursePatient = () => {
                 />
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <DatePicker
+                    disabled={!edit}
                     label="วันเกิด"
                     value={newBirthdate}
                     onChange={(date) => setNewBirthdate(date)}
