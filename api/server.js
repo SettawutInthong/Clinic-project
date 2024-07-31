@@ -22,7 +22,9 @@ function generateToken() {
 app.post("/clinic/users", function (req, res) {
   const { username, password } = req.body;
   if (!username || !password) {
-    return res.status(400).json({ error: "จำเป็นต้องมีชื่อผู้ใช้และรหัสผ่าน" });
+    return res
+      .status(400)
+      .json({ error: "Username and password are required" });
   }
 
   const sql = "SELECT * FROM users WHERE username = ? AND password = ?";
@@ -47,7 +49,7 @@ app.post("/clinic/users", function (req, res) {
         }
       );
     } else {
-      res.status(401).json({ error: "ข้อมูลไม่ถูกต้อง" });
+      res.status(401).json({ error: "Invalid credentials" });
     }
   });
 });
@@ -197,6 +199,33 @@ app.get("/api/walkinqueue", function (req, res) {
     });
   });
 });
+
+// API สำหรับค้นหาผู้ป่วย
+app.get('/api/patients', (req, res) => {
+  const { hn, firstName, lastName } = req.query; // รับค่าจาก query parameters
+
+  let sql = 'SELECT * FROM patient WHERE 1=1'; // เริ่มต้นด้วยเงื่อนไขที่เป็นจริงเสมอ
+  const values = [];
+
+  if (hn) {
+    sql += ' AND HN LIKE ?';
+    values.push(`%${hn}%`);
+  }
+  if (firstName) {
+    sql += ' AND First_Name LIKE ?';
+    values.push(`%${firstName}%`);
+  }
+  if (lastName) {
+    sql += ' AND Last_Name LIKE ?';
+    values.push(`%${lastName}%`);
+  }
+
+  connection.query(sql, values, (error, results) => {
+    if (error) throw error;
+    res.json(results);
+  });
+});
+
 
 app.listen(5000, function () {
   console.log("CORS-enabled web server listening on port 5000");

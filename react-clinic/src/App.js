@@ -8,6 +8,7 @@ import NurseDashboard from "./nurse/NurseDashboard";
 import DoctorDashboard from "./doctor/DoctorDashboard";
 import NursePatient from "./nurse/NursePatient";
 import NurseQueue from "./nurse/NurseQueue";
+import DoctorQueue from "./doctor/DoctorQueue";
 
 const App = () => {
   const token = localStorage.getItem("accessToken");
@@ -38,6 +39,7 @@ const App = () => {
           <>
             <Route path="/" element={<DoctorDashboard />} />
             <Route path="/doctor_dashboard" element={<DoctorDashboard />} />
+            <Route path="/doctor_queue" element={<DoctorQueue />} />
           </>
         ) : null}
       </Routes>
