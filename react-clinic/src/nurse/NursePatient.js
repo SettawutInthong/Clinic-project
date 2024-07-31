@@ -453,41 +453,32 @@ const NursePatient = () => {
                           component="th"
                           scope="row"
                         >
-                          {row.HN}
+                          {row.HN || "-"}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.Title}
+                          {row.Title || "-"}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.First_Name}
+                          {row.First_Name || "-"}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.Last_Name}
+                          {row.Last_Name || "-"}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.Gender}
+                          {row.Gender || "-"}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
                           <ButtonGroup
                             color="primary"
                             aria-label="outlined primary button group"
                           >
-                            <Button
-                              onClick={() => BookQueue(row.HN)}
-                              disabled={isInQueue(row.HN)}
-                              color="success"
-                              style={{
-                                backgroundColor: isInQueue(row.HN)
-                                  ? "gray"
-                                  : "default",
-                              }}
-                            >
+                            <Button onClick={() => BookQueue(row.HN)}>
                               จองคิว
                             </Button>
-                            <Button onClick={() => ViewPatient(row.HN)} >
+                            <Button onClick={() => ViewPatient(row.HN)}>
                               ดู
                             </Button>
-                            <Button onClick={() => DeletePatient(row.HN)} color="error">
+                            <Button onClick={() => DeletePatient(row.HN)}>
                               ลบ
                             </Button>
                           </ButtonGroup>
@@ -774,8 +765,6 @@ const NursePatient = () => {
                 </Button>
               </DialogActions>
             </Dialog>
-
-            {message && <p>{message}</p>}
           </div>
         </PaperStyled>
       </ContainerStyled>

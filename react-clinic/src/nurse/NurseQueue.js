@@ -20,6 +20,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import { ButtonGroup } from "@mui/material";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
+import TextField from "@mui/material/TextField";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(10),
@@ -35,6 +36,8 @@ const NurseQueue = () => {
   const [deletePopup, setDeletePopup] = useState(false);
   const [selectedHN, setSelectedHN] = useState("");
   const [patient, setPatient] = useState({});
+  const [addQueuePopup, setAddQueuePopup] = useState(false);
+  const [queueHN, setQueueHN] = useState("");
   const [message, setMessage] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarType, setSnackbarType] = useState("success");
@@ -63,9 +66,33 @@ const NurseQueue = () => {
       });
 
       const patientData = await Promise.all(patientDataPromises);
-      setData(patientData);
+      const sortedData = patientData.sort((a, b) => a.Queue_ID - b.Queue_ID); // เรียงลำดับตาม Queue_ID
+      setData(sortedData);
     } catch (error) {
       console.error("Error fetching data:", error);
+    }
+  };
+
+  const AddQueue = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/patient?HN=${queueHN}`
+      );
+      const patient = response.data.data[0];
+      if (patient) {
+        await axios.post("http://localhost:5000/api/walkinqueue", {
+          HN: queueHN,
+        });
+        FetchData();
+        setAddQueuePopup(false);
+        setQueueHN("");
+        showMessage("จองคิวสำเร็จ", "success");
+      } else {
+        showMessage("ไม่พบ HN ที่ระบุ", "error");
+      }
+    } catch (error) {
+      console.error("Error booking queue:", error);
+      showMessage("เกิดข้อผิดพลาดในการจองคิว", "error");
     }
   };
 
@@ -126,6 +153,17 @@ const NurseQueue = () => {
             </Typography>
           </Box>
           <div>
+            <Box display="flex" justifyContent="flex-end" mb={2}>
+              <Button
+                variant="contained"
+                style={{ height: "40px", width: "150px" }}
+                color="success"
+                onClick={() => setAddQueuePopup(true)}
+              >
+                <h3>จองคิว</h3>
+              </Button>
+            </Box>
+
             <TableContainer component={Paper}>
               <Table sx={{ minWidth: 650 }} aria-label="simple table">
                 <TableHead>
@@ -163,19 +201,19 @@ const NurseQueue = () => {
                         component="th"
                         scope="row"
                       >
-                        {row.Queue_ID}
+                        {row.Queue_ID || "-"}
                       </TableCell>
                       <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                        {row.Title}
+                        {row.Title || "-"}
                       </TableCell>
                       <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                        {row.First_Name}
+                        {row.First_Name || "-"}
                       </TableCell>
                       <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                        {row.Last_Name}
+                        {row.Last_Name || "-"}
                       </TableCell>
                       <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                        {row.Gender}
+                        {row.Gender || "-"}
                       </TableCell>
                       <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
                         <ButtonGroup
@@ -185,7 +223,10 @@ const NurseQueue = () => {
                           <Button onClick={() => ViewPatient(row.HN)}>
                             ดูรายการ
                           </Button>
-                          <Button onClick={() => DeleteQueue(row.HN)} color="error">
+                          <Button
+                            onClick={() => DeleteQueue(row.HN)}
+                            color="error"
+                          >
                             ลบ
                           </Button>
                         </ButtonGroup>
@@ -195,6 +236,38 @@ const NurseQueue = () => {
                 </TableBody>
               </Table>
             </TableContainer>
+
+            <Dialog
+              open={addQueuePopup}
+              onClose={() => setAddQueuePopup(false)}
+              aria-labelledby="add-queue-dialog-title"
+            >
+              <DialogTitle
+                id="add-queue-dialog-title"
+                style={{ flexGrow: 1, textAlign: "center" }}
+              >
+                จองคิว
+              </DialogTitle>
+              <DialogContent>
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  label="กรอก HN"
+                  type="text"
+                  fullWidth
+                  value={queueHN}
+                  onChange={(e) => setQueueHN(e.target.value)}
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setAddQueuePopup(false)} color="primary">
+                  ยกเลิก
+                </Button>
+                <Button onClick={AddQueue} color="primary">
+                  จองคิว
+                </Button>
+              </DialogActions>
+            </Dialog>
 
             <Dialog
               open={viewPopup}
@@ -245,8 +318,6 @@ const NurseQueue = () => {
                 </Button>
               </DialogActions>
             </Dialog>
-
-            {message && <p>{message}</p>}
           </div>
         </PaperStyled>
       </ContainerStyled>
