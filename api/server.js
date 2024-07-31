@@ -272,7 +272,7 @@ app.delete("/api/walkinqueue/:HN", function (req, res) {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-    res.json({ message: "ลบข้อมูลผู้ป่วยจากคิวสำเร็จ" });
+    res.json({ message: "ลบข้อมูลจาก walkinqueue สำเร็จ" });
   });
 });
 

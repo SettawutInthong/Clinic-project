@@ -18,9 +18,11 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import { ButtonGroup } from "@mui/material";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
-  marginTop: theme.spacing(2),
+  marginTop: theme.spacing(10),
 }));
 
 const PaperStyled = styled(Paper)(({ theme }) => ({
@@ -34,6 +36,18 @@ const NurseQueue = () => {
   const [selectedHN, setSelectedHN] = useState("");
   const [patient, setPatient] = useState({});
   const [message, setMessage] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarType, setSnackbarType] = useState("success");
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
+  const showMessage = (message, type) => {
+    setMessage(message);
+    setSnackbarType(type);
+    setSnackbarOpen(true);
+  };
 
   const FetchData = async () => {
     try {
@@ -65,10 +79,10 @@ const NurseQueue = () => {
       await axios.delete(`http://localhost:5000/api/walkinqueue/${selectedHN}`);
       FetchData();
       setDeletePopup(false);
-      setMessage("");
+      showMessage("ลบข้อมูลผู้ป่วยจากคิวสำเร็จ");
     } catch (error) {
       console.error("Error deleting queue:", error);
-      setMessage("เกิดข้อผิดพลาดในการลบข้อมูลผู้ป่วยจากคิว");
+      showMessage("เกิดข้อผิดพลาดในการลบข้อมูลผู้ป่วยจากคิว");
     }
   };
 
@@ -85,7 +99,7 @@ const NurseQueue = () => {
       }
     } catch (error) {
       console.error("Error viewing patient:", error);
-      setMessage("เกิดข้อผิดพลาดในการดูข้อมูลผู้ป่วย");
+      showMessage("เกิดข้อผิดพลาดในการดูข้อมูลผู้ป่วย");
     }
   };
 
@@ -108,7 +122,7 @@ const NurseQueue = () => {
               gutterBottom
               style={{ flexGrow: 1, textAlign: "center" }}
             >
-              รายชื่อผู้ป่วยในคิว
+              คิว
             </Typography>
           </Box>
           <div>
@@ -117,7 +131,7 @@ const NurseQueue = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                      คิว
+                      ลำดับคิว
                     </TableCell>
                     <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
                       คำนำหน้า
@@ -171,7 +185,7 @@ const NurseQueue = () => {
                           <Button onClick={() => ViewPatient(row.HN)}>
                             ดูรายการ
                           </Button>
-                          <Button onClick={() => DeleteQueue(row.HN)}>
+                          <Button onClick={() => DeleteQueue(row.HN)} color="error">
                             ลบ
                           </Button>
                         </ButtonGroup>
@@ -236,6 +250,20 @@ const NurseQueue = () => {
           </div>
         </PaperStyled>
       </ContainerStyled>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={1500}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarType}
+          sx={{ width: "100%" }}
+        >
+          {message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

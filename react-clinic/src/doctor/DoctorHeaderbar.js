@@ -41,7 +41,7 @@ function DoctorHeader() {
   };
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: "#508D4E" }}>
+    <AppBar position="fixed" sx={{ backgroundColor: "#508D4E" }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <AdbIcon sx={{ display: { xs: "none", md: "flex" }, mr: 1 }} />
