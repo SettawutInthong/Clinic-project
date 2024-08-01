@@ -9,8 +9,8 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Container from "@mui/material/Container";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
-import AdbIcon from "@mui/icons-material/Adb";
 import { useNavigate } from "react-router-dom";
+import logo from "../assets/img/+.png";
 
 const pages = [
   { title: "หน้าแรก", icon: "", to: "/doctor_dashboard" },
@@ -41,10 +41,20 @@ function DoctorHeader() {
   };
 
   return (
-    <AppBar position="fixed" sx={{ backgroundColor: "#508D4E" }}>
+    <AppBar position="static" sx={{ backgroundColor: "#1A5319" }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
-          <AdbIcon sx={{ display: { xs: "none", md: "flex" }, mr: 1 }} />
+          <Box
+            component="img"
+            sx={{
+              height: 32,
+              width: 32,
+              display: { xs: "none", md: "flex" },
+              mr: 1,
+            }}
+            alt="Logo"
+            src={logo}
+          />
           <Typography
             variant="h6"
             noWrap
@@ -102,7 +112,18 @@ function DoctorHeader() {
               ))}
             </Menu>
           </Box>
-          <AdbIcon sx={{ display: { xs: "flex", md: "none" }, mr: 1 }} />
+          <Box
+            component="img"
+            sx={{
+              height: 32,
+              width: 32,
+              display: { xs: "flex", md: "none" },
+              mr: 1,
+              mx: "auto",
+            }}
+            alt="Logo"
+            src={logo}
+          />
           <Typography
             variant="h5"
             noWrap
@@ -117,6 +138,7 @@ function DoctorHeader() {
               letterSpacing: ".3rem",
               color: "inherit",
               textDecoration: "none",
+              mx: "auto",
             }}
           >
             คลินิกรุ่งเรือง
