@@ -472,13 +472,19 @@ const NursePatient = () => {
                             color="primary"
                             aria-label="outlined primary button group"
                           >
-                            <Button onClick={() => BookQueue(row.HN)} color="success">
+                            <Button
+                              onClick={() => BookQueue(row.HN)}
+                              color="success"
+                            >
                               จองคิว
                             </Button>
                             <Button onClick={() => ViewPatient(row.HN)}>
                               ดู
                             </Button>
-                            <Button onClick={() => DeletePatient(row.HN)} color="error">
+                            <Button
+                              onClick={() => DeletePatient(row.HN)}
+                              color="error"
+                            >
                               ลบ
                             </Button>
                           </ButtonGroup>
@@ -505,36 +511,37 @@ const NursePatient = () => {
                 เพิ่มผู้ป่วยใหม่
               </DialogTitle>
               <DialogContent>
-                <FormControl
-                  fullWidth
-                  margin="dense"
-                  variant="outlined"
-                  size="small"
-                  style={{ width: "140px" }}
-                >
-                  <InputLabel>เลือกคำนำหน้า</InputLabel>
-                  <Select
-                    label="เลือกคำนำหน้า"
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
+                <Box display="flex" flexDirection="row" gap={2}>
+                  <FormControl
+                    fullWidth
+                    margin="dense"
+                    variant="outlined"
+                    style={{ width: "200px" }}
                   >
-                    <MenuItem value="- Unknown -">- Unknown -</MenuItem>
-                    <MenuItem value="ด.ช.">ด.ช.</MenuItem>
-                    <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
-                    <MenuItem value="นาย">นาย</MenuItem>
-                    <MenuItem value="นาง">นาง</MenuItem>
-                    <MenuItem value="นางสาว">นางสาว</MenuItem>
-                  </Select>
-                </FormControl>
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  label="กรอกชื่อ"
-                  type="text"
-                  fullWidth
-                  value={newFirstName}
-                  onChange={(e) => setNewFirstName(e.target.value)}
-                />
+                    <InputLabel>เลือกคำนำหน้า</InputLabel>
+                    <Select
+                      label="เลือกคำนำหน้า"
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                    >
+                      <MenuItem value="- Unknown -">- Unknown -</MenuItem>
+                      <MenuItem value="ด.ช.">ด.ช.</MenuItem>
+                      <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
+                      <MenuItem value="นาย">นาย</MenuItem>
+                      <MenuItem value="นาง">นาง</MenuItem>
+                      <MenuItem value="นางสาว">นางสาว</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <TextField
+                    autoFocus
+                    margin="dense"
+                    label="กรอกชื่อ"
+                    type="text"
+                    fullWidth
+                    value={newFirstName}
+                    onChange={(e) => setNewFirstName(e.target.value)}
+                  />
+                </Box>
                 <TextField
                   margin="dense"
                   label="กรอกนามสกุล"
@@ -567,7 +574,6 @@ const NursePatient = () => {
                   fullWidth
                   margin="dense"
                   variant="outlined"
-                  size="small"
                   style={{
                     display: "flex",
                     flexDirection: "row",
@@ -581,6 +587,7 @@ const NursePatient = () => {
                       options={diseases}
                       value={newDisease}
                       onChange={setNewDisease}
+                      size="medium"
                     />
                   </Box>
                   <Box style={{ flex: 1 }}>
@@ -593,6 +600,7 @@ const NursePatient = () => {
                   </Box>
                 </FormControl>
               </DialogContent>
+
               <DialogActions>
                 <Button
                   onClick={() => {
@@ -614,7 +622,6 @@ const NursePatient = () => {
                 </Button>
               </DialogActions>
             </Dialog>
-
             <Dialog
               open={viewPopup}
               onClose={() => setViewPopup(false)}
@@ -627,37 +634,39 @@ const NursePatient = () => {
                 ดูข้อมูลผู้ป่วย
               </DialogTitle>
               <DialogContent>
-                <FormControl
-                  fullWidth
-                  margin="dense"
-                  variant="outlined"
-                  size="small"
-                  style={{ width: "140px" }}
-                >
-                  <InputLabel>คำนำหน้า</InputLabel>
-                  <Select
-                    label="คำนำหน้า"
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    disabled={!edit}
+                <Box display="flex" flexDirection="row" gap={2}>
+                  <FormControl
+                    fullWidth
+                    margin="dense"
+                    variant="outlined"
+                    style={{ width: "200px" }}
                   >
-                    <MenuItem value="- Unknown -">- Unknown -</MenuItem>
-                    <MenuItem value="ด.ช.">ด.ช.</MenuItem>
-                    <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
-                    <MenuItem value="นาย">นาย</MenuItem>
-                    <MenuItem value="นาง">นาง</MenuItem>
-                    <MenuItem value="นางสาว">นางสาว</MenuItem>
-                  </Select>
-                </FormControl>
-                <TextField
-                  margin="dense"
-                  label="ชื่อ"
-                  type="text"
-                  fullWidth
-                  value={newFirstName}
-                  onChange={(e) => setNewFirstName(e.target.value)}
-                  disabled={!edit}
-                />
+                    <InputLabel>คำนำหน้า</InputLabel>
+                    <Select
+                      label="คำนำหน้า"
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                      disabled={!edit}
+                    >
+                      <MenuItem value="- Unknown -">- Unknown -</MenuItem>
+                      <MenuItem value="ด.ช.">ด.ช.</MenuItem>
+                      <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
+                      <MenuItem value="นาย">นาย</MenuItem>
+                      <MenuItem value="นาง">นาง</MenuItem>
+                      <MenuItem value="นางสาว">นางสาว</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <TextField
+                    autoFocus
+                    margin="dense"
+                    label="ชื่อ"
+                    type="text"
+                    fullWidth
+                    value={newFirstName}
+                    onChange={(e) => setNewFirstName(e.target.value)}
+                    disabled={!edit}
+                  />
+                </Box>
                 <TextField
                   margin="dense"
                   label="นามสกุล"
@@ -696,7 +705,6 @@ const NursePatient = () => {
                   fullWidth
                   margin="dense"
                   variant="outlined"
-                  size="small"
                   style={{
                     display: "flex",
                     flexDirection: "row",
