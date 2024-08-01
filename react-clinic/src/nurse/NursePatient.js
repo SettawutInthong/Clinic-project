@@ -222,8 +222,8 @@ const NursePatient = () => {
           ? newBirthdate.toISOString().split("T")[0]
           : null,
         Phone: newPhone,
-        Disease: newDisease.value,
-        allergy: newallergy.value,
+        Disease: newDisease ? newDisease.value : null, 
+        allergy: newallergy ? newallergy.value : null, 
       };
 
       await axios.put(
@@ -453,19 +453,19 @@ const NursePatient = () => {
                           component="th"
                           scope="row"
                         >
-                          {row.HN || "-"}
+                          {row.HN}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.Title || "-"}
+                          {row.Title}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.First_Name || "-"}
+                          {row.First_Name}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.Last_Name || "-"}
+                          {row.Last_Name}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.Gender || "-"}
+                          {row.Gender}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
                           <ButtonGroup
@@ -474,7 +474,13 @@ const NursePatient = () => {
                           >
                             <Button
                               onClick={() => BookQueue(row.HN)}
+                              disabled={isInQueue(row.HN)}
                               color="success"
+                              style={{
+                                backgroundColor: isInQueue(row.HN)
+                                  ? "gray"
+                                  : "default",
+                              }}
                             >
                               จองคิว
                             </Button>
