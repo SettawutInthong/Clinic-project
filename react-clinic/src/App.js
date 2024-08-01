@@ -25,25 +25,27 @@ const App = () => {
     return <Login />;
   }
   return (
-    <BrowserRouter>
-      {userRole === 1 ? <NurseHeaderbar /> : <DoctorHeaderbar />}
-      <Routes>
-        {userRole === 1 ? (
-          <>
-            <Route path="/" element={<NurseDashboard />} />
-            <Route path="/nurse_dashboard" element={<NurseDashboard />} />
-            <Route path="/nurse_patient" element={<NursePatient />} />
-            <Route path="/nurse_queue" element={<NurseQueue />} />
-          </>
-        ) : userRole === 0 ? (
-          <>
-            <Route path="/" element={<DoctorDashboard />} />
-            <Route path="/doctor_dashboard" element={<DoctorDashboard />} />
-            <Route path="/doctor_queue" element={<DoctorQueue />} />
-          </>
-        ) : null}
-      </Routes>
-    </BrowserRouter>
+    <div className="bg">
+      <BrowserRouter>
+        {userRole === 1 ? <NurseHeaderbar /> : <DoctorHeaderbar />}
+        <Routes>
+          {userRole === 1 ? (
+            <>
+              <Route path="/" element={<NurseDashboard />} />
+              <Route path="/nurse_dashboard" element={<NurseDashboard />} />
+              <Route path="/nurse_patient" element={<NursePatient />} />
+              <Route path="/nurse_queue" element={<NurseQueue />} />
+            </>
+          ) : userRole === 0 ? (
+            <>
+              <Route path="/" element={<DoctorDashboard />} />
+              <Route path="/doctor_dashboard" element={<DoctorDashboard />} />
+              <Route path="/doctor_queue" element={<DoctorQueue />} />
+            </>
+          ) : null}
+        </Routes>
+      </BrowserRouter>
+    </div>
   );
 };
 
