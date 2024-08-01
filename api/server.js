@@ -276,6 +276,28 @@ app.delete("/api/walkinqueue/:HN", function (req, res) {
   });
 });
 
+// ดึงข้อมูล order
+app.get("/api/order_medicine", function (req, res) {
+  const HN = req.query.HN;
+
+  const sql = `
+    SELECT * FROM order_medicine 
+    WHERE HN = ? 
+    ORDER BY CAST(SUBSTRING(Order_ID, 2) AS UNSIGNED) DESC 
+    LIMIT 1
+  `;
+  connection.execute(sql, [HN], function (err, results) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    if (results.length > 0) {
+      res.json({ data: results[0] });
+    } else {
+      res.status(404).json({ error: "Order not found" });
+    }
+  });
+});
+
 //--------------------------------------------------------------------------------------------------------------
 
 // API สำหรับค้นหาผู้ป่วย

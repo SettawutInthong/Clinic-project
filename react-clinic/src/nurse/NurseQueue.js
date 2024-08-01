@@ -21,6 +21,7 @@ import { ButtonGroup } from "@mui/material";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import TextField from "@mui/material/TextField";
+import { useNavigate } from "react-router-dom";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(10),
@@ -41,6 +42,8 @@ const NurseQueue = () => {
   const [message, setMessage] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarType, setSnackbarType] = useState("success");
+  const [selectedOrder, setSelectedOrder] = useState({});
+  const navigate = useNavigate();
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
@@ -66,7 +69,7 @@ const NurseQueue = () => {
       });
 
       const patientData = await Promise.all(patientDataPromises);
-      const sortedData = patientData.sort((a, b) => a.Queue_ID - b.Queue_ID); // เรียงลำดับตาม Queue_ID
+      const sortedData = patientData.sort((a, b) => a.Queue_ID - b.Queue_ID);
       setData(sortedData);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -113,22 +116,9 @@ const NurseQueue = () => {
     }
   };
 
-  const ViewPatient = async (HN) => {
-    try {
-      const response = await axios.get(
-        `http://localhost:5000/api/patient?HN=${HN}`
-      );
-      const patient = response.data.data[0];
-      if (patient) {
-        setPatient(patient);
-        setSelectedHN(HN);
-        setViewPopup(true);
-      }
-    } catch (error) {
-      console.error("Error viewing patient:", error);
-      showMessage("เกิดข้อผิดพลาดในการดูข้อมูลผู้ป่วย");
-    }
-  };
+  const ViewOrder = (HN) => {
+    navigate(`/nurse_order?HN=${HN}`);
+  };  
 
   useEffect(() => {
     FetchData();
@@ -220,7 +210,7 @@ const NurseQueue = () => {
                           color="primary"
                           aria-label="outlined primary button group"
                         >
-                          <Button onClick={() => ViewPatient(row.HN)}>
+                          <Button onClick={() => ViewOrder(row.HN)}>
                             ดูรายการ
                           </Button>
                           <Button
