@@ -1,8 +1,6 @@
-
 import * as React from "react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -11,101 +9,117 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
 import { styled } from "@mui/material/styles";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
-import { Link } from "react-router-dom";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import { ButtonGroup } from "@mui/material";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
+import TextField from "@mui/material/TextField";
+import { useNavigate } from "react-router-dom";
+
+const ContainerStyled = styled(Container)(({ theme }) => ({
+  marginTop: theme.spacing(10),
+}));
+
+const PaperStyled = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(2),
+}));
 
 const DoctorQueue = () => {
-
   const [data, setData] = useState([]);
-  const [searchHN, setSearchHN] = useState("");
-  const [searchTitle, setSearchTitle] = useState("");
-  const [searchFirstName, setSearchFirstName] = useState("");
-  const [searchLastName, setSearchLastName] = useState("");
-  const [searchGender, setSearchGender] = useState("");
+  const [viewPopup, setViewPopup] = useState(false);
+  const [deletePopup, setDeletePopup] = useState(false);
+  const [selectedHN, setSelectedHN] = useState("");
+  const [patient, setPatient] = useState({});
+  const [addQueuePopup, setAddQueuePopup] = useState(false);
+  const [queueHN, setQueueHN] = useState("");
   const [message, setMessage] = useState("");
-  const [showPopup, setShowPopup] = useState(false);
-  const [showTable, setShowTable] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarType, setSnackbarType] = useState("success");
+  const [selectedOrder, setSelectedOrder] = useState({});
   const navigate = useNavigate();
 
-  const ContainerStyled = styled(Container)(({ theme }) => ({
-    marginTop: theme.spacing(2),
-  }));
-  
-  const PaperStyled = styled(Paper)(({ theme }) => ({
-    padding: theme.spacing(2),
-  }));
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
 
-  const fetchData = async () => {
-    let url = `http://localhost:5000/api/patient`;
-    const params = {};
+  const showMessage = (message, type) => {
+    setMessage(message);
+    setSnackbarType(type);
+    setSnackbarOpen(true);
+  };
 
-    if (searchHN) {
-      params.HN = searchHN;
-    }
-    if (searchTitle) {
-      params.Title = searchTitle;
-    }
-    if (searchFirstName) {
-      params.First_Name = searchFirstName;
-    }
-    if (searchLastName) {
-      params.Last_Name = searchLastName;
-    }
-    if (searchGender) {
-      params.Gender = searchGender;
-    }
-
+  const FetchData = async () => {
     try {
-      const response = await axios.get(url, { params });
-      setData(response.data.data);
+      const response = await axios.get("http://localhost:5000/api/walkinqueue");
+      const queueData = response.data.data;
+
+      const patientDataPromises = queueData.map(async (queue) => {
+        const patientResponse = await axios.get(
+          `http://localhost:5000/api/patient?HN=${queue.HN}`
+        );
+        const patient = patientResponse.data.data[0];
+        return { ...queue, ...patient };
+      });
+
+      const patientData = await Promise.all(patientDataPromises);
+      const sortedData = patientData.sort((a, b) => a.Queue_ID - b.Queue_ID);
+      setData(sortedData);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
 
-  const SearchHNChange = (event) => {
-    setSearchHN(event.target.value);
+  const AddQueue = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/patient?HN=${queueHN}`
+      );
+      const patient = response.data.data[0];
+      if (patient) {
+        await axios.post("http://localhost:5000/api/walkinqueue", {
+          HN: queueHN,
+        });
+        FetchData();
+        setAddQueuePopup(false);
+        setQueueHN("");
+        showMessage("จองคิวสำเร็จ", "success");
+      } else {
+        showMessage("ไม่พบ HN ที่ระบุ", "error");
+      }
+    } catch (error) {
+      console.error("Error booking queue:", error);
+      showMessage("เกิดข้อผิดพลาดในการจองคิว", "error");
+    }
   };
 
-  const SearchTitleChange = (event) => {
-    setSearchTitle(event.target.value);
+  const DeleteQueue = (HN) => {
+    setSelectedHN(HN);
+    setDeletePopup(true);
   };
 
-  const SearchFirstNameChange = (event) => {
-    setSearchFirstName(event.target.value);
-  };
-
-  const SearchLastNameChange = (event) => {
-    setSearchLastName(event.target.value);
-  };
-  const SearchGenderChange = (event) => {
-    setSearchGender(event.target.value);
-  };
-
-  const SearchSubmit = async (event) => {
-    event.preventDefault();
-    setShowTable(true);
-    fetchData();
+  const ConfirmDeleteQueue = async () => {
+    try {
+      await axios.delete(`http://localhost:5000/api/walkinqueue/${selectedHN}`);
+      FetchData();
+      setDeletePopup(false);
+      showMessage("ลบข้อมูลผู้ป่วยจากคิวสำเร็จ");
+    } catch (error) {
+      console.error("Error deleting queue:", error);
+      showMessage("เกิดข้อผิดพลาดในการลบข้อมูลผู้ป่วยจากคิว");
+    }
   };
 
   useEffect(() => {
-    if (showTable) {
-      fetchData();
-    }
-  }, [showTable]);
+    FetchData();
+  }, []);
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <ContainerStyled maxWidth="lg">
@@ -121,137 +135,194 @@ const DoctorQueue = () => {
               gutterBottom
               style={{ flexGrow: 1, textAlign: "center" }}
             >
-              รายชื่อผู้ป่วย
+              คิว
             </Typography>
           </Box>
           <div>
-            <Box display="flex" justifyContent="space-between" mb={2}>
-              <form
-                onSubmit={SearchSubmit}
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "20px",
-                  alignItems: "center",
-                  marginBottom: "20px",
-                }}
+            <Box display="flex" justifyContent="flex-end" mb={2}>
+              <Button
+                variant="contained"
+                style={{ height: "40px", width: "150px" }}
+                color="success"
+                onClick={() => setAddQueuePopup(true)}
               >
-                <TextField
-                  label="กรอก HN"
-                  variant="outlined"
-                  size="small"
-                  onChange={SearchHNChange}
-                  inputProps={{ maxLength: 5 }}
-                  style={{ width: "100px" }}
-                />
-                <FormControl
-                  variant="outlined"
-                  size="small"
-                  style={{ width: "140px" }}
-                >
-                  <InputLabel>เลือกคำนำหน้า</InputLabel>
-                  <Select
-                    value={searchTitle}
-                    onChange={SearchTitleChange}
-                    label="เลือกคำนำหน้า"
-                  >
-                    <MenuItem value="ด.ช.">ด.ช.</MenuItem>
-                    <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
-                    <MenuItem value="นาย">นาย</MenuItem>
-                    <MenuItem value="นาง">นาง</MenuItem>
-                    <MenuItem value="นางสาว">นางสาว</MenuItem>
-                  </Select>
-                </FormControl>
-                <TextField
-                  label="กรอกชื่อ"
-                  variant="outlined"
-                  size="small"
-                  onChange={SearchFirstNameChange}
-                />
-                <TextField
-                  label="กรอกนามสกุล"
-                  variant="outlined"
-                  size="small"
-                  onChange={SearchLastNameChange}
-                />
-                <FormControl
-                  variant="outlined"
-                  size="small"
-                  style={{ width: "110px" }}
-                >
-                  <InputLabel>เลือกเพศ</InputLabel>
-                  <Select
-                    value={searchGender}
-                    onChange={SearchGenderChange}
-                    variant="outlined"
-                    size="small"
-                    label="เลือกเพศ"
-                  >
-                    <MenuItem value="ชาย">ชาย</MenuItem>
-                    <MenuItem value="หญิง">หญิง</MenuItem>
-                  </Select>
-                </FormControl>
-                <Button
-                  variant="contained"
-                  type="submit"
-                  style={{ height: "40px" }}
-                  color="info"
-                >
-                  ค้นหา
-                </Button>
-              </form>
-              
+                <h3>จองคิว</h3>
+              </Button>
             </Box>
 
-            {showTable && (
-              <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>HN</TableCell>
-                      <TableCell>คำนำหน้า</TableCell>
-                      <TableCell>ชื่อ</TableCell>
-                      <TableCell>นามสกุล</TableCell>
-                      <TableCell>เพศ</TableCell>
-                      <TableCell>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {data.map((row) => (
-                      <TableRow
-                        key={row.HN}
-                        sx={{
-                          "&:last-child td, &:last-child th": { border: 0 },
-                        }}
+            <TableContainer component={Paper}>
+              <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                      ลำดับคิว
+                    </TableCell>
+                    <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                      คำนำหน้า
+                    </TableCell>
+                    <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                      ชื่อ
+                    </TableCell>
+                    <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                      นามสกุล
+                    </TableCell>
+                    <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                      เพศ
+                    </TableCell>
+                    <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                      Actions
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {data.map((row) => (
+                    <TableRow
+                      key={row.Queue_ID}
+                      sx={{
+                        "&:last-child td, &:last-child th": { border: 0 },
+                      }}
+                    >
+                      <TableCell
+                        style={{ flexGrow: 1, textAlign: "center" }}
+                        component="th"
+                        scope="row"
                       >
-                        <TableCell component="th" scope="row">
-                          {row.HN}
-                        </TableCell>
-                        <TableCell>{row.Title}</TableCell>
-                        <TableCell>{row.First_Name}</TableCell>
-                        <TableCell>{row.Last_Name}</TableCell>
-                        <TableCell>{row.Gender}</TableCell>
-                        <TableCell>
-                          <ButtonGroup
-                            color="primary"
-                            aria-label="outlined primary button group"
+                        {row.Queue_ID || "-"}
+                      </TableCell>
+                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                        {row.Title || "-"}
+                      </TableCell>
+                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                        {row.First_Name || "-"}
+                      </TableCell>
+                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                        {row.Last_Name || "-"}
+                      </TableCell>
+                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                        {row.Gender || "-"}
+                      </TableCell>
+                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                        <ButtonGroup
+                          color="primary"
+                          aria-label="outlined primary button group"
+                        >
+                          <Button onClick={() => navigate(`/doctor_patientdetail/${row.HN}`)}> 
+                            ดูข้อมูล
+                          </Button> 
+                          <Button
+                            onClick={() => DeleteQueue(row.HN)}
+                            color="error"
                           >
-                            
-                          </ButtonGroup>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
-            {message && <p>{message}</p>}
+                            ลบ
+                          </Button>
+                        </ButtonGroup>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            <Dialog
+              open={addQueuePopup}
+              onClose={() => setAddQueuePopup(false)}
+              aria-labelledby="add-queue-dialog-title"
+            >
+              <DialogTitle
+                id="add-queue-dialog-title"
+                style={{ flexGrow: 1, textAlign: "center" }}
+              >
+                จองคิว
+              </DialogTitle>
+              <DialogContent>
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  label="กรอก HN"
+                  type="text"
+                  fullWidth
+                  value={queueHN}
+                  onChange={(e) => setQueueHN(e.target.value)}
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setAddQueuePopup(false)} color="primary">
+                  ยกเลิก
+                </Button>
+                <Button onClick={AddQueue} color="primary">
+                  จองคิว
+                </Button>
+              </DialogActions>
+            </Dialog>
+
+            <Dialog
+              open={viewPopup}
+              onClose={() => setViewPopup(false)}
+              aria-labelledby="view-dialog-title"
+            >
+              <DialogTitle
+                id="view-dialog-title"
+                style={{ flexGrow: 1, textAlign: "center" }}
+              >
+                ดูข้อมูลผู้ป่วย
+              </DialogTitle>
+              <DialogContent>
+                <Typography>HN: {patient.HN}</Typography>
+                <Typography>คำนำหน้า: {patient.Title}</Typography>
+                <Typography>ชื่อ: {patient.First_Name}</Typography>
+                <Typography>นามสกุล: {patient.Last_Name}</Typography>
+                <Typography>เพศ: {patient.Gender}</Typography>
+                <Typography>วันเกิด: {patient.Birthdate}</Typography>
+                <Typography>หมายเลขโทรศัพท์: {patient.Phone}</Typography>
+                <Typography>โรคประจำตัว: {patient.Disease_ID}</Typography>
+                <Typography>การแพ้ยา: {patient.Allergy_ID}</Typography>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setViewPopup(false)} color="primary">
+                  ปิด
+                </Button>
+              </DialogActions>
+            </Dialog>
+
+            <Dialog
+              open={deletePopup}
+              onClose={() => setDeletePopup(false)}
+              aria-labelledby="delete-dialog-title"
+            >
+              <DialogTitle id="delete-dialog-title">ยืนยันการลบ</DialogTitle>
+              <DialogContent>
+                <Typography>
+                  คุณแน่ใจหรือว่าต้องการลบข้อมูลผู้ป่วยรายนี้จากคิว
+                </Typography>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setDeletePopup(false)} color="primary">
+                  ยกเลิก
+                </Button>
+                <Button onClick={ConfirmDeleteQueue} color="primary">
+                  ลบ
+                </Button>
+              </DialogActions>
+            </Dialog>
           </div>
         </PaperStyled>
       </ContainerStyled>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={1500}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarType}
+          sx={{ width: "100%" }}
+        >
+          {message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
-
 };
 
 export default DoctorQueue;
