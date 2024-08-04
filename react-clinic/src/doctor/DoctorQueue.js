@@ -207,7 +207,7 @@ const DoctorQueue = () => {
                           aria-label="outlined primary button group"
                         >
                           <Button onClick={() => navigate(`/doctor_patientdetail/${row.HN}`)}> 
-                            ดูข้อมูล
+                            ตรวจ
                           </Button> 
                           <Button
                             onClick={() => DeleteQueue(row.HN)}
