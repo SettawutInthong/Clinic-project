@@ -335,6 +335,72 @@ app.get('/api/disease/:Disease_ID', (req, res) => {
   });
 });
 
+// API เพิ่มวินิจฉัยผู้ป่วย
+app.post("/api/treatment", function (req, res) {
+  const { HN, 
+          Order_ID, 
+          Treatment_Date, 
+          Treatment_Details, 
+          Treatment_cost } = req.body;
+
+  // 1. Input Validation 
+  if (!HN || !Treatment_Date) {
+    return res.status(400).json({ error: "HN and Treatment_Date are required" });
+  }
+
+  // ตรวจสอบรูปแบบวันที่ (YYYY-MM-DD)
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(Treatment_Date)) {
+    return res.status(400).json({ error: "Invalid Treatment_Date format" });
+  }
+
+  // 2. Generate Treatment_ID (เริ่มจาก T00001)
+  const getMaxTreatmentID = "SELECT MAX(Treatment_ID) as maxTreatmentID FROM treatment";
+  connection.execute(getMaxTreatmentID, function (err, results) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    let newTreatmentID = "T00001";
+    if (results.length > 0 && results[0].maxTreatmentID !== null) {
+      const maxTreatmentID = results[0].maxTreatmentID;
+      const numberPart = parseInt(maxTreatmentID.substring(1), 10); 
+      const nextNumber = numberPart + 1;
+      newTreatmentID = `T${nextNumber.toString().padStart(5, "0")}`; 
+    }
+
+    // 3. Calculate Total_Cost (ถ้าจำเป็น)
+    // ... (คำนวณ Total_Cost จาก Treatment_cost และข้อมูลอื่น ๆ ที่เกี่ยวข้อง)
+    let Total_Cost = 0; // หรือคำนวณจากข้อมูลอื่นๆ
+
+    // 4. Insert Treatment Data
+    const addTreatment = `
+      INSERT INTO treatment 
+      (Treatment_ID, HN, Order_ID, Treatment_Date, Treatment_Details, Treatment_cost, Total_Cost) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    connection.execute(
+      addTreatment,
+      [
+        newTreatmentID,
+        HN,
+        Order_ID || null, 
+        Treatment_Date,
+        Treatment_Details || null,
+        Treatment_cost || 0,
+        Total_Cost,
+      ],
+      function (err) {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        res.status(201).json({ message: "เพิ่มข้อมูลการรักษาสำเร็จ", Treatment_ID: newTreatmentID });
+      }
+    );
+  });
+});
+
 
   connection.query(sql, values, (error, results) => {
     if (error) throw error;
