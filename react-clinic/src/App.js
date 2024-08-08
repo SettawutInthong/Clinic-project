@@ -9,6 +9,7 @@ import DoctorDashboard from "./doctor/DoctorDashboard";
 import NursePatient from "./nurse/NursePatient";
 import NurseQueue from "./nurse/NurseQueue";
 import NurseOrder from "./nurse/NurseOrder";
+import NurseBill from "./nurse/NurseBill";
 import DoctorQueue from "./doctor/DoctorQueue";
 import DoctorPatientDetail from "./doctor/DoctorPatientDetail";
 import PatientTreatment from "./doctor/PatientTreatment";
@@ -40,6 +41,7 @@ const App = () => {
               <Route path="/nurse_patient" element={<NursePatient />} />
               <Route path="/nurse_queue" element={<NurseQueue />} />
               <Route path="/nurse_order" element={<NurseOrder />} />
+              <Route path="/nurse_bill" element={<NurseBill />} />
             </>
           ) : userRole === 0 ? (
             <>
