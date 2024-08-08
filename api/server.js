@@ -12,6 +12,8 @@ const connection = mysql.createConnection({
   database: "clinic",
 });
 
+const db = connection.promise();
+
 app.use(cors({ origin: "*" }));
 app.use(bodyParser.json());
 
@@ -298,6 +300,47 @@ app.get("/api/order_medicine", function (req, res) {
   });
 });
 
+// ดึงข้อมูล medicine
+app.get("/api/medicine_details", async (req, res) => {
+  const Order_ID = req.query.Order_ID;
+  try {
+    const [rows] = await db.query(
+      `
+      SELECT om.Order_ID, om.Quantity_Order, m.Medicine_Name, m.Med_Cost 
+      FROM order_medicine om 
+      JOIN medicine m ON om.Medicine_ID = m.Medicine_ID 
+      WHERE om.Order_ID = ?
+    `,
+      [Order_ID]
+    );
+    res.json({ data: rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// สำหรับดึงข้อมูล treatment
+app.get("/api/treatment", async (req, res) => {
+  const HN = req.query.HN;
+
+  const sql = `
+    SELECT * FROM treatment 
+    WHERE HN = ? 
+    ORDER BY Treatment_Date DESC 
+    LIMIT 1
+  `;
+  connection.execute(sql, [HN], function (err, results) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    if (results.length > 0) {
+      res.json({ data: results[0] });
+    } else {
+      res.status(404).json({ error: "Treatment not found" });
+    }
+  });
+});
+
 //--------------------------------------------------------------------------------------------------------------
 
 // API สำหรับค้นหาผู้ป่วย
@@ -320,21 +363,91 @@ app.get("/api/patients", (req, res) => {
     values.push(`%${lastName}%`);
   }
 
-// server.js (ส่วนที่เพิ่มเข้ามา)
+  // server.js (ส่วนที่เพิ่มเข้ามา)
 
-app.get('/api/disease/:Disease_ID', (req, res) => {
-  const diseaseId = req.params.Disease_ID;
-  const sql = 'SELECT Disease_name FROM chronic_disease WHERE Disease_ID = ?';
-  connection.query(sql, [diseaseId], (error, results) => {
-    if (error) throw error;
-    if (results.length > 0) {
-      res.json({ diseaseName: results[0].Disease_name });
-    } else {
-      res.status(404).json({ error: 'Disease not found' });
+  app.get("/api/disease/:Disease_ID", (req, res) => {
+    const diseaseId = req.params.Disease_ID;
+    const sql = "SELECT Disease_name FROM chronic_disease WHERE Disease_ID = ?";
+    connection.query(sql, [diseaseId], (error, results) => {
+      if (error) throw error;
+      if (results.length > 0) {
+        res.json({ diseaseName: results[0].Disease_name });
+      } else {
+        res.status(404).json({ error: "Disease not found" });
+      }
+    });
+  });
+<<<<<<< HEAD
+});
+
+// API เพิ่มวินิจฉัยผู้ป่วย
+app.post("/api/treatment", function (req, res) {
+  const { HN, 
+          Order_ID, 
+          Treatment_Date, 
+          Treatment_Details, 
+          Treatment_cost } = req.body;
+
+  // 1. Input Validation 
+  if (!HN || !Treatment_Date) {
+    return res.status(400).json({ error: "HN and Treatment_Date are required" });
+  }
+
+  // ตรวจสอบรูปแบบวันที่ (YYYY-MM-DD)
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(Treatment_Date)) {
+    return res.status(400).json({ error: "Invalid Treatment_Date format" });
+  }
+
+  // 2. Generate Treatment_ID (เริ่มจาก T00001)
+  const getMaxTreatmentID = "SELECT MAX(Treatment_ID) as maxTreatmentID FROM treatment";
+  connection.execute(getMaxTreatmentID, function (err, results) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
     }
+
+    let newTreatmentID = "T00001";
+    if (results.length > 0 && results[0].maxTreatmentID !== null) {
+      const maxTreatmentID = results[0].maxTreatmentID;
+      const numberPart = parseInt(maxTreatmentID.substring(1), 10); 
+      const nextNumber = numberPart + 1;
+      newTreatmentID = `T${nextNumber.toString().padStart(5, "0")}`; 
+    }
+
+    // 3. Calculate Total_Cost (ถ้าจำเป็น)
+    // ... (คำนวณ Total_Cost จาก Treatment_cost และข้อมูลอื่น ๆ ที่เกี่ยวข้อง)
+    let Total_Cost = 0; // หรือคำนวณจากข้อมูลอื่นๆ
+
+    // 4. Insert Treatment Data
+    const addTreatment = `
+      INSERT INTO treatment 
+      (Treatment_ID, HN, Order_ID, Treatment_Date, Treatment_Details, Treatment_cost, Total_Cost) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    connection.execute(
+      addTreatment,
+      [
+        newTreatmentID,
+        HN,
+        Order_ID || null, 
+        Treatment_Date,
+        Treatment_Details || null,
+        Treatment_cost || 0,
+        Total_Cost,
+      ],
+      function (err) {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        res.status(201).json({ message: "เพิ่มข้อมูลการรักษาสำเร็จ", Treatment_ID: newTreatmentID });
+      }
+    );
   });
 });
 
+=======
+>>>>>>> 71a9ba4d04064d2f3fbbca8662ace3d9773562ef
 
   connection.query(sql, values, (error, results) => {
     if (error) throw error;

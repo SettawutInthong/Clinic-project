@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import PatientTreatment from './PatientTreatment';
 import { Grid, TextField, Typography, Button, Box, ButtonGroup } from '@mui/material';
 import { Card, CardContent } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -130,20 +129,16 @@ const DoctorPatientDetail = () => {
                 // fullWidth
                 />
               </Grid>
-              <h2>ประวัติการรักษา</h2>
-              {treatments.length > 0 ? (
-                <PatientTreatment treatments={treatments} /> // ส่ง treatments ไปยัง component ย่อย
-              ) : (
-                <p>ยังไม่มีประวัติการรักษา</p>
-              )}
+        
 
               <ButtonGroup color="primary" aria-label="outlined primary button group">
+                <Button onClick={() => navigate(`/doctor_queue/`)}>
+                  กลับ
+                </Button>
                 <Button onClick={() => navigate(`/doctor_patienttreatment/${patientData.HN}`)}>
                   ถัดไป
                 </Button>
-                <Button onClick={() => navigate(`/doctor_queue/`)}>
-                  ถัดไป
-                </Button>
+                
               </ButtonGroup>
 
 
