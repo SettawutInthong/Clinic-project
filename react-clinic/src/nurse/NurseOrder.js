@@ -12,6 +12,8 @@ import Box from "@mui/material/Box";
 import { styled } from "@mui/material/styles";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import { useNavigate } from "react-router-dom";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(10),
@@ -25,6 +27,7 @@ const NurseOrder = () => {
   const [orderData, setOrderData] = useState([]);
   const [patientName, setPatientName] = useState("");
   const [orderID, setOrderID] = useState("");
+  const navigate = useNavigate();
 
   const FetchOrderData = async () => {
     const params = new URLSearchParams(window.location.search);
@@ -55,6 +58,14 @@ const NurseOrder = () => {
   useEffect(() => {
     FetchOrderData();
   }, []);
+
+  const handleBackClick = () => {
+    navigate("/nurse_queue");
+  };
+
+  const handleNextClick = () => {
+    navigate("/nurse_bill");
+  };
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -96,6 +107,28 @@ const NurseOrder = () => {
               </TableBody>
             </Table>
           </TableContainer>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginTop: 2,
+            }}
+          >
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleBackClick}
+            >
+              ย้อนกลับ
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleNextClick}
+            >
+              ถัดไป
+            </Button>
+          </Box>
         </PaperStyled>
       </ContainerStyled>
     </Box>
