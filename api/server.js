@@ -301,20 +301,43 @@ app.get("/api/order_medicine", function (req, res) {
 });
 
 // ดึงข้อมูล medicine
-app.get("/api/medicine_details", function (req, res) {
+app.get("/api/medicine_details", async (req, res) => {
   const Order_ID = req.query.Order_ID;
+  try {
+    const [rows] = await db.query(
+      `
+      SELECT om.Order_ID, om.Quantity_Order, m.Medicine_Name, m.Med_Cost 
+      FROM order_medicine om 
+      JOIN medicine m ON om.Medicine_ID = m.Medicine_ID 
+      WHERE om.Order_ID = ?
+    `,
+      [Order_ID]
+    );
+    res.json({ data: rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// สำหรับดึงข้อมูล treatment
+app.get("/api/treatment", async (req, res) => {
+  const HN = req.query.HN;
 
   const sql = `
-    SELECT om.Order_ID, om.Quantity_Order, m.Medicine_Name 
-    FROM order_medicine om 
-    JOIN medicine m ON om.Medicine_ID = m.Medicine_ID 
-    WHERE om.Order_ID = ?
+    SELECT * FROM treatment 
+    WHERE HN = ? 
+    ORDER BY Treatment_Date DESC 
+    LIMIT 1
   `;
-  connection.execute(sql, [Order_ID], function (err, results) {
+  connection.execute(sql, [HN], function (err, results) {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-    res.json({ data: results });
+    if (results.length > 0) {
+      res.json({ data: results[0] });
+    } else {
+      res.status(404).json({ error: "Treatment not found" });
+    }
   });
 });
 
