@@ -12,6 +12,8 @@ const connection = mysql.createConnection({
   database: "clinic",
 });
 
+const db = connection.promise();
+
 app.use(cors({ origin: "*" }));
 app.use(bodyParser.json());
 
@@ -298,6 +300,24 @@ app.get("/api/order_medicine", function (req, res) {
   });
 });
 
+// ดึงข้อมูล medicine
+app.get("/api/medicine_details", function (req, res) {
+  const Order_ID = req.query.Order_ID;
+
+  const sql = `
+    SELECT om.Order_ID, om.Quantity_Order, m.Medicine_Name 
+    FROM order_medicine om 
+    JOIN medicine m ON om.Medicine_ID = m.Medicine_ID 
+    WHERE om.Order_ID = ?
+  `;
+  connection.execute(sql, [Order_ID], function (err, results) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ data: results });
+  });
+});
+
 //--------------------------------------------------------------------------------------------------------------
 
 // API สำหรับค้นหาผู้ป่วย
@@ -320,21 +340,20 @@ app.get("/api/patients", (req, res) => {
     values.push(`%${lastName}%`);
   }
 
-// server.js (ส่วนที่เพิ่มเข้ามา)
+  // server.js (ส่วนที่เพิ่มเข้ามา)
 
-app.get('/api/disease/:Disease_ID', (req, res) => {
-  const diseaseId = req.params.Disease_ID;
-  const sql = 'SELECT Disease_name FROM chronic_disease WHERE Disease_ID = ?';
-  connection.query(sql, [diseaseId], (error, results) => {
-    if (error) throw error;
-    if (results.length > 0) {
-      res.json({ diseaseName: results[0].Disease_name });
-    } else {
-      res.status(404).json({ error: 'Disease not found' });
-    }
+  app.get("/api/disease/:Disease_ID", (req, res) => {
+    const diseaseId = req.params.Disease_ID;
+    const sql = "SELECT Disease_name FROM chronic_disease WHERE Disease_ID = ?";
+    connection.query(sql, [diseaseId], (error, results) => {
+      if (error) throw error;
+      if (results.length > 0) {
+        res.json({ diseaseName: results[0].Disease_name });
+      } else {
+        res.status(404).json({ error: "Disease not found" });
+      }
+    });
   });
-});
-
 
   connection.query(sql, values, (error, results) => {
     if (error) throw error;
