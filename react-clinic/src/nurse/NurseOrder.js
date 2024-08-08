@@ -72,14 +72,21 @@ const NurseOrder = () => {
       <ContainerStyled maxWidth="lg">
         <PaperStyled>
           <Typography variant="h6" gutterBottom style={{ textAlign: "center" }}>
-            รายการยา - {orderID}
+            รายการยา
           </Typography>
           <Typography
             variant="subtitle1"
             gutterBottom
-            style={{ textAlign: "center" }}
+            style={{ textAlign: "left" }}
           >
-            ชื่อผู้ป่วย: {patientName}
+            Order ID: {orderID}
+          </Typography>
+          <Typography
+            variant="subtitle1"
+            gutterBottom
+            style={{ textAlign: "left" }}
+          >
+            ชื่อ: {patientName}
           </Typography>
           <TableContainer component={Paper}>
             <Table sx={{ minWidth: 650 }} aria-label="simple table">
