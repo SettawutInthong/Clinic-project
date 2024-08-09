@@ -9,7 +9,7 @@ const mysql = require("mysql2");
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
-  database: "clinic",
+  database: "clinic1",
 });
 
 const db = connection.promise();
@@ -283,13 +283,8 @@ app.get("/api/order_medicine", function (req, res) {
   const HN = req.query.HN;
 
   const sql = `
-    SELECT * FROM orders  
-    JOIN 
-      order_medicine om ON o.Order_ID = om.Order_ID
-    JOIN 
-      medicine m ON om.Medicine_ID = m.Medicine_ID
+    SELECT * FROM order_medicine 
     WHERE HN = ? 
-   
     ORDER BY CAST(SUBSTRING(Order_ID, 2) AS UNSIGNED) DESC 
     LIMIT 1
   `;
@@ -309,16 +304,35 @@ app.get("/api/order_medicine", function (req, res) {
 app.get("/api/medicine_details", async (req, res) => {
   const Order_ID = req.query.Order_ID;
   try {
-    const [rows] = await db.query(
-      `
-      SELECT om.Order_ID, om.Quantity_Order, m.Medicine_Name, m.Med_Cost 
+    const sql = `
+      SELECT om.Item_ID, om.Quantity_Order, m.Medicine_Name, m.Med_Cost
       FROM order_medicine om 
       JOIN medicine m ON om.Medicine_ID = m.Medicine_ID 
       WHERE om.Order_ID = ?
-    `,
-      [Order_ID]
-    );
+    `;
+    const [rows] = await db.query(sql, [Order_ID]);
     res.json({ data: rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ดึง Order_ID ที่มากที่สุดจากตาราง orders
+app.get("/api/order_medicine", async (req, res) => {
+  const HN = req.query.HN;
+  try {
+    const sql = `
+      SELECT * FROM orders 
+      WHERE HN = ? 
+      ORDER BY CAST(SUBSTRING(Order_ID, 2) AS UNSIGNED) DESC 
+      LIMIT 1
+    `;
+    const [rows] = await db.query(sql, [HN]);
+    if (rows.length > 0) {
+      res.json({ data: rows[0] });
+    } else {
+      res.status(404).json({ error: "Order not found" });
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -382,78 +396,6 @@ app.get('/api/disease/:Disease_ID', (req, res) => {
     }
   });
 });
-
-  // ดึงข้อมูล allergy ตาม Allergy_ID
-  app.get('/api/allergy/:Allergy_ID', (req, res) => {
-    const allergyId = req.params.Allergy_ID;
-    const sql = 'SELECT Allergy_Details FROM allergy WHERE Allergy_ID = ?';
-    connection.query(sql, [allergyId], (error, results) => {
-        if (error) throw error;
-        if (results.length > 0) {
-            res.json({ allergyDetails: results[0].Allergy_Details });
-        } else {
-            res.status(404).json({ error: 'Allergy not found' });
-        }
-    });
-  });
-
-  app.get("/api/treatment/:HN", function (req, res) {
-    console.log("Received request for HN: ", req.params.HN);
-    res.send("Received request for HN: " + req.params.HN);
-  });
-
-
-// // ดึงข้อมูลการรักษาตาม HN
-// app.get("/api/treatment/:HN", function (req, res) {
-//   const HN = req.params.HN; // ดึง HN จากพารามิเตอร์ใน URL
-
-//   const sql = `
-//     SELECT 
-//       t.Treatment_ID, 
-//       t.Treatment_Date, 
-//       t.Treatment_Details, 
-//       t.Treatment_cost, 
-//       t.Total_Cost, 
-//       o.Order_ID, 
-//       o.Order_Date 
-//     FROM 
-//       treatment t
-//     JOIN 
-//       orders o ON t.Order_ID = o.Order_ID
-//     JOIN 
-//       order_medicine om ON o.Order_ID = om.Order_ID
-//     JOIN 
-//       medicine m ON om.Medicine_ID = m.Medicine_ID
-//     WHERE 
-//       t.HN = ?
-//     ORDER BY 
-//       t.Treatment_Date DESC
-//   `;
-
-//   connection.execute(sql, [HN], function (err, results) {
-//     if (err) {
-//       return res.status(500).json({ error: err.message });
-//     }
-//     if (results.length > 0) {
-//       res.json({ data: results });
-//     } else {
-//       res.status(404).json({ error: "Treatment not found" });
-//     }
-//   });
-// });
-
-app.get("/api/treatment/:HN", function (req, res) {
-  console.log("Received request for HN: ", req.params.HN);
-  res.send("Received request for HN: " + req.params.HN);
-});
-
-app.get("/api/test", function (req, res) {
-  console.log("Received request for test route");
-  res.send("Test route working!");
-});
-
-
-  
 
 
   connection.query(sql, values, (error, results) => {

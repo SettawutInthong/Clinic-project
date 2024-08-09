@@ -34,15 +34,21 @@ const NurseOrder = () => {
     const HN = params.get("HN");
 
     try {
-      const response = await axios.get(`http://localhost:5000/api/order_medicine?HN=${HN}`);
+      const response = await axios.get(
+        `http://localhost:5000/api/order_medicine?HN=${HN}`
+      );
       const order = response.data.data;
       setOrderID(order.Order_ID);
 
-      const patientResponse = await axios.get(`http://localhost:5000/api/patient/${HN}`);
+      const patientResponse = await axios.get(
+        `http://localhost:5000/api/patient/${HN}`
+      );
       const patient = patientResponse.data.data[0];
       setPatientName(`${patient.First_Name} ${patient.Last_Name}`);
 
-      const medicineResponse = await axios.get(`http://localhost:5000/api/medicine_details?Order_ID=${order.Order_ID}`);
+      const medicineResponse = await axios.get(
+        `http://localhost:5000/api/medicine_details?Order_ID=${order.Order_ID}`
+      );
       setOrderData(medicineResponse.data.data);
     } catch (error) {
       console.error("Error fetching order data:", error);
@@ -58,17 +64,25 @@ const NurseOrder = () => {
       <ContainerStyled maxWidth="lg">
         <PaperStyled>
           <Typography variant="h6" gutterBottom style={{ textAlign: "center" }}>
-            รายการยา - {orderID}
+            รายการยา
           </Typography>
-          <Typography variant="subtitle1" gutterBottom style={{ textAlign: "center" }}>
-            ชื่อผู้ป่วย: {patientName}
+          <Typography
+            variant="subtitle1"
+            gutterBottom
+            style={{ textAlign: "left" }}
+          >
+            ชื่อ: {patientName}
           </Typography>
           <TableContainer component={Paper}>
             <Table sx={{ minWidth: 650 }} aria-label="simple table">
               <TableHead>
                 <TableRow>
-                  <TableCell style={{ flexGrow: 1, textAlign: "center" }}>ชื่อยา</TableCell>
-                  <TableCell style={{ flexGrow: 1, textAlign: "center" }}>จำนวน</TableCell>
+                  <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                    ชื่อยา
+                  </TableCell>
+                  <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                    จำนวน
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -85,11 +99,35 @@ const NurseOrder = () => {
               </TableBody>
             </Table>
           </TableContainer>
-          <Box display="flex" justifyContent="space-between" mt={2}>
-            <Button variant="contained" onClick={() => navigate(`/nurse_queue?HN=${new URLSearchParams(window.location.search).get("HN")}`)}>
+          <Box display="flex" justifyContent="center" mt={2}>
+            <Button
+              variant="outlined"
+              style={{
+                color: "#1976d2",
+                borderColor: "#1976d2",
+                textTransform: "none",
+                marginRight: "10px",
+              }}
+              onClick={() =>
+                navigate(
+                  `/nurse_queue?HN=${new URLSearchParams(
+                    window.location.search
+                  ).get("HN")}`
+                )
+              }
+            >
               ย้อนกลับ
             </Button>
-            <Button variant="contained" onClick={() => navigate(`/nurse_bill?HN=${new URLSearchParams(window.location.search).get("HN")}`)}>
+            <Button
+              variant="contained"
+              onClick={() =>
+                navigate(
+                  `/nurse_bill?HN=${new URLSearchParams(
+                    window.location.search
+                  ).get("HN")}`
+                )
+              }
+            >
               ถัดไป
             </Button>
           </Box>

@@ -53,10 +53,13 @@ const NurseBill = () => {
 
       let totalCost = 0;
       const billDetails = medicines.map((item) => {
-        totalCost += item.Med_Cost;
+        const itemTotal = item.Med_Cost * item.Quantity_Order;
+        totalCost += itemTotal;
         return {
           Medicine_Name: item.Medicine_Name,
+          Quantity_Order: item.Quantity_Order,
           Med_Cost: item.Med_Cost,
+          Item_Total: itemTotal,
         };
       });
 
@@ -76,14 +79,14 @@ const NurseBill = () => {
       <ContainerStyled maxWidth="lg">
         <PaperStyled>
           <Typography variant="h6" gutterBottom style={{ textAlign: "center" }}>
-            บิล
+            ใบเสร็จ
           </Typography>
           <Typography
             variant="subtitle1"
             gutterBottom
-            style={{ textAlign: "center" }}
+            style={{ textAlign: "left" }}
           >
-            ชื่อผู้ป่วย: {patientName}
+            ชื่อ: {patientName}
           </Typography>
           <TableContainer component={Paper}>
             <Table sx={{ minWidth: 650 }} aria-label="simple table">
@@ -93,7 +96,13 @@ const NurseBill = () => {
                     รายการ
                   </TableCell>
                   <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                    ราคา
+                    จำนวน
+                  </TableCell>
+                  <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                    ราคา (ต่อหน่วย)
+                  </TableCell>
+                  <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                    ราคา (รวม)
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -104,25 +113,36 @@ const NurseBill = () => {
                       {row.Medicine_Name || "-"}
                     </TableCell>
                     <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                      {row.Quantity_Order || "-"}
+                    </TableCell>
+                    <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
                       {row.Med_Cost || "-"}
+                    </TableCell>
+                    <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                      {row.Item_Total || "-"}
                     </TableCell>
                   </TableRow>
                 ))}
                 <TableRow>
-                  <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                  <TableCell colSpan={3} style={{ textAlign: "center" }}>
                     ราคารวม
                   </TableCell>
-                  <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                  <TableCell style={{ textAlign: "center" }}>
                     {totalCost}
                   </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
           </TableContainer>
-          <Box display="flex" justifyContent="space-between" mt={2}>
+          <Box display="flex" justifyContent="center" mt={2}>
             <Button
-              variant="contained"
-              color="primary"
+              variant="outlined"
+              style={{
+                color: "#1976d2",
+                borderColor: "#1976d2",
+                textTransform: "none",
+                marginRight: "10px",
+              }}
               onClick={() => navigate(-1)}
             >
               ย้อนกลับ
