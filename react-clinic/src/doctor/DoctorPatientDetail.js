@@ -1,4 +1,3 @@
-// DoctorPatientDetail.js (แก้ไขแล้ว)
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -6,12 +5,12 @@ import { Grid, TextField, Typography, Button, Box, ButtonGroup } from '@mui/mate
 import { Card, CardContent } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-
 const DoctorPatientDetail = () => {
   const { HN } = useParams();
   const [patientData, setPatientData] = useState(null);
-  const [diseaseName, setDiseaseName] = useState(''); // เพิ่ม state สำหรับ Disease_name
-  const [treatments, setTreatments] = useState([]); // เพิ่ม state สำหรับ treatments
+  const [diseaseName, setDiseaseName] = useState('');
+  const [treatments, setTreatments] = useState([]);
+  const [allergyDetails, setAllergyDetails] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,9 +24,10 @@ const DoctorPatientDetail = () => {
           setDiseaseName(diseaseResponse.data.diseaseName);
         }
 
-        // ดึงข้อมูล treatment
-        const treatmentResponse = await axios.get(`http://localhost:5000/api/treatment/${HN}`);
-        setTreatments(treatmentResponse.data.data);
+        if (response.data.data[0].Allergy_ID) {
+          const allergyResponse = await axios.get(`http://localhost:5000/api/allergy/${response.data.data[0].Allergy_ID}`);
+          setAllergyDetails(allergyResponse.data.allergyDetails);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -36,16 +36,26 @@ const DoctorPatientDetail = () => {
     fetchPatientData();
   }, [HN]);
 
+  const calculateAge = (birthdate) => {
+    const today = new Date();
+    const birthDate = new Date(birthdate);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
 
   return (
     <Box sx={{ flexGrow: 1, padding: 3 }}>
       {patientData ? (
-        <Card sx={{ borderRadius: 3 }}> {/* เพิ่ม borderRadius ที่นี่ */}
+        <Card sx={{ borderRadius: 3 }}>
           <CardContent>
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <Typography variant="h4" gutterBottom>
-                  HN: {patientData.HN}
+                  {patientData.HN}
                 </Typography>
               </Grid>
 
@@ -70,52 +80,7 @@ const DoctorPatientDetail = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="อายุ"
-                // value={/* คำนวณอายุจาก patientData.Birthdate */}
-                // InputProps={{ readOnly: true }}
-                // fullWidth
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="น้ำหนัก"
-                // value={/* ดึงข้อมูลน้ำหนักจาก patientData หรือ state อื่นๆ */}
-                // InputProps={{ readOnly: true }}
-                // fullWidth
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="ส่วนสูง"
-                // value={/* ดึงข้อมูลส่วนสูงจาก patientData หรือ state อื่นๆ */}
-                // InputProps={{ readOnly: true }}
-                // fullWidth
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="อัตราการเต้นของหัวใจ"
-                // value={/* ดึงข้อมูลอัตราการเต้นหัวใจจาก patientData หรือ state อื่นๆ */}
-                // InputProps={{ readOnly: true }}
-                // fullWidth
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="ความดัน"
-                // value={/* ดึงข้อมูลความดันจาก patientData หรือ state อื่นๆ */}
-                // InputProps={{ readOnly: true }}
-                // fullWidth
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="โรคประจำตัว"
-                  value={diseaseName || '-'}
+                  value={calculateAge(patientData.Birthdate)}
                   InputProps={{ readOnly: true }}
                   fullWidth
                 />
@@ -124,34 +89,40 @@ const DoctorPatientDetail = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="แพ้ยา"
-                // value={/* ดึงข้อมูลการแพ้ยาจาก patientData หรือ state อื่นๆ */}
-                // InputProps={{ readOnly: true }}
-                // fullWidth
+                  value={patientData.Allergy_ID ? patientData.Allergy_ID : '-'}
+                  InputProps={{ readOnly: true }}
+                  fullWidth
                 />
               </Grid>
-        
 
-              <ButtonGroup color="primary" aria-label="outlined primary button group">
-                <Button onClick={() => navigate(`/doctor_queue/`)}>
-                  กลับ
-                </Button>
-                <Button onClick={() => navigate(`/doctor_patienttreatment/${patientData.HN}`)}>
-                  ถัดไป
-                </Button>
-                
-              </ButtonGroup>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="โรคประจำตัว"
+                  value={patientData.Disease_ID ? patientData.Disease_ID : '-'}
+                  InputProps={{ readOnly: true }}
+                  fullWidth
+                />
+              </Grid>
 
-
-
+              <Grid item xs={12}>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+                  <ButtonGroup color="primary" aria-label="outlined primary button group">
+                    <Button onClick={() => navigate(`/doctor_queue/`)}>
+                      กลับ
+                    </Button>
+                    <Button onClick={() => navigate(`/doctor_treatmenthistory/${patientData.HN}`)}>
+                      ถัดไป
+                    </Button>
+                  </ButtonGroup>
+                </Box>
+              </Grid>
             </Grid>
           </CardContent>
         </Card>
-
       ) : (
         <p>Loading...</p>
-      )
-      }
-    </Box >
+      )}
+    </Box>
   );
 };
 

@@ -12,7 +12,7 @@ import NurseOrder from "./nurse/NurseOrder";
 import NurseBill from "./nurse/NurseBill";
 import DoctorQueue from "./doctor/DoctorQueue";
 import DoctorPatientDetail from "./doctor/DoctorPatientDetail";
-import PatientTreatment from "./doctor/PatientTreatment";
+import TreatmentHistory from "./doctor/TreatmentHistory";
 import AddTreatment from "./doctor/AddTreatment";
 
 const App = () => {
@@ -49,7 +49,7 @@ const App = () => {
               <Route path="/doctor_dashboard" element={<DoctorDashboard />} />
               <Route path="/doctor_queue" element={<DoctorQueue />} />
               <Route path="/doctor_patientdetail/:HN" element={<DoctorPatientDetail />} />
-              <Route path="/doctor_patienttreatment/:HN" element={<PatientTreatment />} />
+              <Route path="/doctor_treatmenthistory/:HN" element={<TreatmentHistory />} />
               <Route path="/doctor_addtreatment/:HN" element={<AddTreatment />} />
             </>
           ) : null}
