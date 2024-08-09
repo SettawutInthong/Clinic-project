@@ -9,7 +9,7 @@ const mysql = require("mysql2");
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
-  database: "clinic",
+  database: "clinic1",
 });
 
 const db = connection.promise();
@@ -278,42 +278,39 @@ app.delete("/api/walkinqueue/:HN", function (req, res) {
   });
 });
 
-// ดึงข้อมูล order
-app.get("/api/order_medicine", function (req, res) {
-  const HN = req.query.HN;
-
-  const sql = `
-    SELECT * FROM order_medicine 
-    WHERE HN = ? 
-    ORDER BY CAST(SUBSTRING(Order_ID, 2) AS UNSIGNED) DESC 
-    LIMIT 1
-  `;
-  connection.execute(sql, [HN], function (err, results) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    if (results.length > 0) {
-      res.json({ data: results[0] });
-    } else {
-      res.status(404).json({ error: "Order not found" });
-    }
-  });
-});
-
-// ดึงข้อมูล medicine
+// ดึงรายละเอียดของยาใน order_medicine โดยอิงจาก Order_ID
 app.get("/api/medicine_details", async (req, res) => {
   const Order_ID = req.query.Order_ID;
   try {
-    const [rows] = await db.query(
-      `
-      SELECT om.Order_ID, om.Quantity_Order, m.Medicine_Name, m.Med_Cost 
+    const sql = `
+      SELECT om.Item_ID, om.Quantity_Order, m.Medicine_Name, m.Med_Cost
       FROM order_medicine om 
       JOIN medicine m ON om.Medicine_ID = m.Medicine_ID 
       WHERE om.Order_ID = ?
-    `,
-      [Order_ID]
-    );
+    `;
+    const [rows] = await db.query(sql, [Order_ID]);
     res.json({ data: rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ดึง Order_ID ที่มากที่สุดจากตาราง orders
+app.get("/api/order_medicine", async (req, res) => {
+  const HN = req.query.HN;
+  try {
+    const sql = `
+      SELECT * FROM orders 
+      WHERE HN = ? 
+      ORDER BY CAST(SUBSTRING(Order_ID, 2) AS UNSIGNED) DESC 
+      LIMIT 1
+    `;
+    const [rows] = await db.query(sql, [HN]);
+    if (rows.length > 0) {
+      res.json({ data: rows[0] });
+    } else {
+      res.status(404).json({ error: "Order not found" });
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -365,19 +362,18 @@ app.get("/api/patients", (req, res) => {
 
   // server.js (ส่วนที่เพิ่มเข้ามา)
 
-app.get('/api/disease/:Disease_ID', (req, res) => {
-  const diseaseId = req.params.Disease_ID;
-  const sql = 'SELECT Disease_name FROM chronic_disease WHERE Disease_ID = ?';
-  connection.query(sql, [diseaseId], (error, results) => {
-    if (error) throw error;
-    if (results.length > 0) {
-      res.json({ diseaseName: results[0].Disease_name });
-    } else {
-      res.status(404).json({ error: 'Disease not found' });
-    }
+  app.get("/api/disease/:Disease_ID", (req, res) => {
+    const diseaseId = req.params.Disease_ID;
+    const sql = "SELECT Disease_name FROM chronic_disease WHERE Disease_ID = ?";
+    connection.query(sql, [diseaseId], (error, results) => {
+      if (error) throw error;
+      if (results.length > 0) {
+        res.json({ diseaseName: results[0].Disease_name });
+      } else {
+        res.status(404).json({ error: "Disease not found" });
+      }
+    });
   });
-});
-
 
   connection.query(sql, values, (error, results) => {
     if (error) throw error;
