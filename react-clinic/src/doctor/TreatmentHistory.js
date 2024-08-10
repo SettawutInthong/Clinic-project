@@ -5,17 +5,15 @@ import { Box, ButtonGroup, Grid, Typography, Paper, Table, TableBody, TableCell,
 import { useNavigate } from 'react-router-dom';
 
 const TreatmentHistory = () => {
-  const { HN } = useParams(); // รับ HN จาก URL parameter
-  const [treatments, setTreatments] = useState([]); // สถานะสำหรับเก็บข้อมูลการรักษา
+  const { HN } = useParams();
+  const [treatments, setTreatments] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTreatments = async () => {
       try {
-        // เรียก API เพื่อดึงข้อมูลการรักษาที่เชื่อมโยงกับ HN นี้
         const response = await axios.get(`http://localhost:5000/api/treatments/${HN}`);
-        // ตั้งค่าข้อมูลการรักษา
-        setTreatments(response.data.data || []); // ตรวจสอบและใช้ข้อมูลที่ตอบกลับหรือใช้ array ว่างถ้าไม่มีข้อมูล
+        setTreatments(response.data.data || []);
       } catch (error) {
         console.error('Error fetching treatment data:', error);
       }
