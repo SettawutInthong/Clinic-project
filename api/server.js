@@ -9,7 +9,7 @@ const mysql = require("mysql2");
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
-  database: "clinic1",
+  database: "clinic",
 });
 
 const db = connection.promise();
@@ -402,11 +402,10 @@ app.get("/api/patients", (req, res) => {
 
     try {
       const sql = `
-      SELECT * 
-      FROM treatment 
-      WHERE HN = ?
-      ORDER BY Treatment_Date DESC`
-        ;
+        SELECT * 
+        FROM treatment 
+        WHERE HN = ?
+        ORDER BY Treatment_Date DESC`;
       const [rows] = await db.query(sql, [HN]);
 
       res.json({ data: rows });
@@ -414,6 +413,7 @@ app.get("/api/patients", (req, res) => {
       res.status(500).json({ error: err.message });
     }
   });
+
 
   connection.query(sql, values, (error, results) => {
     if (error) throw error;
