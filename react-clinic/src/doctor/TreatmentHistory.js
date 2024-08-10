@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Box, ButtonGroup, Grid, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button } from '@mui/material';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-const DoctorTreatmentHistory = () => {
+const TreatmentHistory = () => {
   const { HN } = useParams(); // รับ HN จาก URL parameter
   const [treatments, setTreatments] = useState([]); // สถานะสำหรับเก็บข้อมูลการรักษา
-  const [patientData, setPatientData] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,6 +34,7 @@ const DoctorTreatmentHistory = () => {
               <TableCell>วันที่รักษา</TableCell>
               <TableCell>รายละเอียดการรักษา</TableCell>
               <TableCell>ค่าใช้จ่าย</TableCell>
+              <TableCell>ราคารวม</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -42,11 +42,15 @@ const DoctorTreatmentHistory = () => {
               <TableRow key={treatment.Treatment_ID}>
                 <TableCell>{new Date(treatment.Treatment_Date).toLocaleDateString('th-TH')}</TableCell>
                 <TableCell>{treatment.Treatment_Details}</TableCell>
-                <TableCell>{treatment.Total_Cost.toFixed(2)}</TableCell>
+                <TableCell>{treatment.Treatment_cost}</TableCell>
+                <TableCell>
+                  {treatment.Total_Cost != null 
+                    ? parseFloat(treatment.Total_Cost).toFixed(2)
+                    : '-'}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
-
         </Table>
       </TableContainer>
       <Grid item xs={12}>
@@ -69,4 +73,4 @@ const DoctorTreatmentHistory = () => {
   );
 };
 
-export default DoctorTreatmentHistory;
+export default TreatmentHistory;
