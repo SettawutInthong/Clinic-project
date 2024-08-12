@@ -22,6 +22,9 @@ import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import TextField from "@mui/material/TextField";
 import { useNavigate } from "react-router-dom";
+import AddToQueueIcon from "@mui/icons-material/AddToQueue";
+import WysiwygIcon from '@mui/icons-material/Wysiwyg';
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(10),
@@ -150,7 +153,7 @@ const NurseQueue = () => {
                 color="success"
                 onClick={() => setAddQueuePopup(true)}
               >
-                <h3>จองคิว</h3>
+                <AddToQueueIcon />
               </Button>
             </Box>
 
@@ -211,13 +214,13 @@ const NurseQueue = () => {
                           aria-label="outlined primary button group"
                         >
                           <Button onClick={() => ViewOrder(row.HN)}>
-                            ดูรายการ
+                            <WysiwygIcon />
                           </Button>
                           <Button
                             onClick={() => DeleteQueue(row.HN)}
                             color="error"
                           >
-                            ลบ
+                            <DeleteIcon />
                           </Button>
                         </ButtonGroup>
                       </TableCell>

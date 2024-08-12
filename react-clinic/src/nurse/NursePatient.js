@@ -29,6 +29,11 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import ReactSelect from "react-select";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
+import AddToQueueIcon from "@mui/icons-material/AddToQueue";
+import DeleteIcon from "@mui/icons-material/Delete";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import SearchIcon from "@mui/icons-material/Search";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(10),
@@ -222,8 +227,8 @@ const NursePatient = () => {
           ? newBirthdate.toISOString().split("T")[0]
           : null,
         Phone: newPhone,
-        Disease: newDisease ? newDisease.value : null, 
-        allergy: newallergy ? newallergy.value : null, 
+        Disease: newDisease ? newDisease.value : null,
+        allergy: newallergy ? newallergy.value : null,
       };
 
       await axios.put(
@@ -399,7 +404,7 @@ const NursePatient = () => {
                   style={{ height: "40px" }}
                   color="info"
                 >
-                  ค้นหา
+                  <SearchIcon />
                 </Button>
               </form>
               <Button
@@ -411,7 +416,7 @@ const NursePatient = () => {
                   setAddPopup(true);
                 }}
               >
-                <h1>+</h1>
+                <PersonAddIcon />
               </Button>
             </Box>
 
@@ -482,16 +487,16 @@ const NursePatient = () => {
                                   : "default",
                               }}
                             >
-                              จองคิว
+                              <AddToQueueIcon />
                             </Button>
                             <Button onClick={() => ViewPatient(row.HN)}>
-                              ดู
+                              <VisibilityIcon />
                             </Button>
                             <Button
                               onClick={() => DeletePatient(row.HN)}
                               color="error"
                             >
-                              ลบ
+                              <DeleteIcon />
                             </Button>
                           </ButtonGroup>
                         </TableCell>
@@ -637,7 +642,7 @@ const NursePatient = () => {
                 id="view-dialog-title"
                 style={{ flexGrow: 1, textAlign: "center" }}
               >
-                ดูข้อมูลผู้ป่วย
+                ข้อมูลผู้ป่วย
               </DialogTitle>
               <DialogContent>
                 <Box display="flex" flexDirection="row" gap={2}>

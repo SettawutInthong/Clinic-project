@@ -99,10 +99,10 @@ const NurseBill = () => {
                     จำนวน
                   </TableCell>
                   <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                    ราคา (ต่อหน่วย)
+                    ราคาต่อหน่วย
                   </TableCell>
                   <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                    ราคา (รวม)
+                    ราคา
                   </TableCell>
                 </TableRow>
               </TableHead>

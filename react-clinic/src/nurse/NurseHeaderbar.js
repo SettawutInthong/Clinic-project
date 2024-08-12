@@ -10,7 +10,8 @@ import Container from "@mui/material/Container";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 import { useNavigate } from "react-router-dom";
-import logo from '../assets/img/+.png';
+import logo from "../assets/img/+.png";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 const pages = [
   { title: "หน้าแรก", icon: "", to: "/nurse_dashboard" },
@@ -119,7 +120,7 @@ function NurseHeaderbar() {
               width: 32,
               display: { xs: "flex", md: "none" },
               mr: 1,
-              mx: "auto"
+              mx: "auto",
             }}
             alt="Logo"
             src={logo}
@@ -138,7 +139,7 @@ function NurseHeaderbar() {
               letterSpacing: ".3rem",
               color: "inherit",
               textDecoration: "none",
-              mx: "auto"
+              mx: "auto",
             }}
           >
             คลินิกรุ่งเรือง
@@ -157,10 +158,15 @@ function NurseHeaderbar() {
 
           <Box sx={{ flexGrow: 0 }}>
             <Button
-              style={{ textDecoration: "none", color: "inherit" }}
+              variant="contained"
+              type="submit"
+              style={{ height: "30px" }}
+              color="error"
               onClick={handleLogout}
             >
-              Logout
+              <IconButton>
+                <LogoutIcon />
+              </IconButton>
             </Button>
           </Box>
         </Toolbar>

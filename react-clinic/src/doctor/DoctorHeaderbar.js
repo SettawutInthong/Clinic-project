@@ -11,6 +11,7 @@ import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/img/+.png";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 const pages = [
   { title: "หน้าแรก", icon: "", to: "/doctor_dashboard" },
@@ -157,10 +158,15 @@ function DoctorHeader() {
 
           <Box sx={{ flexGrow: 0 }}>
             <Button
-              style={{ textDecoration: "none", color: "inherit" }}
+              variant="contained"
+              type="submit"
+              style={{ height: "30px" }}
+              color="error"
               onClick={handleLogout}
             >
-              Logout
+              <IconButton>
+                <LogoutIcon />
+              </IconButton>
             </Button>
           </Box>
         </Toolbar>
