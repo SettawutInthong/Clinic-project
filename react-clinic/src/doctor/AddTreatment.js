@@ -43,6 +43,8 @@ const AddTreatment = () => {
           fullWidth
           value={treatmentDetails}
           onChange={(e) => setTreatmentDetails(e.target.value)}
+          multiline
+          rows={4}
           sx={{ mb: 2 }}
         />
         <TextField

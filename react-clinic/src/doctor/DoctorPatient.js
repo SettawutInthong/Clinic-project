@@ -194,11 +194,8 @@ const DoctorPatient = () => {
 
     const ViewHistory = async (HN) => {
         try {
-            // Fetch treatment history
             const treatmentResponse = await axios.get(`http://localhost:5000/api/treatments/${HN}`);
             setTreatmentHistory(treatmentResponse.data.data);
-
-            // Fetch medicine details for the latest treatment
             if (treatmentResponse.data.data.length > 0) {
                 const latestTreatment = treatmentResponse.data.data[0];
                 const medicineResponse = await axios.get(`http://localhost:5000/api/medicine_details?Order_ID=${latestTreatment.Order_ID}`);
@@ -801,7 +798,7 @@ const DoctorPatient = () => {
                             <DialogContent>
                                 {treatmentHistory.map((treatment, index) => (
                                     <Box key={index} mb={2}>
-                                        <Typography variant="h6">การรักษาที่ {index + 1}</Typography>
+                                        <Typography variant="h6">ครั้งที่ {index + 1}</Typography>
                                         <Typography>วันที่: {new Date(treatment.Treatment_Date).toLocaleDateString()}</Typography>
                                         <Typography>รายละเอียดการรักษา: {treatment.Treatment_Details}</Typography>
                                         <Typography>ค่าใช้จ่ายการรักษา: {treatment.Treatment_Cost}</Typography>
@@ -809,7 +806,7 @@ const DoctorPatient = () => {
                                         <ul>
                                             {medicineDetails.map((medicine, idx) => (
                                                 <li key={idx}>
-                                                    {medicine.Medicine_Name} - จำนวน: {medicine.Quantity_Order}
+                                                    {medicine.Medicine_Name} - จำนวน: {medicine.Quantity_Order} {medicine.Quantity_type} 
                                                 </li>
                                             ))}
                                         </ul>
