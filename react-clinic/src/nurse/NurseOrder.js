@@ -32,20 +32,22 @@ const NurseOrder = () => {
   const FetchOrderData = async () => {
     const params = new URLSearchParams(window.location.search);
     const HN = params.get("HN");
-
+  
     try {
+      // ดึง Order ล่าสุดจากตาราง orders ตาม HN ของผู้ป่วย
       const response = await axios.get(
         `http://localhost:5000/api/order_medicine?HN=${HN}`
       );
       const order = response.data.data;
       setOrderID(order.Order_ID);
-
+  
       const patientResponse = await axios.get(
         `http://localhost:5000/api/patient/${HN}`
       );
       const patient = patientResponse.data.data[0];
       setPatientName(`${patient.First_Name} ${patient.Last_Name}`);
-
+  
+      // ดึงรายการยาจากตาราง order_medicine ตาม Order_ID
       const medicineResponse = await axios.get(
         `http://localhost:5000/api/medicine_details?Order_ID=${order.Order_ID}`
       );
@@ -53,7 +55,7 @@ const NurseOrder = () => {
     } catch (error) {
       console.error("Error fetching order data:", error);
     }
-  };
+  };  
 
   useEffect(() => {
     FetchOrderData();
