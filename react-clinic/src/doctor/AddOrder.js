@@ -1,7 +1,26 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Box, Button, TextField, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Dialog, DialogActions, DialogContent, DialogTitle, Snackbar, Alert, IconButton } from "@mui/material";
-import DeleteIcon from '@mui/icons-material/Delete';
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Snackbar,
+  Alert,
+  IconButton,
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate, useParams } from "react-router-dom";
 
 const AddOrder = () => {
@@ -19,9 +38,12 @@ const AddOrder = () => {
     if (searchName) {
       const fetchMedicines = async () => {
         try {
-          const response = await axios.get("http://localhost:5000/api/medicines", {
-            params: { medicineName: searchName },
-          });
+          const response = await axios.get(
+            "http://localhost:5000/api/medicines",
+            {
+              params: { medicineName: searchName },
+            }
+          );
           setMedicines(response.data.data);
         } catch (error) {
           console.error("Error fetching medicines:", error);
@@ -55,13 +77,15 @@ const AddOrder = () => {
         items: orderItems,
       };
 
-      await axios.post(`http://localhost:5000/api/orders/${orderID}/items`, orderData);
+      await axios.post(
+        `http://localhost:5000/api/orders/${orderID}/items`,
+        orderData
+      );
       setOpenSnackbar(true);
       setOrderItems([]);
 
       // Navigate back to the queue page after submitting the order
-      navigate('/doctor_queue'); // เปลี่ยน URL เป็นหน้าคิวของคุณ
-
+      navigate("/doctor_queue"); // เปลี่ยน URL เป็นหน้าคิวของคุณ
     } catch (error) {
       console.error("Error submitting order:", error.message);
     }
@@ -85,7 +109,11 @@ const AddOrder = () => {
           value={searchName}
           onChange={(e) => setSearchName(e.target.value)}
         />
-        <Button variant="contained" color="primary" onClick={() => setOpenMedicineDialog(true)}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => setOpenMedicineDialog(true)}
+        >
           ค้นหา
         </Button>
       </Box>
@@ -105,7 +133,10 @@ const AddOrder = () => {
                 <TableCell>{item.Medicine_Name}</TableCell>
                 <TableCell>{item.Quantity}</TableCell>
                 <TableCell>
-                  <IconButton onClick={() => handleRemoveItem(index)} color="error">
+                  <IconButton
+                    onClick={() => handleRemoveItem(index)}
+                    color="error"
+                  >
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
@@ -115,11 +146,26 @@ const AddOrder = () => {
         </Table>
       </TableContainer>
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
-        <Button variant="contained" color="secondary" onClick={() => navigate(`/doctor_addtreatment/${HN}`)}>
+      <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
+        <Button
+          variant="outlined"
+          style={{
+            color: "#1976d2",
+            borderColor: "#1976d2",
+            textTransform: "none",
+            marginRight: "10px",
+          }}
+          onClic
+          onClick={() => navigate(`/doctor_addtreatment/${HN}`)}
+        >
           กลับ
         </Button>
-        <Button variant="contained" color="primary" onClick={handleSubmitOrder} disabled={orderItems.length === 0}>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={handleSubmitOrder}
+          disabled={orderItems.length === 0}
+        >
           บันทึกออเดอร์
         </Button>
       </Box>
@@ -128,14 +174,17 @@ const AddOrder = () => {
         open={openSnackbar}
         autoHideDuration={3000}
         onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert onClose={handleSnackbarClose} severity="success">
           บันทึกออเดอร์สำเร็จ
         </Alert>
       </Snackbar>
 
-      <Dialog open={openMedicineDialog} onClose={() => setOpenMedicineDialog(false)}>
+      <Dialog
+        open={openMedicineDialog}
+        onClose={() => setOpenMedicineDialog(false)}
+      >
         <DialogTitle>ค้นหายา</DialogTitle>
         <DialogContent>
           <TableContainer component={Paper}>
@@ -181,7 +230,12 @@ const AddOrder = () => {
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
               />
-              <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={handleAddMedicine}>
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{ mt: 2 }}
+                onClick={handleAddMedicine}
+              >
                 เพิ่มยาในออเดอร์
               </Button>
             </Box>

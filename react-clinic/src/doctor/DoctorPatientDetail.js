@@ -1,38 +1,51 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import axios from 'axios';
-import { Grid, TextField, Typography, Button, Box, ButtonGroup } from '@mui/material';
-import { Card, CardContent } from '@mui/material';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import {
+  Grid,
+  TextField,
+  Typography,
+  Button,
+  Box,
+  ButtonGroup,
+} from "@mui/material";
+import { Card, CardContent } from "@mui/material";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const DoctorPatientDetail = () => {
   const { HN } = useParams();
   const [patientData, setPatientData] = useState(null);
-  const [diseaseName, setDiseaseName] = useState('');
-  const [allergyDetails, setAllergyDetails] = useState('');
-  const [loading, setLoading] = useState(true);  // เพิ่มสถานะ loading
+  const [diseaseName, setDiseaseName] = useState("");
+  const [allergyDetails, setAllergyDetails] = useState("");
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPatientData = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/patient/${HN}`);
+        const response = await axios.get(
+          `http://localhost:5000/api/patient/${HN}`
+        );
         const patient = response.data.data[0];
         setPatientData(patient);
 
         if (patient.Disease_ID) {
-          const diseaseResponse = await axios.get(`http://localhost:5000/api/disease/${patient.Disease_ID}`);
+          const diseaseResponse = await axios.get(
+            `http://localhost:5000/api/disease/${patient.Disease_ID}`
+          );
           setDiseaseName(diseaseResponse.data.diseaseName);
         }
 
         if (patient.Allergy_ID) {
-          const allergyResponse = await axios.get(`http://localhost:5000/api/allergy/${patient.Allergy_ID}`);
+          const allergyResponse = await axios.get(
+            `http://localhost:5000/api/allergy/${patient.Allergy_ID}`
+          );
           setAllergyDetails(allergyResponse.data.allergyDetails);
         }
-        setLoading(false);  // ข้อมูลโหลดเสร็จสิ้น
+        setLoading(false);
       } catch (error) {
-        console.error('Error fetching data:', error);
-        setLoading(false);  // กรณีเกิดข้อผิดพลาด
+        console.error("Error fetching data:", error);
+        setLoading(false);
       }
     };
 
@@ -51,7 +64,7 @@ const DoctorPatientDetail = () => {
   };
 
   if (loading) {
-    return <p>Loading...</p>;  // สามารถแทนด้วย Skeleton หรือ Spinner ได้
+    return <p>Loading...</p>;
   }
 
   return (
@@ -78,7 +91,9 @@ const DoctorPatientDetail = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="วันเกิด"
-                  value={new Date(patientData.Birthdate).toLocaleDateString('th-TH')}
+                  value={new Date(patientData.Birthdate).toLocaleDateString(
+                    "th-TH"
+                  )}
                   InputProps={{ readOnly: true }}
                   fullWidth
                 />
@@ -96,7 +111,7 @@ const DoctorPatientDetail = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="แพ้ยา"
-                  value={allergyDetails || '-'}
+                  value={allergyDetails || "-"}
                   InputProps={{ readOnly: true }}
                   fullWidth
                 />
@@ -105,22 +120,34 @@ const DoctorPatientDetail = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="โรคประจำตัว"
-                  value={diseaseName || '-'}
+                  value={diseaseName || "-"}
                   InputProps={{ readOnly: true }}
                   fullWidth
                 />
               </Grid>
 
               <Grid item xs={12}>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-                  <ButtonGroup color="primary" aria-label="outlined primary button group">
-                    <Button onClick={() => navigate(`/doctor_queue/`)} color="error">
-                      กลับ
-                    </Button>
-                    <Button onClick={() => navigate(`/doctor_treatmenthistory/${patientData.HN}`)}>
-                      ถัดไป
-                    </Button>
-                  </ButtonGroup>
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+                  <Button
+                    variant="outlined"
+                    style={{
+                      color: "#1976d2",
+                      borderColor: "#1976d2",
+                      textTransform: "none",
+                      marginRight: "10px",
+                    }}
+                    onClick={() => navigate(`/doctor_queue/`)}
+                  >
+                    กลับ
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={() =>
+                      navigate(`/doctor_treatmenthistory/${patientData.HN}`)
+                    }
+                  >
+                    ถัดไป
+                  </Button>
                 </Box>
               </Grid>
             </Grid>

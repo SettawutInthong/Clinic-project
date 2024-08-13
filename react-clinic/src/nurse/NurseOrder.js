@@ -116,7 +116,7 @@ const NurseOrder = () => {
                 )
               }
             >
-              ย้อนกลับ
+              กลับ
             </Button>
             <Button
               variant="contained"

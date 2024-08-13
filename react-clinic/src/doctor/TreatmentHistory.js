@@ -1,23 +1,47 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { Box, ButtonGroup, Grid, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemText } from '@mui/material';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
+import {
+  Box,
+  ButtonGroup,
+  Grid,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  List,
+  ListItem,
+  ListItemText,
+} from "@mui/material";
 
 const TreatmentHistory = () => {
   const { HN } = useParams();
   const [treatments, setTreatments] = useState([]);
   const [open, setOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState([]);
-  const [dialogState, setDialogState] = useState({ open: false, selectedOrder: [] });
+  const [dialogState, setDialogState] = useState({
+    open: false,
+    selectedOrder: [],
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTreatments = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/treatments/${HN}`);
+        const response = await axios.get(
+          `http://localhost:5000/api/treatments/${HN}`
+        );
         setTreatments(response.data.data || []);
       } catch (error) {
-        console.error('Error fetching treatment data:', error);
+        console.error("Error fetching treatment data:", error);
       }
     };
 
@@ -26,10 +50,12 @@ const TreatmentHistory = () => {
 
   const handleOpen = async (orderID) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/medicine_details?Order_ID=${orderID}`);
+      const response = await axios.get(
+        `http://localhost:5000/api/medicine_details?Order_ID=${orderID}`
+      );
       setDialogState({ open: true, selectedOrder: response.data.data || [] });
     } catch (error) {
-      console.error('Error fetching order details:', error);
+      console.error("Error fetching order details:", error);
       setDialogState({ open: true, selectedOrder: [] });
     }
   };
@@ -38,10 +64,11 @@ const TreatmentHistory = () => {
     setDialogState({ open: false, selectedOrder: [] });
   };
 
-
   return (
     <Paper>
-      <Typography variant="h6" style={{ margin: '20px' }}>ประวัติการรักษาของผู้ป่วย HN: {HN}</Typography>
+      <Typography variant="h6" style={{ margin: "20px" }}>
+        ประวัติการรักษาของผู้ป่วย HN: {HN}
+      </Typography>
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -57,18 +84,33 @@ const TreatmentHistory = () => {
             {treatments.length > 0 ? (
               treatments.map((treatment) => (
                 <TableRow key={treatment.Treatment_ID}>
-                  <TableCell>{new Date(treatment.Treatment_Date).toLocaleDateString('th-TH')}</TableCell>
+                  <TableCell>
+                    {new Date(treatment.Treatment_Date).toLocaleDateString(
+                      "th-TH"
+                    )}
+                  </TableCell>
                   <TableCell>{treatment.Treatment_Details}</TableCell>
                   <TableCell>{treatment.Treatment_cost}</TableCell>
-                  <TableCell>{treatment.Total_Cost != null ? parseFloat(treatment.Total_Cost).toFixed(2) : '-'}</TableCell>
                   <TableCell>
-                    <Button variant="outlined" onClick={() => handleOpen(treatment.Order_ID)}>ดูออเดอร์</Button>
+                    {treatment.Total_Cost != null
+                      ? parseFloat(treatment.Total_Cost).toFixed(2)
+                      : "-"}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outlined"
+                      onClick={() => handleOpen(treatment.Order_ID)}
+                    >
+                      ดูออเดอร์
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} style={{ textAlign: 'center' }}>ไม่มีข้อมูลการรักษา</TableCell>
+                <TableCell colSpan={5} style={{ textAlign: "center" }}>
+                  ไม่มีข้อมูลการรักษา
+                </TableCell>
               </TableRow>
             )}
           </TableBody>
@@ -94,15 +136,25 @@ const TreatmentHistory = () => {
         </DialogContent>
       </Dialog>
       <Grid item xs={12}>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-          <ButtonGroup color="primary" aria-label="outlined primary button group">
-            <Button onClick={() => navigate(`/doctor_patientdetail/${HN}`)} color="error">
-              กลับ
-            </Button>
-            <Button onClick={() => navigate(`/doctor_addtreatment/${HN}`)}>
-              ถัดไป
-            </Button>
-          </ButtonGroup>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+          <Button
+            variant="outlined"
+            style={{
+              color: "#1976d2",
+              borderColor: "#1976d2",
+              textTransform: "none",
+              marginRight: "10px",
+            }}
+            onClick={() => navigate(`/doctor_patientdetail/${HN}`)}
+          >
+            กลับ
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => navigate(`/doctor_addtreatment/${HN}`)}
+          >
+            ถัดไป
+          </Button>
         </Box>
       </Grid>
     </Paper>
