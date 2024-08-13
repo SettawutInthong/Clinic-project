@@ -15,9 +15,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 const DoctorPatientDetail = () => {
   const { HN } = useParams();
   const [patientData, setPatientData] = useState(null);
-  const [diseaseName, setDiseaseName] = useState("");
-  const [allergyDetails, setAllergyDetails] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [diseaseName, setDiseaseName] = useState('');
+  const [allergyDetails, setAllergyDetails] = useState('');
+  const [loading, setLoading] = useState(true);  // เพิ่มสถานะ loading
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,15 +37,13 @@ const DoctorPatientDetail = () => {
         }
 
         if (patient.Allergy_ID) {
-          const allergyResponse = await axios.get(
-            `http://localhost:5000/api/allergy/${patient.Allergy_ID}`
-          );
+          const allergyResponse = await axios.get(`http://localhost:5000/api/allergy/${patient.Allergy_ID}`);
           setAllergyDetails(allergyResponse.data.allergyDetails);
         }
-        setLoading(false);
+        setLoading(false);  // ข้อมูลโหลดเสร็จสิ้น
       } catch (error) {
-        console.error("Error fetching data:", error);
-        setLoading(false);
+        console.error('Error fetching data:', error);
+        setLoading(false);  // กรณีเกิดข้อผิดพลาด
       }
     };
 
@@ -64,7 +62,7 @@ const DoctorPatientDetail = () => {
   };
 
   if (loading) {
-    return <p>Loading...</p>;
+    return <p>Loading...</p>;  // สามารถแทนด้วย Skeleton หรือ Spinner ได้
   }
 
   return (
@@ -111,7 +109,7 @@ const DoctorPatientDetail = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="แพ้ยา"
-                  value={allergyDetails || "-"}
+                  value={allergyDetails || '-'}
                   InputProps={{ readOnly: true }}
                   fullWidth
                 />

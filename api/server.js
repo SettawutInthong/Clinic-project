@@ -107,8 +107,8 @@ app.post("/api/patient", function (req, res) {
     Gender,
     Birthdate,
     Phone,
-    Disease_ID, 
-    Allergy_ID, 
+    Disease_ID,
+    Allergy_ID,
   } = req.body;
 
   const getMaxHN = "SELECT MAX(HN) as maxHN FROM patient";
@@ -316,7 +316,7 @@ app.get("/api/order_medicine", function (req, res) {
 app.get("/api/medicine_details", function (req, res) {
   const Order_ID = req.query.Order_ID;
   const sql = `
-    SELECT om.Item_ID, om.Quantity_Order, m.Medicine_Name, m.Med_Cost
+    SELECT om.Item_ID, om.Quantity_Order, m.Medicine_Name, m.Med_Cost, m.Quantity_type
     FROM order_medicine om 
     JOIN medicine m ON om.Medicine_ID = m.Medicine_ID 
     WHERE om.Order_ID = ?
@@ -386,6 +386,20 @@ app.get("/api/disease/:Disease_ID", function (req, res) {
       res.json({ diseaseName: results[0].Disease_name });
     } else {
       res.status(404).json({ error: "ไม่พบข้อมูลโรค" });
+    }
+  });
+});
+
+// ดึงข้อมูลAllergyตามAllergy_ID (Allergy_ID)
+app.get('/api/allergy/:Allergy_ID', function (req, res) {
+  const allergyId = req.params.Allergy_ID;
+  const sql = 'SELECT allergy_name FROM allergy WHERE Allergy_ID = ?';
+  connection.query(sql, [allergyId], function (err, results) {
+    if (err) throw err;
+    if (results.length > 0) {
+      res.json({ allergyName: results[0].allergy_name });
+    } else {
+      res.status(404).json({ error: 'ไม่พบข้อมูลการแพ้' });
     }
   });
 });
