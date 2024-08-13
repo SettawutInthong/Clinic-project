@@ -146,10 +146,9 @@ const NursePatient = () => {
         Gender: newGender,
         Birthdate: newBirthdate,
         Phone: newPhone,
-        Disease_ID: newDisease.value,  
-        Allergy_ID: newAllergy.value,  
+        Disease_ID: newDisease.value,
+        Allergy_ID: newAllergy.value,
       };
-      
 
       const response = await axios.post(
         "http://localhost:5000/api/patient",
@@ -201,12 +200,13 @@ const NursePatient = () => {
         setNewBirthdate(new Date(patient.Birthdate));
         setNewGender(patient.Gender);
         setNewPhone(patient.Phone);
-        setNewDisease(
-          diseases.find((disease) => disease.value === patient.Disease_ID)
-        );
-        setNewAllergy(
-          allergy.find((allergy) => allergy.value === patient.Allergy_ID)
-        );
+
+        const diseaseID = patient.Disease_ID || "D000";
+        setNewDisease(diseases.find((disease) => disease.value === diseaseID));
+
+        const allergyID = patient.Allergy_ID || "A000";
+        setNewallergy(allergy.find((allergy) => allergy.value === allergyID));
+
         setSelectedHN(HN);
         setEdit(false);
         setViewPopup(true);

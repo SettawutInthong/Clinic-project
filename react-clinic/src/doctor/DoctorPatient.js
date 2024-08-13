@@ -212,33 +212,39 @@ const DoctorPatient = () => {
 
     const ViewPatient = async (HN) => {
         try {
-            ResetForm();
-            const response = await axios.get(
-                `http://localhost:5000/api/patient?HN=${HN}`
+          ResetForm();
+          const response = await axios.get(
+            `http://localhost:5000/api/patient?HN=${HN}`
+          );
+          const patient = response.data.data[0];
+          if (patient) {
+            setNewTitle(patient.Title);
+            setNewFirstName(patient.First_Name);
+            setNewLastName(patient.Last_Name);
+            setNewBirthdate(new Date(patient.Birthdate));
+            setNewGender(patient.Gender);
+            setNewPhone(patient.Phone);
+            
+            const diseaseID = patient.Disease_ID || "D000";
+            setNewDisease(
+              diseases.find((disease) => disease.value === diseaseID)
             );
-            const patient = response.data.data[0];
-            if (patient) {
-                setNewTitle(patient.Title);
-                setNewFirstName(patient.First_Name);
-                setNewLastName(patient.Last_Name);
-                setNewBirthdate(new Date(patient.Birthdate));
-                setNewGender(patient.Gender);
-                setNewPhone(patient.Phone);
-                setNewDisease(
-                    diseases.find((disease) => disease.value === patient.Disease_ID)
-                );
-                setNewAllergy(
-                    allergy.find((allergy) => allergy.value === patient.Allergy_ID)
-                );
-                setSelectedHN(HN);
-                setEdit(false);
-                setViewPopup(true);
-            }
+            
+                        const allergyID = patient.Allergy_ID || "A000";
+            setNewallergy(
+              allergy.find((allergy) => allergy.value === allergyID)
+            );
+            
+            setSelectedHN(HN);
+            setEdit(false);
+            setViewPopup(true);
+          }
         } catch (error) {
-            console.error("Error viewing patient:", error);
-            showMessage("เกิดข้อผิดพลาดในการดูข้อมูลผู้ป่วย");
+          console.error("Error viewing patient:", error);
+          showMessage("เกิดข้อผิดพลาดในการดูข้อมูลผู้ป่วย");
         }
-    };
+      };
+      
 
     const EditPatient = async () => {
         try {
