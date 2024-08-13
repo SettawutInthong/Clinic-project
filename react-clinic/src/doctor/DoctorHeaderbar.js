@@ -42,7 +42,7 @@ function DoctorHeader() {
   };
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: "#1A5319" }}>
+    <AppBar position="sticky" sx={{ backgroundColor: "#1A5319" }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <Box
