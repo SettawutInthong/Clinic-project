@@ -145,11 +145,11 @@ const NurseBill = () => {
               }}
               onClick={() => navigate(-1)}
             >
-              ย้อนกลับ
+              กลับ
             </Button>
             <Button
               variant="contained"
-              color="primary"
+              color="success"
               onClick={() => navigate("/nurse_queue")}
             >
               เสร็จสิ้น
