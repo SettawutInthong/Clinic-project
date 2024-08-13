@@ -56,7 +56,7 @@ const NursePatient = () => {
   const [newTitle, setNewTitle] = useState("");
   const [newBirthdate, setNewBirthdate] = useState(null);
   const [newPhone, setNewPhone] = useState("");
-  const [newallergy, setNewallergy] = useState("");
+  const [newAllergy, setNewAllergy] = useState("");
   const [newDisease, setNewDisease] = useState("");
   const [allergy, setAllergy] = useState([]);
   const [diseases, setDiseases] = useState([]);
@@ -134,7 +134,7 @@ const NursePatient = () => {
     setNewGender("");
     setNewPhone("");
     setNewDisease("");
-    setNewallergy("");
+    setNewAllergy("");
   };
 
   const AddPatient = async () => {
@@ -146,9 +146,10 @@ const NursePatient = () => {
         Gender: newGender,
         Birthdate: newBirthdate,
         Phone: newPhone,
-        Disease: newDisease.value,
-        allergy: newallergy.value,
+        Disease_ID: newDisease.value,  
+        Allergy_ID: newAllergy.value,  
       };
+      
 
       const response = await axios.post(
         "http://localhost:5000/api/patient",
@@ -203,8 +204,8 @@ const NursePatient = () => {
         setNewDisease(
           diseases.find((disease) => disease.value === patient.Disease_ID)
         );
-        setNewallergy(
-          allergy.find((allergy) => allergy.value === patient.allergy_ID)
+        setNewAllergy(
+          allergy.find((allergy) => allergy.value === patient.Allergy_ID)
         );
         setSelectedHN(HN);
         setEdit(false);
@@ -227,8 +228,8 @@ const NursePatient = () => {
           ? newBirthdate.toISOString().split("T")[0]
           : null,
         Phone: newPhone,
-        Disease: newDisease ? newDisease.value : null,
-        allergy: newallergy ? newallergy.value : null,
+        Disease_ID: newDisease ? newDisease.value : null,
+        Allergy_ID: newAllergy ? newAllergy.value : null,
       };
 
       await axios.put(
@@ -261,7 +262,7 @@ const NursePatient = () => {
   };
 
   useEffect(() => {
-    const fetchallergy = async () => {
+    const fetchAllergy = async () => {
       try {
         const response = await axios.get("http://localhost:5000/api/allergy");
         setAllergy(
@@ -289,7 +290,7 @@ const NursePatient = () => {
       }
     };
 
-    fetchallergy();
+    fetchAllergy();
     fetchDiseases();
   }, []);
 
@@ -604,8 +605,8 @@ const NursePatient = () => {
                   <Box style={{ flex: 1 }}>
                     <ReactSelect
                       options={allergy}
-                      value={newallergy}
-                      onChange={setNewallergy}
+                      value={newAllergy}
+                      onChange={setNewAllergy}
                       placeholder="เลือกการแพ้ยา"
                     />
                   </Box>
@@ -735,8 +736,8 @@ const NursePatient = () => {
                   <Box style={{ flex: 1 }}>
                     <ReactSelect
                       options={allergy}
-                      value={newallergy}
-                      onChange={setNewallergy}
+                      value={newAllergy}
+                      onChange={setNewAllergy}
                       placeholder="เลือกการแพ้ยา"
                       isDisabled={!edit}
                     />
