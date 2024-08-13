@@ -141,8 +141,8 @@ app.post("/api/patient", function (req, res) {
         Gender,
         Birthdate,
         Phone,
-        Disease_ID || null, // ตรวจสอบว่าได้ส่งค่ามาถูกต้องหรือไม่
-        Allergy_ID || null, // ตรวจสอบว่าได้ส่งค่ามาถูกต้องหรือไม่
+        Disease_ID || null, 
+        Allergy_ID || null, 
       ],
       function (err) {
         if (err) {
