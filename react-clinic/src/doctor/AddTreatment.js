@@ -1,72 +1,82 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Grid, ButtonGroup, TextField, Button, Box, Typography, Paper } from '@mui/material';
+import { Paper, TextField, Button, Typography, Snackbar, Alert, Box ,Grid ,ButtonGroup} from '@mui/material';
 
 const AddTreatment = () => {
   const { HN } = useParams();
   const [treatmentDetails, setTreatmentDetails] = useState('');
   const [treatmentCost, setTreatmentCost] = useState('');
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [orderID, setOrderID] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       const response = await axios.post('http://localhost:5000/api/treatments', {
         HN,
-        Treatment_Details: treatmentDetails,
-        Treatment_cost: treatmentCost
+        treatmentDetails,
+        treatmentCost,
       });
 
-      console.log('Treatment added:', response.data);
-      navigate(`/doctor_treatmenthistory/${HN}`);
+      setOrderID(response.data.Order_ID);
+      setSnackbarMessage('บันทึกข้อมูลสำเร็จ');
+      setSnackbarOpen(true);
     } catch (error) {
       console.error('Error adding treatment:', error);
     }
   };
-  
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+    navigate(`/doctor_addorder/${HN}/${orderID}`);
+  };
+
   return (
     <Paper sx={{ padding: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        เพิ่มข้อมูลวินิจฉัยสำหรับผู้ป่วย HN: {HN}
-      </Typography>
-      <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Typography variant="h6">ข้อมูลการรักษา</Typography>
+      <form onSubmit={handleSubmit}>
         <TextField
           label="รายละเอียดการรักษา"
-          variant="outlined"
+          fullWidth
           value={treatmentDetails}
           onChange={(e) => setTreatmentDetails(e.target.value)}
-          fullWidth
+          sx={{ mb: 2 }}
         />
         <TextField
           label="ค่าใช้จ่าย"
-          variant="outlined"
-          type="number"
+          fullWidth
           value={treatmentCost}
           onChange={(e) => setTreatmentCost(e.target.value)}
-          fullWidth
+          type="number"
+          sx={{ mb: 2 }}
         />
-        <Button variant="contained" color="primary" type="submit">
-          บันทึก
-        </Button>
+
         <Grid item xs={12}>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-            <ButtonGroup
-              color="primary"
-              aria-label="outlined primary button group"
-              style={{ display: "flex", justifyContent: "center", marginTop: "16px" }}
-            >
+            <ButtonGroup color="primary" aria-label="outlined primary button group">
               <Button onClick={() => navigate(`/doctor_treatmenthistory/${HN}`)} color="error">
                 กลับ
               </Button>
-              <Button onClick={() => navigate(`/doctor_addorder/${HN}`)}>
-                ถัดไป
+              <Button variant="contained" color="primary" type="submit">
+                บันทึกและสั่งยา
               </Button>
             </ButtonGroup>
           </Box>
         </Grid>
-      </Box>
+      </form>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity="success" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Paper>
   );
 };

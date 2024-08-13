@@ -9,27 +9,30 @@ const DoctorPatientDetail = () => {
   const { HN } = useParams();
   const [patientData, setPatientData] = useState(null);
   const [diseaseName, setDiseaseName] = useState('');
-  const [treatments, setTreatments] = useState([]);
   const [allergyDetails, setAllergyDetails] = useState('');
+  const [loading, setLoading] = useState(true);  // เพิ่มสถานะ loading
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPatientData = async () => {
       try {
         const response = await axios.get(`http://localhost:5000/api/patient/${HN}`);
-        setPatientData(response.data.data[0]);
+        const patient = response.data.data[0];
+        setPatientData(patient);
 
-        if (response.data.data[0].Disease_ID) {
-          const diseaseResponse = await axios.get(`http://localhost:5000/api/disease/${response.data.data[0].Disease_ID}`);
+        if (patient.Disease_ID) {
+          const diseaseResponse = await axios.get(`http://localhost:5000/api/disease/${patient.Disease_ID}`);
           setDiseaseName(diseaseResponse.data.diseaseName);
         }
 
-        if (response.data.data[0].Allergy_ID) {
-          const allergyResponse = await axios.get(`http://localhost:5000/api/allergy/${response.data.data[0].Allergy_ID}`);
+        if (patient.Allergy_ID) {
+          const allergyResponse = await axios.get(`http://localhost:5000/api/allergy/${patient.Allergy_ID}`);
           setAllergyDetails(allergyResponse.data.allergyDetails);
         }
+        setLoading(false);  // ข้อมูลโหลดเสร็จสิ้น
       } catch (error) {
         console.error('Error fetching data:', error);
+        setLoading(false);  // กรณีเกิดข้อผิดพลาด
       }
     };
 
@@ -46,6 +49,10 @@ const DoctorPatientDetail = () => {
     }
     return age;
   };
+
+  if (loading) {
+    return <p>Loading...</p>;  // สามารถแทนด้วย Skeleton หรือ Spinner ได้
+  }
 
   return (
     <Box sx={{ flexGrow: 1, padding: 3 }}>
@@ -89,7 +96,7 @@ const DoctorPatientDetail = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="แพ้ยา"
-                  value={patientData.Allergy_ID ? patientData.Allergy_ID : '-'}
+                  value={allergyDetails || '-'}
                   InputProps={{ readOnly: true }}
                   fullWidth
                 />
@@ -98,7 +105,7 @@ const DoctorPatientDetail = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="โรคประจำตัว"
-                  value={patientData.Disease_ID ? patientData.Disease_ID : '-'}
+                  value={diseaseName || '-'}
                   InputProps={{ readOnly: true }}
                   fullWidth
                 />
@@ -107,7 +114,7 @@ const DoctorPatientDetail = () => {
               <Grid item xs={12}>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
                   <ButtonGroup color="primary" aria-label="outlined primary button group">
-                    <Button onClick={() => navigate(`/doctor_queue/`)}>
+                    <Button onClick={() => navigate(`/doctor_queue/`)} color="error">
                       กลับ
                     </Button>
                     <Button onClick={() => navigate(`/doctor_treatmenthistory/${patientData.HN}`)}>
@@ -120,7 +127,7 @@ const DoctorPatientDetail = () => {
           </CardContent>
         </Card>
       ) : (
-        <p>Loading...</p>
+        <p>ไม่พบข้อมูลผู้ป่วย</p>
       )}
     </Box>
   );

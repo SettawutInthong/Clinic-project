@@ -406,44 +406,85 @@ app.get("/api/treatments/:HN", function (req, res) {
   });
 });
 
-app.post('/api/treatments', async (req, res) => {
-  const { HN, Treatment_Details, Treatment_cost } = req.body;
+
+// Function to generate the next ID based on the prefix
+function generateID(currentMaxID, prefix) {
+  if (!currentMaxID) return `${prefix}00001`;
+  const nextNumber = parseInt(currentMaxID.substring(1), 10) + 1;
+  return `${prefix}${nextNumber.toString().padStart(5, "0")}`;
+}
+
+// API เพื่อเพิ่มการรักษาและสร้าง Order_ID ใหม่
+app.post("/api/treatments", async (req, res) => {
+  const { HN, treatmentDetails, treatmentCost, items } = req.body;
+  const treatmentDate = new Date().toISOString().split("T")[0];
 
   try {
-    // Fetch the latest treatment ID
-    const getMaxTreatmentID = "SELECT MAX(Treatment_ID) as maxID FROM treatment";
-    const [results] = await db.query(getMaxTreatmentID);
-    let newTreatmentID = "T00001";
+    // Generate new Treatment_ID
+    const [maxTreatmentResult] = await db.query(`
+      SELECT MAX(Treatment_ID) as maxTreatmentID FROM treatment
+    `);
+    const newTreatmentID = generateID(maxTreatmentResult[0].maxTreatmentID, 'T');
 
-    if (results.length > 0 && results[0].maxID) {
-      const maxID = results[0].maxID;
-      const numberPart = parseInt(maxID.substring(1), 10);
-      const nextNumber = numberPart + 1;
-      newTreatmentID = `T${nextNumber.toString().padStart(5, "0")}`;
+    // Generate new Order_ID
+    const [maxOrderResult] = await db.query(`
+      SELECT MAX(Order_ID) as maxOrderID FROM orders
+    `);
+    const newOrderID = generateID(maxOrderResult[0].maxOrderID, 'O');
+
+    // Insert into orders table
+    await db.query(`
+      INSERT INTO orders (Order_ID, HN, Order_Date)
+      VALUES (?, ?, ?)
+    `, [newOrderID, HN, treatmentDate]);
+
+    // Insert into treatment table with the generated Order_ID
+    await db.query(`
+      INSERT INTO treatment (Treatment_ID, HN, Treatment_Date, Treatment_Details, Treatment_Cost, Order_ID)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `, [newTreatmentID, HN, treatmentDate, treatmentDetails, treatmentCost, newOrderID]);
+
+    // ตรวจสอบว่ามี items หรือไม่ก่อนใช้ map
+    if (items && items.length > 0) {
+      // Insert items into order_medicine
+      const itemPromises = items.map(item => {
+        return db.query(`
+          INSERT INTO order_medicine (Order_ID, Medicine_ID, Quantity_Order)
+          VALUES (?, ?, ?)
+        `, [newOrderID, item.Medicine_ID, item.Quantity]);
+      });
+
+      await Promise.all(itemPromises);
     }
 
-    // Insert the new treatment record
-    const treatmentDate = new Date();
-    const insertTreatment = `
-      INSERT INTO treatment (Treatment_ID, HN, Treatment_Date, Treatment_Details, Treatment_cost) 
-      VALUES (?, ?, ?, ?, ?)`;
-
-    await db.query(insertTreatment, [newTreatmentID, HN, treatmentDate, Treatment_Details, Treatment_cost]);
-
-    res.status(201).json({ message: "Treatment added successfully", Treatment_ID: newTreatmentID });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.json({ message: "Treatment, Order, and Medicine Items created successfully", Treatment_ID: newTreatmentID, Order_ID: newOrderID });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-// ฟังก์ชันสำหรับสร้าง Order_ID ใหม่
-const generateOrderID = (maxID) => {
-  if (!maxID) return 'O00001';
-  const nextNumber = parseInt(maxID.substring(1), 10) + 1;
-  return `O${nextNumber.toString().padStart(5, '0')}`;
-};
 
-// API สำหรับค้นหายา
+
+app.get('/api/treatments/latest/:HN', async (req, res) => {
+  const { HN } = req.params;
+  try {
+    const [result] = await connection.promise().query('SELECT * FROM treatment WHERE HN = ? ORDER BY Treatment_Date DESC LIMIT 1', [HN]);
+    if (result.length > 0) {
+      res.json(result[0]);
+    } else {
+      res.status(404).json({ message: 'Treatment not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+
+
+
+// API to search medicines by name
 app.get('/api/medicines', (req, res) => {
   const { medicineName } = req.query;
 
@@ -451,43 +492,80 @@ app.get('/api/medicines', (req, res) => {
   const params = [`%${medicineName}%`];
 
   connection.query(sql, params, (error, results) => {
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ data: results });
+      if (error) return res.status(500).json({ error: error.message });
+      res.json({ data: results });
   });
 });
 
-// API สำหรับบันทึกออเดอร์
-app.post('/api/orders', async (req, res) => {
-  const { HN, items, doctorFee } = req.body;
+// ฟังก์ชันสำหรับสร้าง Item_ID ถัดไป
+async function generateNextItemID() {
+  const [result] = await db.query(`
+      SELECT MAX(Item_ID) as maxItemID FROM order_medicine
+  `);
+
+  const currentMaxID = result[0].maxItemID;
+  if (!currentMaxID) return `I00001`;
+
+  // ตัดตัวเลขส่วนท้ายจาก Item_ID
+  const numericPart = parseInt(currentMaxID.substring(1), 10);
+  const nextIDNumber = numericPart + 1;
+
+  // เติมเลขศูนย์ข้างหน้าจนได้รูปแบบที่ต้องการ
+  return `I${nextIDNumber.toString().padStart(5, '0')}`;  // เปลี่ยนจาก 6 เป็น 5
+}
+
+// ตัวอย่างการใช้งานฟังก์ชันนี้เมื่อเพิ่มรายการยาลงใน order
+app.post('/api/orders/:orderID/items', async (req, res) => {
+  const { orderID } = req.params;
+  const { items } = req.body;
 
   try {
-    const [maxOrderResult] = await connection.promise().query(`
-      SELECT MAX(Order_ID) as maxOrderID FROM orders
-    `);
+      // คำนวณ Item_ID เริ่มต้น
+      let nextItemID = await generateNextItemID();
 
-    const newOrderID = generateOrderID(maxOrderResult[0].maxOrderID);
+      const itemPromises = items.map((item, index) => {
+          // เพิ่มเลข Item_ID สำหรับแต่ละยา
+          const currentItemID = `I${(parseInt(nextItemID.substring(1), 10) + index).toString().padStart(5, '0')}`;  // เปลี่ยนจาก 6 เป็น 5
 
-    await connection.promise().query(`
-      INSERT INTO orders (Order_ID, HN, Doctor_Fee)
-      VALUES (?, ?, ?)
-    `, [newOrderID, HN, doctorFee]);
+          return db.query(`
+              INSERT INTO order_medicine (Item_ID, Order_ID, Medicine_ID, Quantity_Order)
+              VALUES (?, ?, ?, ?)
+          `, [currentItemID, orderID, item.Medicine_ID, item.Quantity]);
+      });
 
-    const itemPromises = items.map(item => {
-      return connection.promise().query(`
-        INSERT INTO order_items (Order_ID, Medicine_ID, Quantity, Item_Cost)
-        VALUES (?, ?, ?, ?)
-      `, [newOrderID, item.Medicine_ID, item.Quantity, item.Quantity * item.Med_Cost]);
-    });
-
-    await Promise.all(itemPromises);
-
-    res.json({ message: 'Order created successfully', Order_ID: newOrderID });
+      await Promise.all(itemPromises);
+      res.json({ message: 'เพิ่มรายการยาสำเร็จ' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+      console.error(error);
+      res.status(500).json({ error: 'เกิดข้อผิดพลาดในการเพิ่มรายการยา' });
   }
 });
 
+
+
+
+
+
+app.post('/api/orders', async (req, res) => {
+  const { HN, Order_ID, items } = req.body;
+
+  // สร้างออเดอร์ใหม่ในตาราง orders โดยไม่รวม `Doctor_Fee`
+  const sql = `INSERT INTO orders (Order_ID, HN, Order_Date) VALUES (?, ?, NOW())`;
+  await db.execute(sql, [Order_ID, HN]);
+
+  // ดำเนินการเพิ่มรายการยาในคำสั่งซื้อ (items)
+  for (const item of items) {
+    const { Medicine_ID, Quantity } = item;
+    const sqlItem = `INSERT INTO order_medicine (Order_ID, Medicine_ID, Quantity_Order) VALUES (?, ?, ?)`;
+    await db.execute(sqlItem, [Order_ID, Medicine_ID, Quantity]);
+  }
+
+  res.json({ message: 'Order created successfully' });
+});
+
+
+
 // เริ่มเซิร์ฟเวอร์
 app.listen(5000, function () {
-  console.log("เซิร์ฟเวอร์พร้อมใช้งานที่พอร์ต 5000");
+  console.log("port  5000");
 });
