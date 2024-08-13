@@ -15,7 +15,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 
 const pages = [
   { title: "หน้าแรก", icon: "", to: "/doctor_dashboard" },
-  { title: "รายชื่อผู้ป่วย", icon: "", to: "/patient" },
+  { title: "รายชื่อผู้ป่วย", icon: "", to: "/doctor_patient" },
   { title: "คิว", icon: "", to: "/doctor_queue" },
 ];
 
