@@ -205,7 +205,7 @@ const NursePatient = () => {
         setNewDisease(diseases.find((disease) => disease.value === diseaseID));
 
         const allergyID = patient.Allergy_ID || "A000";
-        setNewallergy(allergy.find((allergy) => allergy.value === allergyID));
+        setNewAllergy(allergy.find((allergy) => allergy.value === allergyID));
 
         setSelectedHN(HN);
         setEdit(false);

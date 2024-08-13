@@ -231,7 +231,7 @@ const DoctorPatient = () => {
             );
             
                         const allergyID = patient.Allergy_ID || "A000";
-            setNewallergy(
+            setNewAllergy(
               allergy.find((allergy) => allergy.value === allergyID)
             );
             
