@@ -1,24 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Snackbar,
-  Alert,
-  IconButton,
+import {Box,Button,TextField,Typography,Paper,Table,TableBody,TableCell,TableContainer,TableHead,TableRow,Dialog,DialogActions,DialogContent,DialogTitle,Snackbar,Alert,IconButton,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate, useParams } from "react-router-dom";
@@ -32,6 +14,7 @@ const AddOrder = () => {
   const [orderItems, setOrderItems] = useState([]);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [openMedicineDialog, setOpenMedicineDialog] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -71,28 +54,35 @@ const AddOrder = () => {
     setOrderItems(updatedItems);
   };
 
-  const handleSubmitOrder = async () => {
-    try {
-      const orderData = {
-        items: orderItems,
-      };
+  const handleConfirmSubmit = async () => {
+    setConfirmDialogOpen(false);
+    if (orderItems.length > 0) {
+      try {
+        const orderData = {
+          items: orderItems,
+        };
 
-      await axios.post(
-        `http://localhost:5000/api/orders/${orderID}/items`,
-        orderData
-      );
-      setOpenSnackbar(true);
-      setOrderItems([]);
-
-      // Navigate back to the queue page after submitting the order
-      navigate("/doctor_queue"); // เปลี่ยน URL เป็นหน้าคิวของคุณ
-    } catch (error) {
-      console.error("Error submitting order:", error.message);
+        await axios.post(
+          `http://localhost:5000/api/orders/${orderID}/items`,
+          orderData
+        );
+        setOpenSnackbar(true);
+        setOrderItems([]);
+        navigate("/doctor_queue");
+      } catch (error) {
+        console.error("Error submitting order:", error.message);
+      }
+    } else {
+      navigate("/doctor_queue");
     }
   };
 
   const handleSnackbarClose = () => {
     setOpenSnackbar(false);
+  };
+
+  const handleSubmitOrder = () => {
+    setConfirmDialogOpen(true);
   };
 
   return (
@@ -155,7 +145,6 @@ const AddOrder = () => {
             textTransform: "none",
             marginRight: "10px",
           }}
-          onClic
           onClick={() => navigate(`/doctor_addtreatment/${HN}`)}
         >
           กลับ
@@ -164,7 +153,6 @@ const AddOrder = () => {
           variant="contained"
           color="secondary"
           onClick={handleSubmitOrder}
-          disabled={orderItems.length === 0}
         >
           บันทึกออเดอร์
         </Button>
@@ -244,6 +232,24 @@ const AddOrder = () => {
         <DialogActions>
           <Button onClick={() => setOpenMedicineDialog(false)} color="primary">
             ปิด
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)}
+      >
+        <DialogTitle>ยืนยันการบันทึกออเดอร์</DialogTitle>
+        <DialogContent>
+          <Typography>คุณต้องการบันทึกออเดอร์ใช่หรือไม่?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDialogOpen(false)} color="primary">
+            ยกเลิก
+          </Button>
+          <Button onClick={handleConfirmSubmit} color="secondary">
+            ยืนยัน
           </Button>
         </DialogActions>
       </Dialog>
