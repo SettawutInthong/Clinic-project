@@ -506,40 +506,33 @@ app.get("/api/medicines", (req, res) => {
   });
 });
 
-//สร้าง Item_ID
-async function generateNextItemID() {
-  const [result] = await db.query(`
-      SELECT MAX(Item_ID) as maxItemID FROM order_medicine
-  `);
-
-  const currentMaxID = result[0].maxItemID;
-  if (!currentMaxID) return `I00001`;
-
-  const numericPart = parseInt(currentMaxID.substring(1), 10);
-  const nextIDNumber = numericPart + 1;
-
-  return `I${nextIDNumber.toString().padStart(5, "0")}`;
-}
-
 //เพิ่มรายการยาลงใน order
 app.post("/api/orders/:orderID/items", async (req, res) => {
   const { orderID } = req.params;
   const { items } = req.body;
 
   try {
-    let nextItemID = await generateNextItemID();
+    // ดึงค่า max Item_ID ปัจจุบันจากฐานข้อมูล
+    const [result] = await db.query(`
+      SELECT MAX(Item_ID) as maxItemID FROM order_medicine
+    `);
 
-    const itemPromises = items.map((item, index) => {
-      const currentItemID = `I${(parseInt(nextItemID.substring(1), 10) + index)
-        .toString()
-        .padStart(5, "0")}`; // เปลี่ยนจาก 6 เป็น 5
+    let maxItemID = result[0].maxItemID;
+
+    // ใช้ฟังก์ชัน generateID ในการสร้าง Item_ID ใหม่สำหรับแต่ละรายการยา
+    const itemPromises = items.map((item) => {
+      // สร้าง ID ใหม่สำหรับรายการนี้
+      const newItemID = generateID(maxItemID, "I");
+
+      // อัปเดต maxItemID ให้เป็น ID ที่เพิ่งสร้างใหม่
+      maxItemID = newItemID;
 
       return db.query(
         `
-              INSERT INTO order_medicine (Item_ID, Order_ID, Medicine_ID, Quantity_Order)
-              VALUES (?, ?, ?, ?)
-          `,
-        [currentItemID, orderID, item.Medicine_ID, item.Quantity]
+          INSERT INTO order_medicine (Item_ID, Order_ID, Medicine_ID, Quantity_Order)
+          VALUES (?, ?, ?, ?)
+        `,
+        [newItemID, orderID, item.Medicine_ID, item.Quantity]
       );
     });
 
@@ -550,6 +543,7 @@ app.post("/api/orders/:orderID/items", async (req, res) => {
     res.status(500).json({ error: "เกิดข้อผิดพลาดในการเพิ่มรายการยา" });
   }
 });
+
 
 app.post("/api/orders", async (req, res) => {
   const { HN, Order_ID, items } = req.body;
