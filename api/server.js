@@ -141,8 +141,8 @@ app.post("/api/patient", function (req, res) {
         Gender,
         Birthdate,
         Phone,
-        Disease_ID || null, // ตรวจสอบว่าได้ส่งค่ามาถูกต้องหรือไม่
-        Allergy_ID || null, // ตรวจสอบว่าได้ส่งค่ามาถูกต้องหรือไม่
+        Disease_ID || null, 
+        Allergy_ID || null, 
       ],
       function (err) {
         if (err) {
@@ -290,65 +290,46 @@ app.delete("/api/walkinqueue/:HN", function (req, res) {
   });
 });
 
-//ดึงข้อมูลคำสั่งซื้อยาล่าสุดของผู้ป่วย
-app.get("/api/order_medicine", function (req, res) {
-  const HN = req.query.HN;
 
-  const sql = `
-    SELECT * FROM order_medicine 
-    WHERE HN = ? 
-    ORDER BY CAST(SUBSTRING(Order_ID, 2) AS UNSIGNED) DESC 
-    LIMIT 1
-  `;
-  connection.execute(sql, [HN], function (err, results) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    if (results.length > 0) {
-      res.json({ data: results[0] });
-    } else {
-      res.status(404).json({ error: "ไม่พบข้อมูลคำสั่งซื้อ" });
-    }
-  });
-});
-
-//ดึงข้อมูลยาตาม Order ID
-app.get("/api/medicine_details", function (req, res) {
+// ดึงรายละเอียดของยาใน order_medicine โดยอิงจาก Order_ID
+app.get("/api/medicine_details", async (req, res) => {
   const Order_ID = req.query.Order_ID;
-  const sql = `
-    SELECT om.Item_ID, om.Quantity_Order, m.Medicine_Name, m.Med_Cost, m.Quantity_type
-    FROM order_medicine om 
-    JOIN medicine m ON om.Medicine_ID = m.Medicine_ID 
-    WHERE om.Order_ID = ?
-  `;
-  connection.execute(sql, [Order_ID], function (err, results) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.json({ data: results });
-  });
+  try {
+    const sql = `
+      SELECT om.Item_ID, om.Quantity_Order, m.Medicine_Name, m.Med_Cost
+      FROM order_medicine om 
+      JOIN medicine m ON om.Medicine_ID = m.Medicine_ID 
+      WHERE om.Order_ID = ?
+    `;
+    const [rows] = await db.query(sql, [Order_ID]);
+    res.json({ data: rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-//ดึง Order_ID ที่มากที่สุดจากตาราง orders
-app.get("/api/order_medicine", function (req, res) {
+// ดึง Order_ID ที่มากที่สุดจากตาราง orders
+app.get("/api/order_medicine", async (req, res) => {
   const HN = req.query.HN;
-  const sql = `
-    SELECT * FROM orders 
-    WHERE HN = ? 
-    ORDER BY CAST(SUBSTRING(Order_ID, 2) AS UNSIGNED) DESC 
-    LIMIT 1
-  `;
-  connection.execute(sql, [HN], function (err, results) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    if (results.length > 0) {
-      res.json({ data: results[0] });
+  try {
+    const sql = `
+      SELECT * FROM orders 
+      WHERE HN = ? 
+      ORDER BY CAST(SUBSTRING(Order_ID, 2) AS UNSIGNED) DESC 
+      LIMIT 1
+    `;
+    const [rows] = await db.query(sql, [HN]);
+    if (rows.length > 0) {
+      res.json({ data: rows[0] });
     } else {
-      res.status(404).json({ error: "ไม่พบคำสั่งซื้อ" });
+      res.status(404).json({ error: "Order not found" });
     }
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
+
+
 
 //สำหรับค้นหาผู้ป่วย
 app.get("/api/patients", function (req, res) {
