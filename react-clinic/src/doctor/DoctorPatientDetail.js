@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import {
-  Grid,
-  TextField,
-  Typography,
-  Button,
-  Box,
-  ButtonGroup,
-} from "@mui/material";
+import {Grid,TextField,Typography,Button,Box,ButtonGroup} from "@mui/material";
 import { Card, CardContent } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -17,8 +10,7 @@ const DoctorPatientDetail = () => {
   const [patientData, setPatientData] = useState(null);
   const [diseaseName, setDiseaseName] = useState('');
   const [allergyDetails, setAllergyDetails] = useState('');
-  const [loading, setLoading] = useState(true);  // เพิ่มสถานะ loading
-  const navigate = useNavigate();
+const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPatientData = async () => {
@@ -40,10 +32,8 @@ const DoctorPatientDetail = () => {
           const allergyResponse = await axios.get(`http://localhost:5000/api/allergy/${patient.Allergy_ID}`);
           setAllergyDetails(allergyResponse.data.allergyDetails);
         }
-        setLoading(false);  // ข้อมูลโหลดเสร็จสิ้น
       } catch (error) {
         console.error('Error fetching data:', error);
-        setLoading(false);  // กรณีเกิดข้อผิดพลาด
       }
     };
 
@@ -60,10 +50,6 @@ const DoctorPatientDetail = () => {
     }
     return age;
   };
-
-  if (loading) {
-    return <p>Loading...</p>;  // สามารถแทนด้วย Skeleton หรือ Spinner ได้
-  }
 
   return (
     <Box sx={{ flexGrow: 1, padding: 3 }}>

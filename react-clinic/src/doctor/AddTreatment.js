@@ -1,17 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  Paper,
-  TextField,
-  Button,
-  Typography,
-  Snackbar,
-  Alert,
-  Box,
-  Grid,
-  ButtonGroup,
-} from "@mui/material";
+import {Paper,TextField,Button,Typography,Snackbar,Alert,Box,Grid,ButtonGroup,} from "@mui/material";
 
 const AddTreatment = () => {
   const { HN } = useParams();

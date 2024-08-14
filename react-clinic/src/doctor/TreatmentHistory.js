@@ -1,26 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import {
-  Box,
-  ButtonGroup,
-  Grid,
-  Typography,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  List,
-  ListItem,
-  ListItemText,
-} from "@mui/material";
+import {Box,ButtonGroup,Grid,Typography,Paper,Table,TableBody,TableCell,TableContainer,TableHead,TableRow,Button,
+  Dialog,DialogTitle,DialogContent,List,ListItem,ListItemText,} from "@mui/material";
 
 const TreatmentHistory = () => {
   const { HN } = useParams();
