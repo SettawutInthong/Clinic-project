@@ -70,7 +70,6 @@ const NurseBill = () => {
 
       billDetails.push({
         Medicine_Name: "ค่ารักษา",
-        Med_Cost: treatmentCost,
         Item_Total: treatmentCost,
       });
 
