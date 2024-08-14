@@ -51,7 +51,12 @@ const NurseBill = () => {
       );
       const medicines = medicineResponse.data.data;
 
-      let totalCost = 0;
+      const treatmentResponse = await axios.get(
+        `http://localhost:5000/api/treatment_cost?Order_ID=${orderID}`
+      );
+      const treatmentCost = treatmentResponse.data.Treatment_cost;
+
+      let totalCost = treatmentCost; 
       const billDetails = medicines.map((item) => {
         const itemTotal = item.Med_Cost * item.Quantity_Order;
         totalCost += itemTotal;
@@ -61,6 +66,12 @@ const NurseBill = () => {
           Med_Cost: item.Med_Cost,
           Item_Total: itemTotal,
         };
+      });
+
+      billDetails.push({
+        Medicine_Name: "ค่ารักษา",
+        Med_Cost: treatmentCost,
+        Item_Total: treatmentCost,
       });
 
       setBillData(billDetails);
