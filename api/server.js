@@ -385,6 +385,23 @@ app.get('/api/allergy/:Allergy_ID', function (req, res) {
   });
 });
 
+// ดึงข้อมูล Treatment_cost จากตาราง treatment ตาม Order_ID
+app.get("/api/treatment_cost", function (req, res) {
+  const Order_ID = req.query.Order_ID;
+
+  const sql = "SELECT Treatment_cost FROM treatment WHERE Order_ID = ?";
+  connection.execute(sql, [Order_ID], function (err, results) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    if (results.length > 0) {
+      res.json({ Treatment_cost: results[0].Treatment_cost });
+    } else {
+      res.status(404).json({ error: "ไม่พบข้อมูลค่ารักษา" });
+    }
+  });
+});
+
 //ดึงข้อมูลการรักษา (Treatments) ตาม HN
 app.get("/api/treatments/:HN", function (req, res) {
   const HN = req.params.HN;
