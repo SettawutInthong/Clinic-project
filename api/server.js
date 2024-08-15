@@ -333,9 +333,9 @@ app.get("/api/order_medicine", async (req, res) => {
 
 //สำหรับค้นหาผู้ป่วย
 app.get("/api/patients", function (req, res) {
-  const { hn, firstName, lastName } = req.query; // รับค่าจาก query parameters
+  const { hn, firstName, lastName } = req.query; 
 
-  let sql = "SELECT * FROM patient WHERE 1=1"; // เริ่มต้นด้วยเงื่อนไขที่เป็นจริงเสมอ
+  let sql = "SELECT * FROM patient WHERE 1=1"; 
   const values = [];
 
   if (hn) {
