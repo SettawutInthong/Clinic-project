@@ -529,19 +529,14 @@ app.post("/api/orders/:orderID/items", async (req, res) => {
   const { items } = req.body;
 
   try {
-    // ดึงค่า max Item_ID ปัจจุบันจากฐานข้อมูล
     const [result] = await db.query(`
       SELECT MAX(Item_ID) as maxItemID FROM order_medicine
     `);
 
     let maxItemID = result[0].maxItemID;
-
-    // ใช้ฟังก์ชัน generateID ในการสร้าง Item_ID ใหม่สำหรับแต่ละรายการยา
     const itemPromises = items.map((item) => {
-      // สร้าง ID ใหม่สำหรับรายการนี้
       const newItemID = generateID(maxItemID, "I");
 
-      // อัปเดต maxItemID ให้เป็น ID ที่เพิ่งสร้างใหม่
       maxItemID = newItemID;
 
       return db.query(
