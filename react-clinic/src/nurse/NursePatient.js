@@ -70,6 +70,17 @@ const NursePatient = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarType, setSnackbarType] = useState("success");
   const [showTable, setShowTable] = useState(false);
+  const [addQueuePopup, setAddQueuePopup] = useState(false);
+  const [queueHN, setQueueHN] = useState("");
+  const [treatmentData, setTreatmentData] = useState({
+    Heart_Rate: "",
+    Pressure: "",
+    Temp: "",
+    Weight: "",
+    Height: "",
+    Symptom: "",
+  });
+
   const navigate = useNavigate();
 
   const SnackbarClose = () => {
@@ -146,8 +157,8 @@ const NursePatient = () => {
         Gender: newGender,
         Birthdate: newBirthdate,
         Phone: newPhone,
-        Disease_ID: newDisease.value,
-        Allergy_ID: newAllergy.value,
+        Disease: newDisease,
+        Allergy: newAllergy,
       };
 
       const response = await axios.post(
@@ -167,7 +178,6 @@ const NursePatient = () => {
       showMessage("เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วย");
     }
   };
-
   const DeletePatient = (HN) => {
     setSelectedHN(HN);
     setDeletePopup(true);
@@ -200,12 +210,8 @@ const NursePatient = () => {
         setNewBirthdate(new Date(patient.Birthdate));
         setNewGender(patient.Gender);
         setNewPhone(patient.Phone);
-
-        const diseaseID = patient.Disease_ID || "D000";
-        setNewDisease(diseases.find((disease) => disease.value === diseaseID));
-
-        const allergyID = patient.Allergy_ID || "A000";
-        setNewAllergy(allergy.find((allergy) => allergy.value === allergyID));
+        setNewAllergy(patient.Allergy);
+        setNewDisease(patient.Disease);
 
         setSelectedHN(HN);
         setEdit(false);
@@ -228,8 +234,8 @@ const NursePatient = () => {
           ? newBirthdate.toISOString().split("T")[0]
           : null,
         Phone: newPhone,
-        Disease_ID: newDisease ? newDisease.value : null,
-        Allergy_ID: newAllergy ? newAllergy.value : null,
+        Disease: newDisease,
+        Allergy: newAllergy,
       };
 
       await axios.put(
@@ -245,54 +251,49 @@ const NursePatient = () => {
     }
   };
 
-  const BookQueue = async (HN) => {
-    try {
-      await axios.post("http://localhost:5000/api/walkinqueue", { HN });
-      showMessage("จองคิวสำเร็จ");
+  const AddQueue = (HN) => {
+    setQueueHN(HN);
+    setAddQueuePopup(true);
+  };
 
-      setQueueData((prevQueueData) => [...prevQueueData, { HN }]);
+  const resetForm = () => {
+    setTreatmentData({
+      Heart_Rate: "",
+      Pressure: "",
+      Temp: "",
+      Weight: "",
+      Height: "",
+      Symptom: "",
+    });
+  };
+
+  const ConfirmAddQueue = async () => {
+    try {
+      await axios.post("http://localhost:5000/api/walkinqueue", {
+        HN: queueHN,
+        Heart_Rate: treatmentData.Heart_Rate || null,
+        Pressure: treatmentData.Pressure || null,
+        Temp: treatmentData.Temp || null,
+        Weight: treatmentData.Weight || null,
+        Height: treatmentData.Height || null,
+        Symptom: treatmentData.Symptom || null,
+        Treatment_Details: null,
+        Treatment_cost: null,
+        Total_Cost: null,
+      });
+      showMessage("จองคิวสำเร็จ", "success");
+      setQueueData((prevQueueData) => [...prevQueueData, { HN: queueHN }]);
+      setAddQueuePopup(false);
+      resetForm();
     } catch (error) {
       console.error("Error booking queue:", error);
-      showMessage("เกิดข้อผิดพลาดในการจองคิว");
+      showMessage("เกิดข้อผิดพลาดในการจองคิว", "error");
     }
   };
 
   const isInQueue = (HN) => {
     return queueData.some((queue) => queue.HN === HN);
   };
-
-  useEffect(() => {
-    const fetchAllergy = async () => {
-      try {
-        const response = await axios.get("http://localhost:5000/api/allergy");
-        setAllergy(
-          response.data.data.map((item) => ({
-            value: item.Allergy_ID,
-            label: item.Allergy_Details,
-          }))
-        );
-      } catch (error) {
-        console.error("Error fetching allergy:", error);
-      }
-    };
-
-    const fetchDiseases = async () => {
-      try {
-        const response = await axios.get("http://localhost:5000/api/diseases");
-        setDiseases(
-          response.data.data.map((item) => ({
-            value: item.Disease_ID,
-            label: item.disease_name,
-          }))
-        );
-      } catch (error) {
-        console.error("Error fetching diseases:", error);
-      }
-    };
-
-    fetchAllergy();
-    fetchDiseases();
-  }, []);
 
   useEffect(() => {
     const fetchQueueData = async () => {
@@ -462,16 +463,22 @@ const NursePatient = () => {
                           {row.HN}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.Title}
+                          {row.Title || "-"}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.First_Name}
+                          {row.First_Name || "-"}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.Last_Name}
+                          {row.Last_Name || "-"}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.Gender}
+                          {row.Gender || "-"}
+                        </TableCell>
+                        <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                          {row.Disease || "-"}
+                        </TableCell>
+                        <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                          {row.Allergy || "-"}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
                           <ButtonGroup
@@ -479,7 +486,7 @@ const NursePatient = () => {
                             aria-label="outlined primary button group"
                           >
                             <Button
-                              onClick={() => BookQueue(row.HN)}
+                              onClick={() => AddQueue(row.HN)}
                               disabled={isInQueue(row.HN)}
                               color="success"
                               style={{
@@ -490,6 +497,7 @@ const NursePatient = () => {
                             >
                               <AddToQueueIcon />
                             </Button>
+
                             <Button onClick={() => ViewPatient(row.HN)}>
                               <VisibilityIcon />
                             </Button>
@@ -582,35 +590,22 @@ const NursePatient = () => {
                   value={newPhone}
                   onChange={(e) => setNewPhone(e.target.value)}
                 />
-                <FormControl
-                  fullWidth
+                <TextField
                   margin="dense"
-                  variant="outlined"
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    gap: "10px",
-                  }}
-                >
-                  <Box style={{ flex: 1 }}>
-                    <ReactSelect
-                      placeholder="เลือกโรคประจำตัว"
-                      options={diseases}
-                      value={newDisease}
-                      onChange={setNewDisease}
-                      size="medium"
-                    />
-                  </Box>
-                  <Box style={{ flex: 1 }}>
-                    <ReactSelect
-                      options={allergy}
-                      value={newAllergy}
-                      onChange={setNewAllergy}
-                      placeholder="เลือกการแพ้ยา"
-                    />
-                  </Box>
-                </FormControl>
+                  label="โรคประจำตัว"
+                  type="text"
+                  fullWidth
+                  value={newDisease}
+                  onChange={(e) => setNewDisease(e.target.value)}
+                />
+                <TextField
+                  margin="dense"
+                  label="การแพ้ยา"
+                  type="text"
+                  fullWidth
+                  value={newAllergy}
+                  onChange={(e) => setNewAllergy(e.target.value)}
+                />
               </DialogContent>
 
               <DialogActions>
@@ -634,6 +629,108 @@ const NursePatient = () => {
                 </Button>
               </DialogActions>
             </Dialog>
+
+            <Dialog
+              open={addQueuePopup}
+              onClose={() => {
+                setAddQueuePopup(false);
+                resetForm();
+              }}
+              aria-labelledby="add-queue-dialog-title"
+            >
+              <DialogTitle
+                id="add-queue-dialog-title"
+                style={{ textAlign: "center" }}
+              >
+                จองคิว
+              </DialogTitle>
+              <DialogContent>
+                <TextField
+                  margin="dense"
+                  label="Heart Rate"
+                  name="Heart_Rate"
+                  value={treatmentData.Heart_Rate}
+                  onChange={(e) =>
+                    setTreatmentData({
+                      ...treatmentData,
+                      Heart_Rate: e.target.value,
+                    })
+                  }
+                  fullWidth
+                />
+                <TextField
+                  margin="dense"
+                  label="Pressure"
+                  name="Pressure"
+                  value={treatmentData.Pressure}
+                  onChange={(e) =>
+                    setTreatmentData({
+                      ...treatmentData,
+                      Pressure: e.target.value,
+                    })
+                  }
+                  fullWidth
+                />
+                <TextField
+                  margin="dense"
+                  label="Temp"
+                  name="Temp"
+                  value={treatmentData.Temp}
+                  onChange={(e) =>
+                    setTreatmentData({ ...treatmentData, Temp: e.target.value })
+                  }
+                  fullWidth
+                />
+                <TextField
+                  margin="dense"
+                  label="Weight"
+                  name="Weight"
+                  value={treatmentData.Weight}
+                  onChange={(e) =>
+                    setTreatmentData({
+                      ...treatmentData,
+                      Weight: e.target.value,
+                    })
+                  }
+                  fullWidth
+                />
+                <TextField
+                  margin="dense"
+                  label="Height"
+                  name="Height"
+                  value={treatmentData.Height}
+                  onChange={(e) =>
+                    setTreatmentData({
+                      ...treatmentData,
+                      Height: e.target.value,
+                    })
+                  }
+                  fullWidth
+                />
+                <TextField
+                  margin="dense"
+                  label="Symptom"
+                  name="Symptom"
+                  value={treatmentData.Symptom}
+                  onChange={(e) =>
+                    setTreatmentData({
+                      ...treatmentData,
+                      Symptom: e.target.value,
+                    })
+                  }
+                  fullWidth
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setAddQueuePopup(false)} color="primary">
+                  ยกเลิก
+                </Button>
+                <Button onClick={ConfirmAddQueue} color="primary">
+                  จองคิว
+                </Button>
+              </DialogActions>
+            </Dialog>
+
             <Dialog
               open={viewPopup}
               onClose={() => setViewPopup(false)}
@@ -713,37 +810,26 @@ const NursePatient = () => {
                   onChange={(e) => setNewPhone(e.target.value)}
                   disabled={!edit}
                 />
-                <FormControl
-                  fullWidth
+                <TextField
                   margin="dense"
-                  variant="outlined"
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    gap: "10px",
-                  }}
-                >
-                  <Box style={{ flex: 1 }}>
-                    <ReactSelect
-                      placeholder="เลือกโรคประจำตัว"
-                      options={diseases}
-                      value={newDisease}
-                      onChange={setNewDisease}
-                      isDisabled={!edit}
-                    />
-                  </Box>
-                  <Box style={{ flex: 1 }}>
-                    <ReactSelect
-                      options={allergy}
-                      value={newAllergy}
-                      onChange={setNewAllergy}
-                      placeholder="เลือกการแพ้ยา"
-                      isDisabled={!edit}
-                    />
-                  </Box>
-                </FormControl>
+                  label="โรคประจำตัว"
+                  type="text"
+                  fullWidth
+                  value={newDisease}
+                  onChange={(e) => setNewDisease(e.target.value)}
+                  disabled={!edit}
+                />
+                <TextField
+                  margin="dense"
+                  label="การแพ้ยา"
+                  type="text"
+                  fullWidth
+                  value={newAllergy}
+                  onChange={(e) => setNewAllergy(e.target.value)}
+                  disabled={!edit}
+                />
               </DialogContent>
+
               <DialogActions>
                 {edit ? (
                   <>
