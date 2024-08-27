@@ -72,7 +72,7 @@ const NursePatient = () => {
   const [showTable, setShowTable] = useState(false);
   const navigate = useNavigate();
 
-  const handleSnackbarClose = () => {
+  const SnackbarClose = () => {
     setSnackbarOpen(false);
   };
 
@@ -791,11 +791,11 @@ const NursePatient = () => {
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={1500}
-        onClose={handleSnackbarClose}
+        onClose={SnackbarClose}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
-          onClose={handleSnackbarClose}
+          onClose={SnackbarClose}
           severity={snackbarType}
           sx={{ width: "100%" }}
         >

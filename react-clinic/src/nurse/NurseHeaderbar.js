@@ -23,20 +23,20 @@ function NurseHeaderbar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const navigate = useNavigate();
 
-  const handleOpenNavMenu = (event) => {
+  const OpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
   };
 
-  const handleCloseNavMenu = () => {
+  const CloseNavMenu = () => {
     setAnchorElNav(null);
   };
 
-  const handleMenuItemClick = (to) => {
+  const MenuItemClick = (to) => {
     navigate(to);
-    handleCloseNavMenu();
+    CloseNavMenu();
   };
 
-  const handleLogout = () => {
+  const Logout = () => {
     localStorage.removeItem("accessToken");
     window.location.href = "/";
   };
@@ -80,7 +80,7 @@ function NurseHeaderbar() {
               aria-label="account of current user"
               aria-controls="menu-appbar"
               aria-haspopup="true"
-              onClick={handleOpenNavMenu}
+              onClick={OpenNavMenu}
               color="inherit"
             >
               <MenuIcon />
@@ -98,7 +98,7 @@ function NurseHeaderbar() {
                 horizontal: "left",
               }}
               open={Boolean(anchorElNav)}
-              onClose={handleCloseNavMenu}
+              onClose={CloseNavMenu}
               sx={{
                 display: { xs: "block", md: "none" },
               }}
@@ -106,7 +106,7 @@ function NurseHeaderbar() {
               {pages.map((page) => (
                 <MenuItem
                   key={page.title}
-                  onClick={() => handleMenuItemClick(page.to)}
+                  onClick={() => MenuItemClick(page.to)}
                 >
                   <Typography textAlign="center">{page.title}</Typography>
                 </MenuItem>
@@ -148,7 +148,7 @@ function NurseHeaderbar() {
             {pages.map((page) => (
               <Button
                 key={page.title}
-                onClick={() => handleMenuItemClick(page.to)}
+                onClick={() => MenuItemClick(page.to)}
                 sx={{ my: 2, color: "white", display: "block" }}
               >
                 {page.title}
@@ -162,7 +162,7 @@ function NurseHeaderbar() {
               type="submit"
               style={{ height: "30px" }}
               color="error"
-              onClick={handleLogout}
+              onClick={Logout}
             >
               <IconButton>
                 <LogoutIcon />
