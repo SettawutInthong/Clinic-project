@@ -226,27 +226,6 @@ app.put("/api/patient/:HN", function (req, res) {
   );
 });
 
-//ดึงข้อมูลการแพ้ยา (Allergy)
-app.get("/api/allergy", function (req, res) {
-  const sql = "SELECT * FROM allergy";
-  connection.execute(sql, function (err, results) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.json({ data: results });
-  });
-});
-
-//ดึงข้อมูลโรคประจำตัว (Diseases)
-app.get("/api/diseases", function (req, res) {
-  const sql = "SELECT * FROM chronic_disease";
-  connection.execute(sql, function (err, results) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.json({ data: results });
-  });
-});
 
 // API สำหรับเพิ่มข้อมูลการรักษา
 app.post("/api/addtreatment", async (req, res) => {

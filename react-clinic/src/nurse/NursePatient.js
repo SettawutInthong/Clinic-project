@@ -34,6 +34,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import SearchIcon from "@mui/icons-material/Search";
+import Grid from "@mui/material/Grid";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(10),
@@ -142,11 +143,20 @@ const NursePatient = () => {
     setNewTitle("");
     setNewFirstName("");
     setNewLastName("");
+    setNewID("");
     setNewBirthdate(null);
     setNewGender("");
     setNewPhone("");
     setNewDisease("");
     setNewAllergy("");
+    setTreatmentData({
+      Heart_Rate: "",
+      Pressure: "",
+      Temp: "",
+      Weight: "",
+      Height: "",
+      Symptom: "",
+    });
   };
 
   const AddPatient = async () => {
@@ -209,6 +219,7 @@ const NursePatient = () => {
         setNewTitle(patient.Title);
         setNewFirstName(patient.First_Name);
         setNewLastName(patient.Last_Name);
+        setNewID(patient.ID);
         setNewBirthdate(new Date(patient.Birthdate));
         setNewGender(patient.Gender);
         setNewPhone(patient.Phone);
@@ -258,17 +269,6 @@ const NursePatient = () => {
     setAddQueuePopup(true);
   };
 
-  const resetForm = () => {
-    setTreatmentData({
-      Heart_Rate: "",
-      Pressure: "",
-      Temp: "",
-      Weight: "",
-      Height: "",
-      Symptom: "",
-    });
-  };
-
   const ConfirmAddQueue = async () => {
     try {
       await axios.post("http://localhost:5000/api/walkinqueue", {
@@ -286,7 +286,7 @@ const NursePatient = () => {
       showMessage("จองคิวสำเร็จ", "success");
       setQueueData((prevQueueData) => [...prevQueueData, { HN: queueHN }]);
       setAddQueuePopup(false);
-      resetForm();
+      ResetForm();
     } catch (error) {
       console.error("Error booking queue:", error);
       showMessage("เกิดข้อผิดพลาดในการจองคิว", "error");
@@ -519,6 +519,8 @@ const NursePatient = () => {
                 ResetForm();
               }}
               aria-labelledby="form-dialog-title"
+              maxWidth="lg"
+              fullWidth
             >
               <DialogTitle
                 id="form-dialog-title"
@@ -527,89 +529,190 @@ const NursePatient = () => {
                 เพิ่มผู้ป่วยใหม่
               </DialogTitle>
               <DialogContent>
-                <Box display="flex" flexDirection="row" gap={2}>
-                  <FormControl
-                    fullWidth
-                    margin="dense"
-                    variant="outlined"
-                    style={{ width: "200px" }}
-                  >
-                    <InputLabel>เลือกคำนำหน้า</InputLabel>
-                    <Select
-                      label="เลือกคำนำหน้า"
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                    >
-                      <MenuItem value="- Unknown -">- Unknown -</MenuItem>
-                      <MenuItem value="ด.ช.">ด.ช.</MenuItem>
-                      <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
-                      <MenuItem value="นาย">นาย</MenuItem>
-                      <MenuItem value="นาง">นาง</MenuItem>
-                      <MenuItem value="นางสาว">นางสาว</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <TextField
-                    autoFocus
-                    margin="dense"
-                    label="กรอกชื่อ"
-                    type="text"
-                    fullWidth
-                    value={newFirstName}
-                    onChange={(e) => setNewFirstName(e.target.value)}
-                  />
-                </Box>
-                <TextField
-                  margin="dense"
-                  label="กรอกนามสกุล"
-                  type="text"
-                  fullWidth
-                  value={newLastName}
-                  onChange={(e) => setNewLastName(e.target.value)}
-                />
-                <TextField
-                  margin="dense"
-                  label="กรอกเลขบัตรประชาชน"
-                  type="text"
-                  fullWidth
-                  value={newID}
-                  onChange={(e) => setNewID(e.target.value)}
-                />
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DatePicker
-                    label="เลือกวันเกิด"
-                    value={newBirthdate}
-                    onChange={(date) => setNewBirthdate(date)}
-                    inputFormat="dd/MM/yyyy"
-                    slotProps={{
-                      textField: { fullWidth: true, margin: "dense" },
-                    }}
-                  />
-                </LocalizationProvider>
-
-                <TextField
-                  margin="dense"
-                  label="กรอกหมายเลขโทรศัพท์"
-                  type="text"
-                  fullWidth
-                  value={newPhone}
-                  onChange={(e) => setNewPhone(e.target.value)}
-                />
-                <TextField
-                  margin="dense"
-                  label="โรคประจำตัว"
-                  type="text"
-                  fullWidth
-                  value={newDisease}
-                  onChange={(e) => setNewDisease(e.target.value)}
-                />
-                <TextField
-                  margin="dense"
-                  label="การแพ้ยา"
-                  type="text"
-                  fullWidth
-                  value={newAllergy}
-                  onChange={(e) => setNewAllergy(e.target.value)}
-                />
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <Box display="flex" flexDirection="row" gap={2}>
+                      <FormControl
+                        fullWidth
+                        margin="dense"
+                        variant="outlined"
+                        style={{ width: "200px" }}
+                        size="small"
+                      >
+                        <InputLabel>เลือกคำนำหน้า</InputLabel>
+                        <Select
+                          label="เลือกคำนำหน้า"
+                          value={newTitle}
+                          onChange={(e) => setNewTitle(e.target.value)}
+                        >
+                          <MenuItem value="- Unknown -">- Unknown -</MenuItem>
+                          <MenuItem value="ด.ช.">ด.ช.</MenuItem>
+                          <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
+                          <MenuItem value="นาย">นาย</MenuItem>
+                          <MenuItem value="นาง">นาง</MenuItem>
+                          <MenuItem value="นางสาว">นางสาว</MenuItem>
+                        </Select>
+                      </FormControl>
+                      <TextField
+                        autoFocus
+                        margin="dense"
+                        label="กรอกชื่อ"
+                        type="text"
+                        fullWidth
+                        value={newFirstName}
+                        onChange={(e) => setNewFirstName(e.target.value)}
+                        size="small"
+                      />
+                    </Box>
+                    <TextField
+                      margin="dense"
+                      label="กรอกนามสกุล"
+                      type="text"
+                      fullWidth
+                      value={newLastName}
+                      onChange={(e) => setNewLastName(e.target.value)}
+                      size="small"
+                    />
+                    <TextField
+                      margin="dense"
+                      label="กรอกเลขบัตรประชาชน"
+                      type="text"
+                      fullWidth
+                      value={newID}
+                      onChange={(e) => setNewID(e.target.value)}
+                      size="small"
+                    />
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <DatePicker
+                        label="เลือกวันเกิด"
+                        value={newBirthdate}
+                        onChange={(date) => setNewBirthdate(date)}
+                        inputFormat="dd/MM/yyyy"
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            margin: "dense",
+                            size: "small",
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
+                    <TextField
+                      margin="dense"
+                      label="กรอกหมายเลขโทรศัพท์"
+                      type="text"
+                      fullWidth
+                      value={newPhone}
+                      onChange={(e) => setNewPhone(e.target.value)}
+                      size="small"
+                    />
+                    <TextField
+                      margin="dense"
+                      label="โรคประจำตัว"
+                      type="text"
+                      fullWidth
+                      value={newDisease}
+                      onChange={(e) => setNewDisease(e.target.value)}
+                      size="small"
+                    />
+                    <TextField
+                      margin="dense"
+                      label="แพ้ยา"
+                      type="text"
+                      fullWidth
+                      value={newAllergy}
+                      onChange={(e) => setNewAllergy(e.target.value)}
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      margin="dense"
+                      label="อัตราการเต้นหัวใจ"
+                      name="อัตราการเต้นหัวใจ"
+                      value={treatmentData.Heart_Rate}
+                      onChange={(e) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Heart_Rate: e.target.value,
+                        })
+                      }
+                      fullWidth
+                      size="small"
+                    />
+                    <TextField
+                      margin="dense"
+                      label="ความดัน"
+                      name="ความดัน"
+                      value={treatmentData.Pressure}
+                      onChange={(e) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Pressure: e.target.value,
+                        })
+                      }
+                      fullWidth
+                      size="small"
+                    />
+                    <TextField
+                      margin="dense"
+                      label="อุณหภูมิ"
+                      name="อุณหภูมิ"
+                      value={treatmentData.Temp}
+                      onChange={(e) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Temp: e.target.value,
+                        })
+                      }
+                      fullWidth
+                      size="small"
+                    />
+                    <TextField
+                      margin="dense"
+                      label="น้ำหนัก"
+                      name="น้ำหนัก"
+                      value={treatmentData.Weight}
+                      onChange={(e) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Weight: e.target.value,
+                        })
+                      }
+                      fullWidth
+                      size="small"
+                    />
+                    <TextField
+                      margin="dense"
+                      label="ส่วนสูง"
+                      name="ส่วนสูง"
+                      value={treatmentData.Height}
+                      onChange={(e) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Height: e.target.value,
+                        })
+                      }
+                      fullWidth
+                      size="small"
+                    />
+                    <TextField
+                      margin="dense"
+                      label="อาการ"
+                      name="อาการ"
+                      value={treatmentData.Symptom}
+                      onChange={(e) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Symptom: e.target.value,
+                        })
+                      }
+                      fullWidth
+                      multiline
+                      rows={4}
+                    />
+                  </Grid>
+                </Grid>
               </DialogContent>
 
               <DialogActions>
@@ -638,7 +741,7 @@ const NursePatient = () => {
               open={addQueuePopup}
               onClose={() => {
                 setAddQueuePopup(false);
-                resetForm();
+                ResetForm();
               }}
               aria-labelledby="add-queue-dialog-title"
             >
@@ -651,8 +754,8 @@ const NursePatient = () => {
               <DialogContent>
                 <TextField
                   margin="dense"
-                  label="Heart Rate"
-                  name="Heart_Rate"
+                  label="อัตราการเต้นหัวใจ"
+                  name="อัตราการเต้นหัวใจ"
                   value={treatmentData.Heart_Rate}
                   onChange={(e) =>
                     setTreatmentData({
@@ -664,8 +767,8 @@ const NursePatient = () => {
                 />
                 <TextField
                   margin="dense"
-                  label="Pressure"
-                  name="Pressure"
+                  label="ความดัน"
+                  name="ความดัน"
                   value={treatmentData.Pressure}
                   onChange={(e) =>
                     setTreatmentData({
@@ -677,8 +780,8 @@ const NursePatient = () => {
                 />
                 <TextField
                   margin="dense"
-                  label="Temp"
-                  name="Temp"
+                  label="อุณหภูมิ"
+                  name="อุณหภูมิ"
                   value={treatmentData.Temp}
                   onChange={(e) =>
                     setTreatmentData({ ...treatmentData, Temp: e.target.value })
@@ -687,8 +790,8 @@ const NursePatient = () => {
                 />
                 <TextField
                   margin="dense"
-                  label="Weight"
-                  name="Weight"
+                  label="น้ำหนัก"
+                  name="น้ำหนัก"
                   value={treatmentData.Weight}
                   onChange={(e) =>
                     setTreatmentData({
@@ -700,8 +803,8 @@ const NursePatient = () => {
                 />
                 <TextField
                   margin="dense"
-                  label="Height"
-                  name="Height"
+                  label="ส่วนสูง"
+                  name="ส่วนสูง"
                   value={treatmentData.Height}
                   onChange={(e) =>
                     setTreatmentData({
@@ -713,8 +816,8 @@ const NursePatient = () => {
                 />
                 <TextField
                   margin="dense"
-                  label="Symptom"
-                  name="Symptom"
+                  label="อาการ"
+                  name="อาการ"
                   value={treatmentData.Symptom}
                   onChange={(e) =>
                     setTreatmentData({
@@ -787,6 +890,15 @@ const NursePatient = () => {
                   fullWidth
                   value={newLastName}
                   onChange={(e) => setNewLastName(e.target.value)}
+                  disabled={!edit}
+                />
+                <TextField
+                  margin="dense"
+                  label="เลขบัตรประชาชน"
+                  type="text"
+                  fullWidth
+                  value={newID}
+                  onChange={(e) => setNewID(e.target.value)}
                   disabled={!edit}
                 />
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
