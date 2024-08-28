@@ -26,7 +26,6 @@ import DialogTitle from "@mui/material/DialogTitle";
 import { ButtonGroup } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import ReactSelect from "react-select";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import AddToQueueIcon from "@mui/icons-material/AddToQueue";
@@ -60,8 +59,6 @@ const NursePatient = () => {
   const [newPhone, setNewPhone] = useState("");
   const [newAllergy, setNewAllergy] = useState("");
   const [newDisease, setNewDisease] = useState("");
-  const [allergy, setAllergy] = useState([]);
-  const [diseases, setDiseases] = useState([]);
   const [selectedHN, setSelectedHN] = useState("");
   const [addPopup, setAddPopup] = useState(false);
   const [viewPopup, setViewPopup] = useState(false);
@@ -82,8 +79,24 @@ const NursePatient = () => {
     Height: "",
     Symptom: "",
   });
-
+  const [currentPage, setCurrentPage] = useState(1); // หน้าปัจจุบันเริ่มที่ 1
+  const patientsPerPage = 10; // จำนวนผู้ป่วยต่อหน้า
+  const indexOfLastPatient = currentPage * patientsPerPage;
+  const indexOfFirstPatient = indexOfLastPatient - patientsPerPage;
+  const currentPatients = data.slice(indexOfFirstPatient, indexOfLastPatient);
   const navigate = useNavigate();
+
+  const nextPage = () => {
+    if (currentPage < Math.ceil(data.length / patientsPerPage)) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   const SnackbarClose = () => {
     setSnackbarOpen(false);
@@ -450,7 +463,7 @@ const NursePatient = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {data.map((row) => (
+                    {currentPatients.map((row) => (
                       <TableRow
                         key={row.HN}
                         sx={{
@@ -493,7 +506,6 @@ const NursePatient = () => {
                             >
                               <AddToQueueIcon />
                             </Button>
-
                             <Button onClick={() => ViewPatient(row.HN)}>
                               <VisibilityIcon />
                             </Button>
@@ -509,6 +521,22 @@ const NursePatient = () => {
                     ))}
                   </TableBody>
                 </Table>
+                <Box display="flex" justifyContent="center" mt={2}>
+                  <Button onClick={prevPage} disabled={currentPage === 1}>
+                    ก่อนหน้า
+                  </Button>
+                  <Typography variant="body1" style={{ margin: "0 15px" }}>
+                    {currentPage}
+                  </Typography>
+                  <Button
+                    onClick={nextPage}
+                    disabled={
+                      currentPage === Math.ceil(data.length / patientsPerPage)
+                    }
+                  >
+                    ถัดไป
+                  </Button>
+                </Box>
               </TableContainer>
             )}
 
@@ -856,6 +884,10 @@ const NursePatient = () => {
                     margin="dense"
                     variant="outlined"
                     style={{ width: "200px" }}
+                    sx={{
+                      backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                      color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                    }}
                   >
                     <InputLabel>คำนำหน้า</InputLabel>
                     <Select
@@ -863,6 +895,10 @@ const NursePatient = () => {
                       value={newTitle}
                       onChange={(e) => setNewTitle(e.target.value)}
                       disabled={!edit}
+                      sx={{
+                        backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                        color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                      }}
                     >
                       <MenuItem value="- Unknown -">- Unknown -</MenuItem>
                       <MenuItem value="ด.ช.">ด.ช.</MenuItem>
@@ -881,6 +917,10 @@ const NursePatient = () => {
                     value={newFirstName}
                     onChange={(e) => setNewFirstName(e.target.value)}
                     disabled={!edit}
+                    sx={{
+                      backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                      color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                    }}
                   />
                 </Box>
                 <TextField
@@ -891,6 +931,10 @@ const NursePatient = () => {
                   value={newLastName}
                   onChange={(e) => setNewLastName(e.target.value)}
                   disabled={!edit}
+                  sx={{
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                  }}
                 />
                 <TextField
                   margin="dense"
@@ -900,6 +944,10 @@ const NursePatient = () => {
                   value={newID}
                   onChange={(e) => setNewID(e.target.value)}
                   disabled={!edit}
+                  sx={{
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                  }}
                 />
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <DatePicker
@@ -913,6 +961,12 @@ const NursePatient = () => {
                         fullWidth: true,
                         margin: "dense",
                         disabled: !edit,
+                        sx: {
+                          backgroundColor: edit
+                            ? "white"
+                            : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                          color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                        },
                       },
                     }}
                   />
@@ -925,6 +979,10 @@ const NursePatient = () => {
                   value={newPhone}
                   onChange={(e) => setNewPhone(e.target.value)}
                   disabled={!edit}
+                  sx={{
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                  }}
                 />
                 <TextField
                   margin="dense"
@@ -934,6 +992,10 @@ const NursePatient = () => {
                   value={newDisease}
                   onChange={(e) => setNewDisease(e.target.value)}
                   disabled={!edit}
+                  sx={{
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                  }}
                 />
                 <TextField
                   margin="dense"
@@ -943,6 +1005,10 @@ const NursePatient = () => {
                   value={newAllergy}
                   onChange={(e) => setNewAllergy(e.target.value)}
                   disabled={!edit}
+                  sx={{
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                  }}
                 />
               </DialogContent>
 

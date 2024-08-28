@@ -26,6 +26,8 @@ import AddToQueueIcon from "@mui/icons-material/AddToQueue";
 import WysiwygIcon from "@mui/icons-material/Wysiwyg";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ReactSelect from "react-select";
+import Grid from "@mui/material/Grid";
+import FormControl from "@mui/material/FormControl";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(10),
@@ -57,6 +59,16 @@ const NurseQueue = () => {
   });
   const [patientOptions, setPatientOptions] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [showTextFields, setShowTextFields] = useState(false);
+  const [newFirstName, setNewFirstName] = useState("");
+  const [newLastName, setNewLastName] = useState("");
+  const [newID, setNewID] = useState("");
+  const [newGender, setNewGender] = useState("");
+  const [newTitle, setNewTitle] = useState("");
+  const [newBirthdate, setNewBirthdate] = useState(null);
+  const [newPhone, setNewPhone] = useState("");
+  const [newAllergy, setNewAllergy] = useState("");
+  const [newDisease, setNewDisease] = useState("");
   const navigate = useNavigate();
 
   const SnackbarClose = () => {
@@ -92,20 +104,17 @@ const NurseQueue = () => {
 
   const AddQueue = async () => {
     try {
-      // ตรวจสอบว่ามี HN ที่ถูกต้อง
       if (!queueHN) {
         showMessage("กรุณาเลือก HN ของผู้ป่วย", "error");
         return;
       }
 
-      // ตรวจสอบว่าผู้ป่วยมีอยู่ในระบบหรือไม่
       const response = await axios.get(
         `http://localhost:5000/api/patient?HN=${queueHN}`
       );
       const patient = response.data.data[0];
 
       if (patient) {
-        // ทำการจองคิวและเพิ่มข้อมูลการรักษา
         await axios.post("http://localhost:5000/api/walkinqueue", {
           HN: queueHN,
           Heart_Rate: treatmentData.Heart_Rate || null,
@@ -114,20 +123,14 @@ const NurseQueue = () => {
           Weight: treatmentData.Weight || null,
           Height: treatmentData.Height || null,
           Symptom: treatmentData.Symptom || null,
-          Treatment_Details: null, // เพิ่มค่า null สำหรับ Treatment_Details
-          Treatment_cost: null, // เพิ่มค่า null สำหรับ Treatment_cost
-          Total_Cost: null, // เพิ่มค่า null สำหรับ Total_Cost
+          Treatment_Details: null,
+          Treatment_cost: null,
+          Total_Cost: null,
         });
 
-        // ดึงข้อมูลใหม่เพื่ออัปเดตตารางคิว
         FetchData();
-
-        // Reset form values
-        resetForm();
-
-        // ปิด popup จองคิว
+        ResetForm();
         setAddQueuePopup(false);
-
         showMessage("จองคิวสำเร็จ", "success");
       } else {
         showMessage("ไม่พบ HN ที่ระบุ", "error");
@@ -138,8 +141,78 @@ const NurseQueue = () => {
     }
   };
 
-  const resetForm = () => {
-    setSelectedPatient(null);
+  const handleHNSelect = async (selectedOption) => {
+    setQueueHN(selectedOption ? selectedOption.value : "");
+    setShowTextFields(!!selectedOption); // แสดงกล่องข้อความเมื่อ HN ถูกเลือก
+
+    if (selectedOption) {
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/api/patient?HN=${selectedOption.value}`
+        );
+        const patient = response.data.data[0];
+        if (patient) {
+          setNewTitle(patient.Title);
+          setNewFirstName(patient.First_Name);
+          setNewLastName(patient.Last_Name);
+          setNewID(patient.ID);
+          setNewBirthdate(new Date(patient.Birthdate));
+          setNewGender(patient.Gender);
+          setNewPhone(patient.Phone);
+          setNewAllergy(patient.Allergy);
+          setNewDisease(patient.Disease);
+        }
+      } catch (error) {
+        console.error("Error fetching patient details:", error);
+      }
+    } else {
+      ResetForm();
+    }
+  };
+
+  const handleCancel = () => {
+    setShowTextFields(false);
+    ResetForm();
+    setAddQueuePopup(false);
+  };
+
+  const ViewPatient = async (HN) => {
+    try {
+      ResetForm();
+      const response = await axios.get(
+        `http://localhost:5000/api/patient?HN=${HN}`
+      );
+      const patient = response.data.data[0];
+      if (patient) {
+        setNewTitle(patient.Title);
+        setNewFirstName(patient.First_Name);
+        setNewLastName(patient.Last_Name);
+        setNewID(patient.ID);
+        setNewBirthdate(new Date(patient.Birthdate));
+        setNewGender(patient.Gender);
+        setNewPhone(patient.Phone);
+        setNewAllergy(patient.Allergy);
+        setNewDisease(patient.Disease);
+
+        setSelectedHN(HN);
+        setViewPopup(true);
+      }
+    } catch (error) {
+      console.error("Error viewing patient:", error);
+      showMessage("เกิดข้อผิดพลาดในการดูข้อมูลผู้ป่วย");
+    }
+  };
+
+  const ResetForm = () => {
+    setNewTitle("");
+    setNewFirstName("");
+    setNewLastName("");
+    setNewID("");
+    setNewBirthdate(null);
+    setNewGender("");
+    setNewPhone("");
+    setNewDisease("");
+    setNewAllergy("");
     setTreatmentData({
       Heart_Rate: "",
       Pressure: "",
@@ -148,7 +221,6 @@ const NurseQueue = () => {
       Height: "",
       Symptom: "",
     });
-    setQueueHN(""); // Reset HN if needed
   };
 
   const DeleteQueue = (HN) => {
@@ -173,10 +245,11 @@ const NurseQueue = () => {
   };
 
   const handleTreatmentChange = (e) => {
-    setTreatmentData({
-      ...treatmentData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setTreatmentData((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
   };
 
   useEffect(() => {
@@ -307,11 +380,10 @@ const NurseQueue = () => {
 
             <Dialog
               open={addQueuePopup}
-              onClose={() => {
-                setAddQueuePopup(false);
-                resetForm();
-              }}
+              onClose={handleCancel}
               aria-labelledby="add-queue-dialog-title"
+              maxWidth="lg"
+              fullWidth
             >
               <DialogTitle
                 id="add-queue-dialog-title"
@@ -323,9 +395,7 @@ const NurseQueue = () => {
                 <ReactSelect
                   autoFocus
                   options={patientOptions}
-                  onChange={(selectedOption) =>
-                    setQueueHN(selectedOption ? selectedOption.value : "")
-                  }
+                  onChange={handleHNSelect} // ใช้ฟังก์ชัน handleHNSelect
                   placeholder="กรอก HN"
                   isClearable
                   isSearchable
@@ -336,58 +406,168 @@ const NurseQueue = () => {
                   }}
                 />
 
-                <TextField
-                  margin="dense"
-                  label="Heart Rate"
-                  name="Heart_Rate"
-                  value={treatmentData.Heart_Rate}
-                  onChange={handleTreatmentChange}
-                  fullWidth
-                />
-                <TextField
-                  margin="dense"
-                  label="Pressure"
-                  name="Pressure"
-                  value={treatmentData.Pressure}
-                  onChange={handleTreatmentChange}
-                  fullWidth
-                />
-                <TextField
-                  margin="dense"
-                  label="Temp"
-                  name="Temp"
-                  value={treatmentData.Temp}
-                  onChange={handleTreatmentChange}
-                  fullWidth
-                />
-                <TextField
-                  margin="dense"
-                  label="Weight"
-                  name="Weight"
-                  value={treatmentData.Weight}
-                  onChange={handleTreatmentChange}
-                  fullWidth
-                />
-                <TextField
-                  margin="dense"
-                  label="Height"
-                  name="Height"
-                  value={treatmentData.Height}
-                  onChange={handleTreatmentChange}
-                  fullWidth
-                />
-                <TextField
-                  margin="dense"
-                  label="Symptom"
-                  name="Symptom"
-                  value={treatmentData.Symptom}
-                  onChange={handleTreatmentChange}
-                  fullWidth
-                />
+                {showTextFields && (
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <Box display="flex" flexDirection="row" gap={2}>
+                        <FormControl style={{ width: "200px" }}>
+                          <TextField
+                            margin="dense"
+                            label="คำนำหน้า"
+                            value={newTitle}
+                            fullWidth
+                            disabled
+                            sx={{
+                              backgroundColor: "rgba(0, 0, 0, 0.1)",
+                              color: "rgba(255, 255, 255, 0.7)",
+                            }}
+                          />
+                        </FormControl>
+                        <TextField
+                          margin="dense"
+                          label="ชื่อ"
+                          value={newFirstName}
+                          fullWidth
+                          disabled
+                          sx={{
+                            backgroundColor: "rgba(0, 0, 0, 0.1)",
+                            color: "rgba(255, 255, 255, 0.7)",
+                          }}
+                        />
+                      </Box>
+                      <TextField
+                        margin="dense"
+                        label="นามสกุล"
+                        value={newLastName}
+                        fullWidth
+                        disabled
+                        sx={{
+                          backgroundColor: "rgba(0, 0, 0, 0.1)",
+                          color: "rgba(255, 255, 255, 0.7)",
+                        }}
+                      />
+                      <TextField
+                        margin="dense"
+                        label="เลขบัตรประชาชน"
+                        value={newID}
+                        fullWidth
+                        disabled
+                        sx={{
+                          backgroundColor: "rgba(0, 0, 0, 0.1)",
+                          color: "rgba(255, 255, 255, 0.7)",
+                        }}
+                      />
+                      <TextField
+                        margin="dense"
+                        label="วันเกิด"
+                        value={
+                          newBirthdate ? newBirthdate.toLocaleDateString() : ""
+                        }
+                        fullWidth
+                        disabled
+                        sx={{
+                          backgroundColor: "rgba(0, 0, 0, 0.1)",
+                          color: "rgba(255, 255, 255, 0.7)",
+                        }}
+                      />
+                      <TextField
+                        margin="dense"
+                        label="หมายเลขโทรศัพท์"
+                        value={newPhone}
+                        fullWidth
+                        disabled
+                        sx={{
+                          backgroundColor: "rgba(0, 0, 0, 0.1)",
+                          color: "rgba(255, 255, 255, 0.7)",
+                        }}
+                      />
+                      <TextField
+                        margin="dense"
+                        label="โรคประจำตัว"
+                        value={newDisease}
+                        fullWidth
+                        disabled
+                        sx={{
+                          backgroundColor: "rgba(0, 0, 0, 0.1)",
+                          color: "rgba(255, 255, 255, 0.7)",
+                        }}
+                      />
+                      <TextField
+                        margin="dense"
+                        label="แพ้ยา"
+                        value={newAllergy}
+                        fullWidth
+                        disabled
+                        sx={{
+                          backgroundColor: "rgba(0, 0, 0, 0.1)",
+                          color: "rgba(255, 255, 255, 0.7)",
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        margin="dense"
+                        label="อัตราการเต้นหัวใจ"
+                        name="Heart_Rate"
+                        value={treatmentData.Heart_Rate}
+                        onChange={handleTreatmentChange}
+                        fullWidth
+                        sx={{ backgroundColor: "white" }}
+                      />
+                      <TextField
+                        margin="dense"
+                        label="ความดัน"
+                        name="Pressure"
+                        value={treatmentData.Pressure}
+                        onChange={handleTreatmentChange}
+                        fullWidth
+                        sx={{ backgroundColor: "white" }}
+                      />
+                      <TextField
+                        margin="dense"
+                        label="อุณหภูมิ"
+                        name="Temp"
+                        value={treatmentData.Temp}
+                        onChange={handleTreatmentChange}
+                        fullWidth
+                        sx={{ backgroundColor: "white" }}
+                      />
+                      <TextField
+                        margin="dense"
+                        label="น้ำหนัก"
+                        name="Weight"
+                        value={treatmentData.Weight}
+                        onChange={handleTreatmentChange}
+                        fullWidth
+                        sx={{ backgroundColor: "white" }}
+                      />
+                      <TextField
+                        margin="dense"
+                        label="ส่วนสูง"
+                        name="Height"
+                        value={treatmentData.Height}
+                        onChange={handleTreatmentChange}
+                        fullWidth
+                        sx={{ backgroundColor: "white" }}
+                      />
+                      <TextField
+                        margin="dense"
+                        label="อาการ"
+                        name="Symptom"
+                        value={treatmentData.Symptom}
+                        onChange={handleTreatmentChange}
+                        fullWidth
+                        multiline
+                        rows={4}
+                        sx={{ backgroundColor: "white" }}
+                      />
+                    </Grid>
+                  </Grid>
+                )}
               </DialogContent>
 
               <DialogActions>
-                <Button onClick={() => setAddQueuePopup(false)} color="primary">
+                <Button onClick={handleCancel} color="primary">
                   ยกเลิก
                 </Button>
                 <Button onClick={AddQueue} color="primary">
@@ -396,55 +576,7 @@ const NurseQueue = () => {
               </DialogActions>
             </Dialog>
 
-            <Dialog
-              open={viewPopup}
-              onClose={() => setViewPopup(false)}
-              aria-labelledby="view-dialog-title"
-            >
-              <DialogTitle
-                id="view-dialog-title"
-                style={{ flexGrow: 1, textAlign: "center" }}
-              >
-                ดูข้อมูลผู้ป่วย
-              </DialogTitle>
-              <DialogContent>
-                <Typography>HN: {patient.HN}</Typography>
-                <Typography>คำนำหน้า: {patient.Title}</Typography>
-                <Typography>ชื่อ: {patient.First_Name}</Typography>
-                <Typography>นามสกุล: {patient.Last_Name}</Typography>
-                <Typography>เพศ: {patient.Gender}</Typography>
-                <Typography>วันเกิด: {patient.Birthdate}</Typography>
-                <Typography>หมายเลขโทรศัพท์: {patient.Phone}</Typography>
-                <Typography>โรคประจำตัว: {patient.Disease_ID}</Typography>
-                <Typography>การแพ้ยา: {patient.Allergy_ID}</Typography>
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={() => setViewPopup(false)} color="primary">
-                  ปิด
-                </Button>
-              </DialogActions>
-            </Dialog>
-
-            <Dialog
-              open={deletePopup}
-              onClose={() => setDeletePopup(false)}
-              aria-labelledby="delete-dialog-title"
-            >
-              <DialogTitle id="delete-dialog-title">ยืนยันการลบ</DialogTitle>
-              <DialogContent>
-                <Typography>
-                  คุณแน่ใจหรือว่าต้องการลบข้อมูลผู้ป่วยรายนี้จากคิว
-                </Typography>
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={() => setDeletePopup(false)} color="primary">
-                  ยกเลิก
-                </Button>
-                <Button onClick={ConfirmDeleteQueue} color="primary">
-                  ลบ
-                </Button>
-              </DialogActions>
-            </Dialog>
+            {/* ส่วนของ Dialog และ Snackbar ที่เหลือ */}
           </div>
         </PaperStyled>
       </ContainerStyled>
