@@ -52,6 +52,7 @@ const NursePatient = () => {
   const [searchGender, setSearchGender] = useState("");
   const [newFirstName, setNewFirstName] = useState("");
   const [newLastName, setNewLastName] = useState("");
+  const [newID, setNewID] = useState("");
   const [newGender, setNewGender] = useState("");
   const [newTitle, setNewTitle] = useState("");
   const [newBirthdate, setNewBirthdate] = useState(null);
@@ -154,6 +155,7 @@ const NursePatient = () => {
         Title: newTitle,
         First_Name: newFirstName,
         Last_Name: newLastName,
+        ID: newID,
         Gender: newGender,
         Birthdate: newBirthdate,
         Phone: newPhone,
@@ -475,12 +477,6 @@ const NursePatient = () => {
                           {row.Gender || "-"}
                         </TableCell>
                         <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.Disease || "-"}
-                        </TableCell>
-                        <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                          {row.Allergy || "-"}
-                        </TableCell>
-                        <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
                           <ButtonGroup
                             color="primary"
                             aria-label="outlined primary button group"
@@ -569,6 +565,14 @@ const NursePatient = () => {
                   fullWidth
                   value={newLastName}
                   onChange={(e) => setNewLastName(e.target.value)}
+                />
+                <TextField
+                  margin="dense"
+                  label="กรอกเลขบัตรประชาชน"
+                  type="text"
+                  fullWidth
+                  value={newID}
+                  onChange={(e) => setNewID(e.target.value)}
                 />
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <DatePicker

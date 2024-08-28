@@ -104,6 +104,7 @@ app.post("/api/patient", function (req, res) {
     Title,
     First_Name,
     Last_Name,
+    ID,
     Gender,
     Birthdate,
     Phone,
@@ -130,7 +131,7 @@ app.post("/api/patient", function (req, res) {
     }
 
     const addPatient =
-      "INSERT INTO patient (HN, Title, First_Name, Last_Name, Gender, Birthdate, Phone, Disease, Allergy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO patient (HN, Title, First_Name, Last_Name, ID, Gender, Birthdate, Phone, Disease, Allergy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     connection.execute(
       addPatient,
       [
@@ -138,6 +139,7 @@ app.post("/api/patient", function (req, res) {
         Title,
         First_Name,
         Last_Name,
+        ID,
         Gender,
         Birthdate,
         Phone,
