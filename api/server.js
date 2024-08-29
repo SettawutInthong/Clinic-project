@@ -159,16 +159,39 @@ app.post("/api/patient", function (req, res) {
 });
 
 //ลบรายชื่อผู้ป่วย
-app.delete("/api/patient/:HN", function (req, res) {
+app.delete("/api/patient/:HN", async function (req, res) {
   const HN = req.params.HN;
-  const sql = "DELETE FROM patient WHERE HN = ?";
-  connection.execute(sql, [HN], function (err) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
+
+  try {
+    // ลบข้อมูลในตาราง treatment ที่อ้างอิงถึง HN นี้
+    await db.query("DELETE FROM treatment WHERE HN = ?", [HN]);
+
+    // ดึง Order_ID ทั้งหมดที่เกี่ยวข้องกับ HN
+    const [orderIdsResult] = await db.query("SELECT Order_ID FROM orders WHERE HN = ?", [HN]);
+
+    if (orderIdsResult.length > 0) {
+      const orderIds = orderIdsResult.map(row => row.Order_ID);
+
+      // ลบข้อมูลในตาราง order_medicine ที่อ้างอิงถึง Order_ID เหล่านี้
+      await db.query("DELETE FROM order_medicine WHERE Order_ID IN (?)", [orderIds]);
+
+      // ลบข้อมูลในตาราง orders ที่เกี่ยวข้องกับ HN
+      await db.query("DELETE FROM orders WHERE HN = ?", [HN]);
     }
+
+    // ลบข้อมูลในตาราง walkinqueue ที่อ้างอิงถึง HN นี้
+    await db.query("DELETE FROM walkinqueue WHERE HN = ?", [HN]);
+
+    // ลบข้อมูลในตาราง patient
+    await db.query("DELETE FROM patient WHERE HN = ?", [HN]);
+
     res.json({ message: "ลบข้อมูลผู้ป่วยสำเร็จ" });
-  });
+  } catch (err) {
+    console.error("Error deleting patient data:", err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
+
 
 //ดูข้อมูลผู้ป่วย
 app.get("/api/patient/:HN", function (req, res) {

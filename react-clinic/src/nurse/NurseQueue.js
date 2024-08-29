@@ -69,8 +69,24 @@ const NurseQueue = () => {
   const [newPhone, setNewPhone] = useState("");
   const [newAllergy, setNewAllergy] = useState("");
   const [newDisease, setNewDisease] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
+  const indexOfLastRow = currentPage * rowsPerPage;
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const currentData = data.slice(indexOfFirstRow, indexOfLastRow);
   const navigate = useNavigate();
 
+  const nextPage = () => {
+    if (currentPage < Math.ceil(data.length / rowsPerPage)) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
   const SnackbarClose = () => {
     setSnackbarOpen(false);
   };
@@ -176,33 +192,6 @@ const NurseQueue = () => {
     setAddQueuePopup(false);
   };
 
-  const ViewPatient = async (HN) => {
-    try {
-      ResetForm();
-      const response = await axios.get(
-        `http://localhost:5000/api/patient?HN=${HN}`
-      );
-      const patient = response.data.data[0];
-      if (patient) {
-        setNewTitle(patient.Title);
-        setNewFirstName(patient.First_Name);
-        setNewLastName(patient.Last_Name);
-        setNewID(patient.ID);
-        setNewBirthdate(new Date(patient.Birthdate));
-        setNewGender(patient.Gender);
-        setNewPhone(patient.Phone);
-        setNewAllergy(patient.Allergy);
-        setNewDisease(patient.Disease);
-
-        setSelectedHN(HN);
-        setViewPopup(true);
-      }
-    } catch (error) {
-      console.error("Error viewing patient:", error);
-      showMessage("เกิดข้อผิดพลาดในการดูข้อมูลผู้ป่วย");
-    }
-  };
-
   const ResetForm = () => {
     setNewTitle("");
     setNewFirstName("");
@@ -225,21 +214,20 @@ const NurseQueue = () => {
 
   const DeleteQueue = (HN) => {
     setSelectedHN(HN);
-    setDeletePopup(true);
+    setDeletePopup(true); // เปิดป๊อปอัพยืนยันการลบ
   };
 
   const ConfirmDeleteQueue = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/walkinqueue/${selectedHN}`);
-      FetchData();
-      setDeletePopup(false);
-      showMessage("ลบข้อมูลผู้ป่วยจากคิวสำเร็จ");
+      await axios.delete(`http://localhost:5000/api/walkinqueue/${selectedHN}`); // เรียกใช้งาน API เพื่อลบคิว
+      FetchData(); // ดึงข้อมูลใหม่หลังจากลบเสร็จ
+      setDeletePopup(false); // ปิดป๊อปอัพยืนยันการลบ
+      showMessage("ลบข้อมูลผู้ป่วยจากคิวสำเร็จ", "success"); // แสดงข้อความเมื่อการลบสำเร็จ
     } catch (error) {
-      console.error("Error deleting queue:", error);
-      showMessage("เกิดข้อผิดพลาดในการลบข้อมูลผู้ป่วยจากคิว");
+      console.error("Error deleting queue:", error); // แสดงข้อผิดพลาดในคอนโซล
+      showMessage("เกิดข้อผิดพลาดในการลบข้อมูลผู้ป่วยจากคิว", "error"); // แสดงข้อความเมื่อเกิดข้อผิดพลาด
     }
   };
-
   const ViewOrder = (HN) => {
     navigate(`/nurse_order?HN=${HN}`);
   };
@@ -330,12 +318,10 @@ const NurseQueue = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {data.map((row) => (
+                  {currentData.map((row) => (
                     <TableRow
                       key={row.Queue_ID}
-                      sx={{
-                        "&:last-child td, &:last-child th": { border: 0 },
-                      }}
+                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                     >
                       <TableCell
                         style={{ flexGrow: 1, textAlign: "center" }}
@@ -376,6 +362,22 @@ const NurseQueue = () => {
                   ))}
                 </TableBody>
               </Table>
+              <Box display="flex" justifyContent="center" mt={2}>
+                <Button onClick={prevPage} disabled={currentPage === 1}>
+                  ก่อนหน้า
+                </Button>
+                <Typography variant="body1" style={{ margin: "0 15px" }}>
+                  {currentPage}
+                </Typography>
+                <Button
+                  onClick={nextPage}
+                  disabled={
+                    currentPage === Math.ceil(data.length / rowsPerPage)
+                  }
+                >
+                  ถัดไป
+                </Button>
+              </Box>
             </TableContainer>
 
             <Dialog
@@ -576,7 +578,26 @@ const NurseQueue = () => {
               </DialogActions>
             </Dialog>
 
-            {/* ส่วนของ Dialog และ Snackbar ที่เหลือ */}
+            <Dialog
+              open={deletePopup}
+              onClose={() => setDeletePopup(false)}
+              aria-labelledby="delete-dialog-title"
+            >
+              <DialogTitle id="delete-dialog-title">ยืนยันการลบ</DialogTitle>
+              <DialogContent>
+                <Typography>
+                  คุณแน่ใจหรือว่าต้องการลบข้อมูลผู้ป่วยรายนี้จากคิว
+                </Typography>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setDeletePopup(false)} color="primary">
+                  ยกเลิก
+                </Button>
+                <Button onClick={ConfirmDeleteQueue} color="primary">
+                  ลบ
+                </Button>
+              </DialogActions>
+            </Dialog>
           </div>
         </PaperStyled>
       </ContainerStyled>

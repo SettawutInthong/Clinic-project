@@ -91,12 +91,13 @@ const NursePatient = () => {
       setCurrentPage(currentPage + 1);
     }
   };
-
+  
   const prevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }
   };
+  
 
   const SnackbarClose = () => {
     setSnackbarOpen(false);
@@ -210,16 +211,17 @@ const NursePatient = () => {
 
   const ConfirmDeletePatient = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/walkinqueue/${selectedHN}`);
+      // ลบข้อมูลทั้งหมดที่เกี่ยวข้องกับ HN โดยใช้ API เดียว
       await axios.delete(`http://localhost:5000/api/patient/${selectedHN}`);
-      FetchData();
-      setDeletePopup(false);
-      showMessage("ลบข้อมูลผู้ป่วยสำเร็จ");
+  
+      FetchData();  // โหลดข้อมูลใหม่อีกครั้งหลังจากลบสำเร็จ
+      setDeletePopup(false);  // ปิด popup การยืนยันการลบ
+      showMessage("ลบข้อมูลผู้ป่วยสำเร็จ", "success");
     } catch (error) {
       console.error("Error deleting patient:", error);
-      showMessage("เกิดข้อผิดพลาดในการลบข้อมูลผู้ป่วย");
+      showMessage("เกิดข้อผิดพลาดในการลบข้อมูลผู้ป่วย", "error");
     }
-  };
+};
 
   const ViewPatient = async (HN) => {
     try {
@@ -1045,13 +1047,14 @@ const NursePatient = () => {
                 </Typography>
               </DialogContent>
               <DialogActions>
-                <Button onClick={() => setDeletePopup(false)} color="primary">
-                  ยกเลิก
-                </Button>
-                <Button onClick={ConfirmDeletePatient} color="primary">
-                  ลบ
-                </Button>
-              </DialogActions>
+  <Button onClick={() => setDeletePopup(false)} color="primary">
+    ยกเลิก
+  </Button>
+  <Button onClick={ConfirmDeletePatient} color="primary">
+    ลบ
+  </Button>
+</DialogActions>
+
             </Dialog>
           </div>
         </PaperStyled>
