@@ -54,6 +54,7 @@ const NursePatient = () => {
   const [newLastName, setNewLastName] = useState("");
   const [newID, setNewID] = useState("");
   const [newGender, setNewGender] = useState("");
+  const [isGenderLocked, setIsGenderLocked] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newBirthdate, setNewBirthdate] = useState(null);
   const [newPhone, setNewPhone] = useState("");
@@ -85,19 +86,19 @@ const NursePatient = () => {
   const indexOfFirstPatient = indexOfLastPatient - patientsPerPage;
   const currentPatients = data.slice(indexOfFirstPatient, indexOfLastPatient);
   const navigate = useNavigate();
+  const [errors, setErrors] = useState({});
 
   const nextPage = () => {
     if (currentPage < Math.ceil(data.length / patientsPerPage)) {
       setCurrentPage(currentPage + 1);
     }
   };
-  
+
   const prevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }
   };
-  
 
   const SnackbarClose = () => {
     setSnackbarOpen(false);
@@ -173,9 +174,40 @@ const NursePatient = () => {
     });
   };
 
+  // ฟังก์ชันสำหรับตรวจสอบข้อมูลในฟอร์ม
+  const validateForm = () => {
+    const newErrors = {};
+
+    // ตรวจสอบค่าที่เป็นตัวเลข (เช่น ID) ต้องไม่ใช่ค่าว่างและเป็นตัวเลข
+    if (!newID) {
+      newErrors.ID = "กรุณากรอกเลขบัตรประชาชน";
+    } else if (isNaN(newID)) {
+      newErrors.ID = "เลขบัตรประชาชนต้องเป็นตัวเลข";
+    }
+
+    // ตรวจสอบข้อมูลอื่น ๆ ตามที่ต้องการ
+    // เช่น Weight, Height ควรเป็นตัวเลข
+    if (treatmentData.Weight && isNaN(treatmentData.Weight)) {
+      newErrors.Weight = "น้ำหนักต้องเป็นตัวเลข";
+    }
+    if (treatmentData.Height && isNaN(treatmentData.Height)) {
+      newErrors.Height = "ส่วนสูงต้องเป็นตัวเลข";
+    }
+
+    setErrors(newErrors);
+
+    // ถ้าไม่มีข้อผิดพลาด (จำนวนข้อผิดพลาดเป็น 0) ให้คืนค่า true
+    return Object.keys(newErrors).length === 0;
+  };
+
   const AddPatient = async () => {
+    // ตรวจสอบฟอร์มก่อน
+    if (!validateForm()) {
+      showMessage("ข้อมูลไม่ถูกต้อง", "error");
+      return;
+    }
     try {
-      const newPatient = {
+      const newPatientDetails = {
         Title: newTitle,
         First_Name: newFirstName,
         Last_Name: newLastName,
@@ -185,25 +217,31 @@ const NursePatient = () => {
         Phone: newPhone,
         Disease: newDisease,
         Allergy: newAllergy,
+        Heart_Rate: treatmentData.Heart_Rate,
+        Pressure: treatmentData.Pressure,
+        Temp: treatmentData.Temp,
+        Weight: treatmentData.Weight,
+        Height: treatmentData.Height,
+        Symptom: treatmentData.Symptom,
       };
 
       const response = await axios.post(
-        "http://localhost:5000/api/patient",
-        newPatient
+        "http://localhost:5000/api/addPatientWithDetails",
+        newPatientDetails
       );
 
-      const newHN = response.data.HN;
-      await axios.post("http://localhost:5000/api/walkinqueue", { HN: newHN });
-
-      FetchData();
-      setAddPopup(false);
-      showMessage("เพิ่มข้อมูลผู้ป่วยสำเร็จ");
-      ResetForm();
+      if (response.status === 201) {
+        FetchData();
+        setAddPopup(false);
+        showMessage("เพิ่มข้อมูลผู้ป่วยสำเร็จ", "success");
+        ResetForm();
+      }
     } catch (error) {
       console.error("Error adding patient:", error);
-      showMessage("เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วย");
+      showMessage("เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วย", "error");
     }
   };
+
   const DeletePatient = (HN) => {
     setSelectedHN(HN);
     setDeletePopup(true);
@@ -213,15 +251,15 @@ const NursePatient = () => {
     try {
       // ลบข้อมูลทั้งหมดที่เกี่ยวข้องกับ HN โดยใช้ API เดียว
       await axios.delete(`http://localhost:5000/api/patient/${selectedHN}`);
-  
-      FetchData();  // โหลดข้อมูลใหม่อีกครั้งหลังจากลบสำเร็จ
-      setDeletePopup(false);  // ปิด popup การยืนยันการลบ
+
+      FetchData(); // โหลดข้อมูลใหม่อีกครั้งหลังจากลบสำเร็จ
+      setDeletePopup(false); // ปิด popup การยืนยันการลบ
       showMessage("ลบข้อมูลผู้ป่วยสำเร็จ", "success");
     } catch (error) {
       console.error("Error deleting patient:", error);
       showMessage("เกิดข้อผิดพลาดในการลบข้อมูลผู้ป่วย", "error");
     }
-};
+  };
 
   const ViewPatient = async (HN) => {
     try {
@@ -329,6 +367,23 @@ const NursePatient = () => {
       fetchQueueData();
     }
   }, [showTable]);
+
+  useEffect(() => {
+    if (newTitle === "นาย" || newTitle === "ด.ช.") {
+      setNewGender("ชาย");
+      setIsGenderLocked(true); // ล็อกฟิลด์เพศ
+    } else if (
+      newTitle === "นาง" ||
+      newTitle === "นางสาว" ||
+      newTitle === "ด.ญ."
+    ) {
+      setNewGender("หญิง");
+      setIsGenderLocked(true); // ล็อกฟิลด์เพศ
+    } else {
+      setNewGender(""); // หรือให้เป็นค่าว่างถ้าไม่ตรงกับเงื่อนไขใด
+      setIsGenderLocked(false); // ปลดล็อกฟิลด์เพศ
+    }
+  }, [newTitle]);
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -546,7 +601,6 @@ const NursePatient = () => {
               open={addPopup}
               onClose={() => {
                 setAddPopup(false);
-                ResetForm();
               }}
               aria-labelledby="form-dialog-title"
               maxWidth="lg"
@@ -566,7 +620,7 @@ const NursePatient = () => {
                         fullWidth
                         margin="dense"
                         variant="outlined"
-                        style={{ width: "200px" }}
+                        style={{ width: "225px" }}
                         size="small"
                       >
                         <InputLabel>เลือกคำนำหน้า</InputLabel>
@@ -583,17 +637,36 @@ const NursePatient = () => {
                           <MenuItem value="นางสาว">นางสาว</MenuItem>
                         </Select>
                       </FormControl>
-                      <TextField
-                        autoFocus
-                        margin="dense"
-                        label="กรอกชื่อ"
-                        type="text"
+                      <FormControl
                         fullWidth
-                        value={newFirstName}
-                        onChange={(e) => setNewFirstName(e.target.value)}
+                        margin="dense"
+                        variant="outlined"
+                        style={{ width: "225px" }}
                         size="small"
-                      />
+                      >
+                        <InputLabel>เลือกเพศ</InputLabel>
+                        <Select
+                          label="เลือกเพศ"
+                          value={newGender}
+                          onChange={(e) => setNewGender(e.target.value)}
+                          disabled={isGenderLocked} // ล็อกฟิลด์ถ้า isGenderLocked เป็น true
+                        >
+                          <MenuItem value="">- เลือกเพศ -</MenuItem>
+                          <MenuItem value="ชาย">ชาย</MenuItem>
+                          <MenuItem value="หญิง">หญิง</MenuItem>
+                        </Select>
+                      </FormControl>
                     </Box>
+                    <TextField
+                      autoFocus
+                      margin="dense"
+                      label="กรอกชื่อ"
+                      type="text"
+                      fullWidth
+                      value={newFirstName}
+                      onChange={(e) => setNewFirstName(e.target.value)}
+                      size="small"
+                    />
                     <TextField
                       margin="dense"
                       label="กรอกนามสกุล"
@@ -611,6 +684,8 @@ const NursePatient = () => {
                       value={newID}
                       onChange={(e) => setNewID(e.target.value)}
                       size="small"
+                      error={Boolean(errors.ID)}
+                      helperText={errors.ID}
                     />
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
                       <DatePicker
@@ -758,7 +833,6 @@ const NursePatient = () => {
                 <Button
                   onClick={() => {
                     AddPatient();
-                    ResetForm();
                   }}
                   color="primary"
                 >
@@ -1047,14 +1121,13 @@ const NursePatient = () => {
                 </Typography>
               </DialogContent>
               <DialogActions>
-  <Button onClick={() => setDeletePopup(false)} color="primary">
-    ยกเลิก
-  </Button>
-  <Button onClick={ConfirmDeletePatient} color="primary">
-    ลบ
-  </Button>
-</DialogActions>
-
+                <Button onClick={() => setDeletePopup(false)} color="primary">
+                  ยกเลิก
+                </Button>
+                <Button onClick={ConfirmDeletePatient} color="primary">
+                  ลบ
+                </Button>
+              </DialogActions>
             </Dialog>
           </div>
         </PaperStyled>

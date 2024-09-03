@@ -99,8 +99,66 @@ app.get("/api/patient", function (req, res) {
 });
 
 //เพิ่มรายชื่อผู้ป่วย
-app.post("/api/patient", function (req, res) {
-  const {
+// app.post("/api/patient", function (req, res) {
+//   const {
+//     Title,
+//     First_Name,
+//     Last_Name,
+//     ID,
+//     Gender,
+//     Birthdate,
+//     Phone,
+//     Disease,
+//     Allergy,
+//   } = req.body;
+
+//   const getMaxHN = "SELECT MAX(HN) as maxHN FROM patient";
+//   connection.execute(getMaxHN, function (err, results) {
+//     if (err) {
+//       return res.status(500).json({ error: err.message });
+//     }
+
+//     let newHN = "HN001";
+//     if (results.length > 0 && results[0].maxHN !== null) {
+//       const maxHN = results[0].maxHN;
+//       const numberPart = parseInt(maxHN.substring(2), 10);
+//       const nextNumber = numberPart + 1;
+
+//       if (nextNumber > 999) {
+//         return res.status(500).json({ error: "ถึงขีดจำกัดของ HN แล้ว" });
+//       }
+//       newHN = `HN${nextNumber.toString().padStart(3, "0")}`;
+//     }
+
+//     const addPatient =
+//       "INSERT INTO patient (HN, Title, First_Name, Last_Name, ID, Gender, Birthdate, Phone, Disease, Allergy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+//     connection.execute(
+//       addPatient,
+//       [
+//         newHN,
+//         Title,
+//         First_Name,
+//         Last_Name,
+//         ID,
+//         Gender,
+//         Birthdate,
+//         Phone,
+//         Disease || null,
+//         Allergy || null,
+//       ],
+//       function (err) {
+//         if (err) {
+//           return res.status(500).json({ error: err.message });
+//         }
+//         res
+//           .status(201)
+//           .json({ message: "เพิ่มรายชื่อผู้ป่วยสำเร็จ", HN: newHN });
+//       }
+//     );
+//   });
+// });
+app.post("/api/addPatientWithDetails", async (req, res) => {
+  let {
     Title,
     First_Name,
     Last_Name,
@@ -110,52 +168,110 @@ app.post("/api/patient", function (req, res) {
     Phone,
     Disease,
     Allergy,
+    Heart_Rate,
+    Pressure,
+    Temp,
+    Weight,
+    Height,
+    Symptom
   } = req.body;
 
-  const getMaxHN = "SELECT MAX(HN) as maxHN FROM patient";
-  connection.execute(getMaxHN, function (err, results) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+  try {
+    // ตรวจสอบค่าว่างและแทนที่ด้วย NULL ถ้าจำเป็น
+    Title = Title || null;
+    First_Name = First_Name || null;
+    Last_Name = Last_Name || null;
+    ID = ID || null;
+    Gender = Gender || null;
+    Birthdate = Birthdate || null;
+    Phone = Phone || null;
+    Disease = Disease || null;
+    Allergy = Allergy || null;
+    Heart_Rate = Heart_Rate || null;
+    Pressure = Pressure || null;
+    Temp = Temp || null;
+    Weight = Weight || null;
+    Height = Height || null;
+    Symptom = Symptom || null;
 
+    // สร้าง HN ใหม่
+    const [maxHNResult] = await db.query("SELECT MAX(HN) as maxHN FROM patient");
     let newHN = "HN001";
-    if (results.length > 0 && results[0].maxHN !== null) {
-      const maxHN = results[0].maxHN;
+    if (maxHNResult[0].maxHN !== null) {
+      const maxHN = maxHNResult[0].maxHN;
       const numberPart = parseInt(maxHN.substring(2), 10);
-      const nextNumber = numberPart + 1;
-
-      if (nextNumber > 999) {
-        return res.status(500).json({ error: "ถึงขีดจำกัดของ HN แล้ว" });
-      }
-      newHN = `HN${nextNumber.toString().padStart(3, "0")}`;
+      newHN = `HN${(numberPart + 1).toString().padStart(3, "0")}`;
     }
 
-    const addPatient =
-      "INSERT INTO patient (HN, Title, First_Name, Last_Name, ID, Gender, Birthdate, Phone, Disease, Allergy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    connection.execute(
-      addPatient,
-      [
-        newHN,
-        Title,
-        First_Name,
-        Last_Name,
-        ID,
-        Gender,
-        Birthdate,
-        Phone,
-        Disease || null,
-        Allergy || null,
-      ],
-      function (err) {
-        if (err) {
-          return res.status(500).json({ error: err.message });
-        }
-        res
-          .status(201)
-          .json({ message: "เพิ่มรายชื่อผู้ป่วยสำเร็จ", HN: newHN });
-      }
-    );
-  });
+    // เพิ่มข้อมูลในตาราง patient
+    const addPatientSql = `
+      INSERT INTO patient (HN, Title, First_Name, Last_Name, ID, Gender, Birthdate, Phone, Disease, Allergy) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    await db.execute(addPatientSql, [
+      newHN,
+      Title,
+      First_Name,
+      Last_Name,
+      ID,
+      Gender,
+      Birthdate,
+      Phone,
+      Disease,
+      Allergy,
+    ]);
+
+    // เพิ่มข้อมูลในตาราง walkinqueue
+    const addQueueSql = "INSERT INTO walkinqueue (HN) VALUES (?)";
+    await db.execute(addQueueSql, [newHN]);
+
+    // สร้าง Order_ID ใหม่
+    const [maxOrderResult] = await db.query("SELECT MAX(Order_ID) as maxOrderID FROM orders");
+    let newOrderID = "O00001";
+    if (maxOrderResult[0].maxOrderID !== null) {
+      const maxOrderID = maxOrderResult[0].maxOrderID;
+      const orderNumberPart = parseInt(maxOrderID.substring(1), 10);
+      newOrderID = `O${(orderNumberPart + 1).toString().padStart(5, "0")}`;
+    }
+
+    // เพิ่มข้อมูลในตาราง orders
+    const addOrderSql = `
+      INSERT INTO orders (Order_ID, HN, Order_Date) 
+      VALUES (?, ?, NOW())
+    `;
+    await db.execute(addOrderSql, [newOrderID, newHN]);
+
+    // สร้าง Treatment_ID ใหม่
+    const [maxTreatmentResult] = await db.query("SELECT MAX(Treatment_ID) as maxTreatmentID FROM treatment");
+    let newTreatmentID = "T00001";
+    if (maxTreatmentResult[0].maxTreatmentID !== null) {
+      const maxTreatmentID = maxTreatmentResult[0].maxTreatmentID;
+      const treatmentNumberPart = parseInt(maxTreatmentID.substring(1), 10);
+      newTreatmentID = `T${(treatmentNumberPart + 1).toString().padStart(5, "0")}`;
+    }
+
+    // เพิ่มข้อมูลในตาราง treatment
+    const addTreatmentSql = `
+      INSERT INTO treatment (Treatment_ID, HN, Order_ID, Treatment_Date, Treatment_Details, Treatment_cost, Total_Cost, Symptom, Weight, Height, Temp, Pressure, Heart_Rate)
+      VALUES (?, ?, ?, NOW(), NULL, NULL, NULL, ?, ?, ?, ?, ?, ?)
+    `;
+    await db.execute(addTreatmentSql, [
+      newTreatmentID,
+      newHN,
+      newOrderID,
+      Symptom,
+      Weight,
+      Height,
+      Temp,
+      Pressure,
+      Heart_Rate,
+    ]);
+
+    res.status(201).json({ message: "เพิ่มผู้ป่วยและข้อมูลที่เกี่ยวข้องสำเร็จ", HN: newHN });
+  } catch (error) {
+    console.error("Error adding patient with details:", error);
+    res.status(500).json({ error: "เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วย" });
+  }
 });
 
 //ลบรายชื่อผู้ป่วย
@@ -330,77 +446,93 @@ app.get("/api/treatmentsss", function (req, res) {
 });
 
 // เพิ่มคิวผู้ป่วย (Walk-In Queue) พร้อมตรวจสอบค่า Order_ID ล่าสุด
-app.post("/api/walkinqueue", async function (req, res) {
+// app.post("/api/walkinqueue", async function (req, res) {
+//   const { HN, Heart_Rate, Pressure, Temp, Weight, Height, Symptom } = req.body;
+
+//   try {
+//     // ตรวจสอบค่า Queue_ID ล่าสุด
+//     const [queueResult] = await db.query(
+//       "SELECT MAX(Queue_ID) as maxQueueID FROM walkinqueue"
+//     );
+//     let newQueueID = 1;
+//     if (queueResult.length > 0 && queueResult[0].maxQueueID !== null) {
+//       newQueueID = queueResult[0].maxQueueID + 1;
+//     }
+
+//     // ตรวจสอบค่า Order_ID ล่าสุด
+//     const [orderResult] = await db.query(
+//       "SELECT MAX(Order_ID) as maxOrderID FROM orders"
+//     );
+//     let newOrderID;
+//     if (orderResult.length > 0 && orderResult[0].maxOrderID !== null) {
+//       const currentMaxID = orderResult[0].maxOrderID;
+//       const nextNumber = parseInt(currentMaxID.substring(1), 10) + 1; // แยกหมายเลขและเพิ่มค่า
+//       newOrderID = `O${nextNumber.toString().padStart(5, "0")}`; // สร้าง Order_ID ใหม่
+//     } else {
+//       newOrderID = "O00001"; // กำหนดค่าเริ่มต้นถ้าไม่มีข้อมูล
+//     }
+
+//     // เพิ่มข้อมูลในตาราง orders ด้วยค่า Order_ID ใหม่
+//     await db.query(
+//       "INSERT INTO orders (Order_ID, HN, Order_Date) VALUES (?, ?, NOW())",
+//       [newOrderID, HN]
+//     );
+
+//     // เพิ่มข้อมูลในตาราง walkinqueue
+//     await db.query("INSERT INTO walkinqueue (Queue_ID, HN) VALUES (?, ?)", [
+//       newQueueID,
+//       HN,
+//     ]);
+
+//     // เพิ่มข้อมูลการรักษาในตาราง treatment
+//     const [maxTreatmentResult] = await db.query(
+//       "SELECT MAX(Treatment_ID) as maxTreatmentID FROM treatment"
+//     );
+//     const newTreatmentID = generateID(
+//       maxTreatmentResult[0].maxTreatmentID,
+//       "T"
+//     );
+
+//     await db.query(
+//       `INSERT INTO treatment (Treatment_ID, HN, Order_ID, Treatment_Date, Treatment_Details, Treatment_cost, Total_Cost, Symptom, Weight, Height, Temp, Pressure, Heart_Rate)
+//    VALUES (?, ?, ?, NOW(), NULL, NULL, NULL, ?, ?, ?, ?, ?, ?)`,
+//       [
+//         newTreatmentID,
+//         HN,
+//         newOrderID,
+//         Symptom,
+//         Weight,
+//         Height,
+//         Temp,
+//         Pressure,
+//         Heart_Rate,
+//       ]
+//     );
+
+//     res.status(201).json({
+//       message: "เพิ่มผู้ป่วยเข้า walkinqueue และสร้างข้อมูลการรักษาสำเร็จ",
+//     });
+//   } catch (err) {
+//     console.error("Error adding to queue or creating treatment:", err);
+//     res
+//       .status(500)
+//       .json({ error: "เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วยหรือการรักษา" });
+//   }
+// });
+app.post("/api/walkinqueue", async (req, res) => {
   const { HN, Heart_Rate, Pressure, Temp, Weight, Height, Symptom } = req.body;
 
   try {
-    // ตรวจสอบค่า Queue_ID ล่าสุด
-    const [queueResult] = await db.query(
-      "SELECT MAX(Queue_ID) as maxQueueID FROM walkinqueue"
-    );
-    let newQueueID = 1;
-    if (queueResult.length > 0 && queueResult[0].maxQueueID !== null) {
-      newQueueID = queueResult[0].maxQueueID + 1;
-    }
+    // ไม่ต้องกำหนดค่า Queue_ID เอง ปล่อยให้ฐานข้อมูลจัดการ
+    await db.query("INSERT INTO walkinqueue (HN) VALUES (?)", [HN]);
 
-    // ตรวจสอบค่า Order_ID ล่าสุด
-    const [orderResult] = await db.query(
-      "SELECT MAX(Order_ID) as maxOrderID FROM orders"
-    );
-    let newOrderID;
-    if (orderResult.length > 0 && orderResult[0].maxOrderID !== null) {
-      const currentMaxID = orderResult[0].maxOrderID;
-      const nextNumber = parseInt(currentMaxID.substring(1), 10) + 1; // แยกหมายเลขและเพิ่มค่า
-      newOrderID = `O${nextNumber.toString().padStart(5, "0")}`; // สร้าง Order_ID ใหม่
-    } else {
-      newOrderID = "O00001"; // กำหนดค่าเริ่มต้นถ้าไม่มีข้อมูล
-    }
-
-    // เพิ่มข้อมูลในตาราง orders ด้วยค่า Order_ID ใหม่
-    await db.query(
-      "INSERT INTO orders (Order_ID, HN, Order_Date) VALUES (?, ?, NOW())",
-      [newOrderID, HN]
-    );
-
-    // เพิ่มข้อมูลในตาราง walkinqueue
-    await db.query("INSERT INTO walkinqueue (Queue_ID, HN) VALUES (?, ?)", [
-      newQueueID,
-      HN,
-    ]);
-
-    // เพิ่มข้อมูลการรักษาในตาราง treatment
-    const [maxTreatmentResult] = await db.query(
-      "SELECT MAX(Treatment_ID) as maxTreatmentID FROM treatment"
-    );
-    const newTreatmentID = generateID(
-      maxTreatmentResult[0].maxTreatmentID,
-      "T"
-    );
-
-    await db.query(
-      `INSERT INTO treatment (Treatment_ID, HN, Order_ID, Treatment_Date, Treatment_Details, Treatment_cost, Total_Cost, Symptom, Weight, Height, Temp, Pressure, Heart_Rate)
-   VALUES (?, ?, ?, NOW(), NULL, NULL, NULL, ?, ?, ?, ?, ?, ?)`,
-      [
-        newTreatmentID,
-        HN,
-        newOrderID,
-        Symptom,
-        Weight,
-        Height,
-        Temp,
-        Pressure,
-        Heart_Rate,
-      ]
-    );
-
+    // การดำเนินการอื่น ๆ เช่น เพิ่มข้อมูลการรักษา ฯลฯ
     res.status(201).json({
       message: "เพิ่มผู้ป่วยเข้า walkinqueue และสร้างข้อมูลการรักษาสำเร็จ",
     });
   } catch (err) {
-    console.error("Error adding to queue or creating treatment:", err);
-    res
-      .status(500)
-      .json({ error: "เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วยหรือการรักษา" });
+    console.error("Error adding patient to walkinqueue:", err);
+    res.status(500).json({ error: "เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วย" });
   }
 });
 
