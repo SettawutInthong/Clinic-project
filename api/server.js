@@ -98,6 +98,30 @@ app.get("/api/patient", function (req, res) {
   });
 });
 
+//เพิ่ม appointments
+app.post('/api/appointments', async (req, res) => {
+  const { HN, Queue_Date, Queue_Time } = req.body;
+
+  try {
+    // ตรวจสอบว่า HN ที่ได้รับมีอยู่ในตาราง patient หรือไม่
+    const [rows] = await db.execute('SELECT HN FROM patient WHERE HN = ?', [HN]);
+    if (rows.length === 0) {
+      return res.status(400).json({ message: 'ไม่พบ HN ที่ระบุในฐานข้อมูลผู้ป่วย' });
+    }
+
+    // เพิ่มข้อมูลนัดหมายใหม่โดยไม่ต้องระบุ Queue_ID
+    await db.execute(
+      'INSERT INTO appointmentqueue (HN, Queue_Date, Queue_Time) VALUES (?, ?, ?)',
+      [HN, Queue_Date, Queue_Time]
+    );
+
+    res.status(201).json({ message: 'เพิ่มข้อมูลการนัดหมายสำเร็จ' });
+  } catch (error) {
+    console.error('Error adding appointment:', error);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการเพิ่มข้อมูลการนัดหมาย' });
+  }
+});
+
 //เพิ่มรายชื่อผู้ป่วย
 // app.post("/api/patient", function (req, res) {
 //   const {

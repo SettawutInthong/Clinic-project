@@ -24,8 +24,6 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import { ButtonGroup } from "@mui/material";
-import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import AddToQueueIcon from "@mui/icons-material/AddToQueue";
@@ -34,6 +32,13 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import SearchIcon from "@mui/icons-material/Search";
 import Grid from "@mui/material/Grid";
+import EditCalendarIcon from "@mui/icons-material/EditCalendar";
+import {
+  DateTimePicker,
+  LocalizationProvider,
+  DatePicker,
+} from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(10),
@@ -87,6 +92,8 @@ const NursePatient = () => {
   const currentPatients = data.slice(indexOfFirstPatient, indexOfLastPatient);
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});
+  const [appointmentPopup, setAppointmentPopup] = useState(false);
+  const [appointmentDate, setAppointmentDate] = useState(null);
 
   const nextPage = () => {
     if (currentPage < Math.ceil(data.length / patientsPerPage)) {
@@ -172,6 +179,8 @@ const NursePatient = () => {
       Height: "",
       Symptom: "",
     });
+    setSelectedHN("");
+    setAppointmentDate(null);
   };
 
   // ฟังก์ชันสำหรับตรวจสอบข้อมูลในฟอร์ม
@@ -348,6 +357,42 @@ const NursePatient = () => {
 
   const isInQueue = (HN) => {
     return queueData.some((queue) => queue.HN === HN);
+  };
+
+  const ScheduleAppointment = (HN) => {
+    setSelectedHN(HN);
+    setAppointmentPopup(true);
+  };
+
+  const ConfirmAppointment = async () => {
+    if (!selectedHN || !appointmentDate) {
+      showMessage("กรุณาเลือกผู้ป่วยและวันที่นัดหมาย", "error");
+      return;
+    }
+
+    try {
+      const date = appointmentDate.toISOString().split("T")[0]; // แปลงวันที่เป็นรูปแบบ YYYY-MM-DD
+      const time = appointmentDate.toLocaleTimeString("it-IT"); // แปลงเวลาเป็นรูปแบบ HH:mm:ss
+
+      // ส่งข้อมูลไปยังเซิร์ฟเวอร์
+      await axios.post(`http://localhost:5000/api/appointments`, {
+        HN: selectedHN,
+        Queue_Date: date,
+        Queue_Time: time,
+      });
+
+      showMessage("นัดหมายสำเร็จ", "success");
+      ResetForm();
+      setAppointmentPopup(false);
+    } catch (error) {
+      console.error("Error scheduling appointment:", error);
+      showMessage("เกิดข้อผิดพลาดในการนัดหมาย", "error");
+    }
+  };
+
+  const handleCloseAppointmentPopup = () => {
+    ResetForm(); // รีเซ็ตฟอร์มเมื่อปิด Popup
+    setAppointmentPopup(false);
   };
 
   useEffect(() => {
@@ -562,6 +607,12 @@ const NursePatient = () => {
                               }}
                             >
                               <AddToQueueIcon />
+                            </Button>
+                            <Button
+                              onClick={() => ScheduleAppointment(row.HN)}
+                              color="primary"
+                            >
+                              <EditCalendarIcon />
                             </Button>
                             <Button onClick={() => ViewPatient(row.HN)}>
                               <VisibilityIcon />
@@ -1126,6 +1177,53 @@ const NursePatient = () => {
                 </Button>
                 <Button onClick={ConfirmDeletePatient} color="primary">
                   ลบ
+                </Button>
+              </DialogActions>
+            </Dialog>
+
+            <Dialog
+              open={appointmentPopup}
+              onClose={handleCloseAppointmentPopup}
+              aria-labelledby="appointment-dialog-title"
+              maxWidth="sm"
+              fullWidth
+              sx={{ "& .MuiDialog-paper": { minHeight: "80vh" } }} // เพิ่มบรรทัดนี้
+            >
+              <DialogTitle
+                id="appointment-dialog-title"
+                style={{ flexGrow: 1, textAlign: "center" }}
+              >
+                นัดหมายผู้ป่วย
+              </DialogTitle>
+              <DialogContent sx={{ minHeight: "70vh" }}>
+                {/* ฟอร์มสำหรับเลือกวันที่และเวลา */}
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DateTimePicker
+                    label="เลือกวันที่และเวลา"
+                    value={appointmentDate}
+                    onChange={(date) => setAppointmentDate(date)}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        margin: "dense",
+                        size: "small",
+                      },
+                    }}
+                    renderInput={(params) => (
+                      <TextField {...params} fullWidth />
+                    )}
+                  />
+                </LocalizationProvider>
+              </DialogContent>
+              <DialogActions>
+                <Button
+                  onClick={handleCloseAppointmentPopup}
+                  color="primary"
+                >
+                  ยกเลิก
+                </Button>
+                <Button onClick={ConfirmAppointment} color="primary">
+                  บันทึก
                 </Button>
               </DialogActions>
             </Dialog>
