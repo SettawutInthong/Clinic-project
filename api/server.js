@@ -868,6 +868,25 @@ app.post("/api/orders/:orderID/items", async (req, res) => {
   }
 });
 
+app.get("/api/medicine_stock", async (req, res) => {
+  const name = req.query.name || ""; // รับคีย์เวิร์ดค้นหาจาก query parameters
+
+  try {
+    const sql = `
+      SELECT Medicine_ID, Medicine_Name, Description, Med_Cost, Quantity_type, Quantity
+      FROM medicine 
+      WHERE Medicine_Name LIKE ?
+    `;
+    const [results] = await db.query(sql, [`%${name}%`]); // ค้นหาชื่อยาที่ตรงกับคีย์เวิร์ด
+
+    res.json({ data: results });
+  } catch (error) {
+    console.error("Error fetching medicine stock data:", error);
+    res.status(500).json({ error: "Error fetching medicine stock data" });
+  }
+});
+
+
 app.post("/api/orders", async (req, res) => {
   const { HN, Order_ID, items } = req.body;
 

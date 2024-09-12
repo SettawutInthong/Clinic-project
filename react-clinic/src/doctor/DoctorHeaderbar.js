@@ -17,6 +17,7 @@ const pages = [
   { title: "หน้าแรก", icon: "", to: "/doctor_dashboard" },
   { title: "รายชื่อผู้ป่วย", icon: "", to: "/doctor_patient" },
   { title: "คิว", icon: "", to: "/doctor_queue" },
+  { title: "รายการยา", icon: "", to: "/doctor_meddetail" },
 ];
 
 function DoctorHeader() {
