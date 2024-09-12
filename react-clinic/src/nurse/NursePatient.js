@@ -610,7 +610,7 @@ const NursePatient = () => {
                             </Button>
                             <Button
                               onClick={() => ScheduleAppointment(row.HN)}
-                              color="primary"
+                              color="warning"
                             >
                               <EditCalendarIcon />
                             </Button>

@@ -46,7 +46,24 @@ const DoctorQueue = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarType, setSnackbarType] = useState("success");
   const [selectedOrder, setSelectedOrder] = useState({});
+  const [currentPage, setCurrentPage] = useState(1); // หน้าปัจจุบันเริ่มที่ 1
+  const patientsPerPage = 10; // จำนวนผู้ป่วยต่อหน้า
+  const indexOfLastPatient = currentPage * patientsPerPage;
+  const indexOfFirstPatient = indexOfLastPatient - patientsPerPage;
+  const currentPatients = data.slice(indexOfFirstPatient, indexOfLastPatient);
   const navigate = useNavigate();
+
+  const nextPage = () => {
+    if (currentPage < Math.ceil(data.length / patientsPerPage)) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
@@ -178,7 +195,7 @@ const DoctorQueue = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {data.map((row) => (
+                  {currentPatients.map((row) => (
                     <TableRow
                       key={row.Queue_ID}
                       sx={{
@@ -228,6 +245,22 @@ const DoctorQueue = () => {
                   ))}
                 </TableBody>
               </Table>
+              <Box display="flex" justifyContent="center" mt={2}>
+                  <Button onClick={prevPage} disabled={currentPage === 1}>
+                    ก่อนหน้า
+                  </Button>
+                  <Typography variant="body1" style={{ margin: "0 15px" }}>
+                    {currentPage}
+                  </Typography>
+                  <Button
+                    onClick={nextPage}
+                    disabled={
+                      currentPage === Math.ceil(data.length / patientsPerPage)
+                    }
+                  >
+                    ถัดไป
+                  </Button>
+                </Box>
             </TableContainer>
 
             <Dialog
