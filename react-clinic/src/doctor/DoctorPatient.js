@@ -535,7 +535,10 @@ const DoctorPatient = () => {
                             <Button onClick={() => ViewPatient(row.HN)}>
                               <VisibilityIcon />
                             </Button>
-                            <Button onClick={() => ViewHistory(row.HN)}>
+                            <Button
+                              onClick={() => ViewHistory(row.HN)}
+                              color="secondary"
+                            >
                               <HistoryIcon />
                             </Button>
                             <Button
