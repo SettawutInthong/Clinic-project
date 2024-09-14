@@ -39,6 +39,7 @@ import {
   DatePicker,
 } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { subMinutes, setHours, setMinutes } from "date-fns";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(10),
@@ -1202,6 +1203,10 @@ const NursePatient = () => {
                     label="เลือกวันที่และเวลา"
                     value={appointmentDate}
                     onChange={(date) => setAppointmentDate(date)}
+                    minutesStep={15} // ล็อกให้เลือกนาทีทีละ 15 นาที
+                    ampm={false} // ใช้รูปแบบ 24 ชั่วโมง
+                    minTime={setHours(setMinutes(new Date(), 0), 8)} // จำกัดเวลาเริ่มต้นเป็น 08:00
+                    maxTime={setHours(setMinutes(new Date(), 0), 20)} // จำกัดเวลาสิ้นสุดเป็น 20:00
                     slotProps={{
                       textField: {
                         fullWidth: true,
@@ -1209,17 +1214,11 @@ const NursePatient = () => {
                         size: "small",
                       },
                     }}
-                    renderInput={(params) => (
-                      <TextField {...params} fullWidth />
-                    )}
                   />
                 </LocalizationProvider>
               </DialogContent>
               <DialogActions>
-                <Button
-                  onClick={handleCloseAppointmentPopup}
-                  color="primary"
-                >
+                <Button onClick={handleCloseAppointmentPopup} color="primary">
                   ยกเลิก
                 </Button>
                 <Button onClick={ConfirmAppointment} color="primary">

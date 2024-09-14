@@ -99,26 +99,32 @@ app.get("/api/patient", function (req, res) {
 });
 
 //เพิ่ม appointments
-app.post('/api/appointments', async (req, res) => {
+app.post("/api/appointments", async (req, res) => {
   const { HN, Queue_Date, Queue_Time } = req.body;
 
   try {
     // ตรวจสอบว่า HN ที่ได้รับมีอยู่ในตาราง patient หรือไม่
-    const [rows] = await db.execute('SELECT HN FROM patient WHERE HN = ?', [HN]);
+    const [rows] = await db.execute("SELECT HN FROM patient WHERE HN = ?", [
+      HN,
+    ]);
     if (rows.length === 0) {
-      return res.status(400).json({ message: 'ไม่พบ HN ที่ระบุในฐานข้อมูลผู้ป่วย' });
+      return res
+        .status(400)
+        .json({ message: "ไม่พบ HN ที่ระบุในฐานข้อมูลผู้ป่วย" });
     }
 
     // เพิ่มข้อมูลนัดหมายใหม่โดยไม่ต้องระบุ Queue_ID
     await db.execute(
-      'INSERT INTO appointmentqueue (HN, Queue_Date, Queue_Time) VALUES (?, ?, ?)',
+      "INSERT INTO appointmentqueue (HN, Queue_Date, Queue_Time) VALUES (?, ?, ?)",
       [HN, Queue_Date, Queue_Time]
     );
 
-    res.status(201).json({ message: 'เพิ่มข้อมูลการนัดหมายสำเร็จ' });
+    res.status(201).json({ message: "เพิ่มข้อมูลการนัดหมายสำเร็จ" });
   } catch (error) {
-    console.error('Error adding appointment:', error);
-    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการเพิ่มข้อมูลการนัดหมาย' });
+    console.error("Error adding appointment:", error);
+    res
+      .status(500)
+      .json({ message: "เกิดข้อผิดพลาดในการเพิ่มข้อมูลการนัดหมาย" });
   }
 });
 
@@ -197,7 +203,7 @@ app.post("/api/addPatientWithDetails", async (req, res) => {
     Temp,
     Weight,
     Height,
-    Symptom
+    Symptom,
   } = req.body;
 
   try {
@@ -219,7 +225,9 @@ app.post("/api/addPatientWithDetails", async (req, res) => {
     Symptom = Symptom || null;
 
     // สร้าง HN ใหม่
-    const [maxHNResult] = await db.query("SELECT MAX(HN) as maxHN FROM patient");
+    const [maxHNResult] = await db.query(
+      "SELECT MAX(HN) as maxHN FROM patient"
+    );
     let newHN = "HN001";
     if (maxHNResult[0].maxHN !== null) {
       const maxHN = maxHNResult[0].maxHN;
@@ -250,7 +258,9 @@ app.post("/api/addPatientWithDetails", async (req, res) => {
     await db.execute(addQueueSql, [newHN]);
 
     // สร้าง Order_ID ใหม่
-    const [maxOrderResult] = await db.query("SELECT MAX(Order_ID) as maxOrderID FROM orders");
+    const [maxOrderResult] = await db.query(
+      "SELECT MAX(Order_ID) as maxOrderID FROM orders"
+    );
     let newOrderID = "O00001";
     if (maxOrderResult[0].maxOrderID !== null) {
       const maxOrderID = maxOrderResult[0].maxOrderID;
@@ -266,12 +276,16 @@ app.post("/api/addPatientWithDetails", async (req, res) => {
     await db.execute(addOrderSql, [newOrderID, newHN]);
 
     // สร้าง Treatment_ID ใหม่
-    const [maxTreatmentResult] = await db.query("SELECT MAX(Treatment_ID) as maxTreatmentID FROM treatment");
+    const [maxTreatmentResult] = await db.query(
+      "SELECT MAX(Treatment_ID) as maxTreatmentID FROM treatment"
+    );
     let newTreatmentID = "T00001";
     if (maxTreatmentResult[0].maxTreatmentID !== null) {
       const maxTreatmentID = maxTreatmentResult[0].maxTreatmentID;
       const treatmentNumberPart = parseInt(maxTreatmentID.substring(1), 10);
-      newTreatmentID = `T${(treatmentNumberPart + 1).toString().padStart(5, "0")}`;
+      newTreatmentID = `T${(treatmentNumberPart + 1)
+        .toString()
+        .padStart(5, "0")}`;
     }
 
     // เพิ่มข้อมูลในตาราง treatment
@@ -291,7 +305,9 @@ app.post("/api/addPatientWithDetails", async (req, res) => {
       Heart_Rate,
     ]);
 
-    res.status(201).json({ message: "เพิ่มผู้ป่วยและข้อมูลที่เกี่ยวข้องสำเร็จ", HN: newHN });
+    res
+      .status(201)
+      .json({ message: "เพิ่มผู้ป่วยและข้อมูลที่เกี่ยวข้องสำเร็จ", HN: newHN });
   } catch (error) {
     console.error("Error adding patient with details:", error);
     res.status(500).json({ error: "เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วย" });
@@ -307,13 +323,18 @@ app.delete("/api/patient/:HN", async function (req, res) {
     await db.query("DELETE FROM treatment WHERE HN = ?", [HN]);
 
     // ดึง Order_ID ทั้งหมดที่เกี่ยวข้องกับ HN
-    const [orderIdsResult] = await db.query("SELECT Order_ID FROM orders WHERE HN = ?", [HN]);
+    const [orderIdsResult] = await db.query(
+      "SELECT Order_ID FROM orders WHERE HN = ?",
+      [HN]
+    );
 
     if (orderIdsResult.length > 0) {
-      const orderIds = orderIdsResult.map(row => row.Order_ID);
+      const orderIds = orderIdsResult.map((row) => row.Order_ID);
 
       // ลบข้อมูลในตาราง order_medicine ที่อ้างอิงถึง Order_ID เหล่านี้
-      await db.query("DELETE FROM order_medicine WHERE Order_ID IN (?)", [orderIds]);
+      await db.query("DELETE FROM order_medicine WHERE Order_ID IN (?)", [
+        orderIds,
+      ]);
 
       // ลบข้อมูลในตาราง orders ที่เกี่ยวข้องกับ HN
       await db.query("DELETE FROM orders WHERE HN = ?", [HN]);
@@ -331,7 +352,6 @@ app.delete("/api/patient/:HN", async function (req, res) {
     res.status(500).json({ error: err.message });
   }
 });
-
 
 //ดูข้อมูลผู้ป่วย
 app.get("/api/patient/:HN", function (req, res) {
@@ -388,7 +408,6 @@ app.put("/api/patient/:HN", function (req, res) {
     }
   );
 });
-
 
 // API สำหรับเพิ่มข้อมูลการรักษา
 app.post("/api/addtreatment", async (req, res) => {
@@ -543,16 +562,40 @@ app.get("/api/treatmentsss", function (req, res) {
 //       .json({ error: "เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วยหรือการรักษา" });
 //   }
 // });
+// เพิ่มผู้ป่วยเข้า walkinqueue พร้อมกับเวลาจาก Queue_Time
 app.post("/api/walkinqueue", async (req, res) => {
-  const { HN, Heart_Rate, Pressure, Temp, Weight, Height, Symptom } = req.body;
+  const { HN } = req.body;
 
   try {
-    // ไม่ต้องกำหนดค่า Queue_ID เอง ปล่อยให้ฐานข้อมูลจัดการ
-    await db.query("INSERT INTO walkinqueue (HN) VALUES (?)", [HN]);
+    // Retrieve Queue_Time from appointmentqueue for the selected HN
+    const [appointment] = await db.query(
+      "SELECT Queue_Time FROM appointmentqueue WHERE HN = ?",
+      [HN]
+    );
 
-    // การดำเนินการอื่น ๆ เช่น เพิ่มข้อมูลการรักษา ฯลฯ
+    if (appointment.length === 0) {
+      return res.status(404).json({
+        error: "No appointment found for the provided HN."
+      });
+    }
+
+    const queueTime = appointment[0].Queue_Time;
+
+    // Retrieve the maximum Queue_ID and increment by 1
+    const [maxQueue] = await db.query(
+      "SELECT MAX(Queue_ID) as maxQueueID FROM walkinqueue"
+    );
+
+    const newQueueID = maxQueue[0].maxQueueID ? maxQueue[0].maxQueueID + 1 : 1;
+
+    // Insert the new record into walkinqueue
+    await db.query(
+      "INSERT INTO walkinqueue (Queue_ID, HN, Time, Status) VALUES (?, ?, ?, 'checkin')",
+      [newQueueID, HN, queueTime]
+    );
+
     res.status(201).json({
-      message: "เพิ่มผู้ป่วยเข้า walkinqueue และสร้างข้อมูลการรักษาสำเร็จ",
+      message: "Patient successfully checked in with updated queue time.",
     });
   } catch (err) {
     console.error("Error adding patient to walkinqueue:", err);
@@ -563,9 +606,10 @@ app.post("/api/walkinqueue", async (req, res) => {
 //ดึงข้อมูลคิวผู้ป่วย (Walk-In Queue)
 app.get("/api/walkinqueue", function (req, res) {
   const sql = `
-    SELECT w.Queue_ID, w.HN, p.Title, p.First_Name, p.Last_Name, p.Gender
+    SELECT w.Queue_ID, w.HN, w.Time, w.Status, p.Title, p.First_Name, p.Last_Name, p.Gender
     FROM walkinqueue w
     JOIN patient p ON w.HN = p.HN
+    ORDER BY w.Time ASC
   `;
   connection.execute(sql, function (err, results) {
     if (err) {
@@ -575,25 +619,57 @@ app.get("/api/walkinqueue", function (req, res) {
   });
 });
 
-//ลบคิวผู้ป่วยออกจากคิว (Walk-In Queue)
-app.delete("/api/walkinqueue/:HN", function (req, res) {
-  const HN = req.params.HN;
-  const sql = "DELETE FROM walkinqueue WHERE HN = ?";
-  connection.execute(sql, [HN], function (err) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
+// API สำหรับดึงข้อมูลจาก appointmentqueue ตาม HN
+app.get("/api/appointmentqueue", async (req, res) => {
+  const HN = req.query.HN;
+  try {
+    let query = "SELECT * FROM appointmentqueue";
+    const params = [];
+    if (HN) {
+      query += " WHERE HN = ?";
+      params.push(HN);
     }
-    res.json({ message: "ลบข้อมูลจาก walkinqueue สำเร็จ" });
-  });
+    const [rows] = await db.query(query, params);
+    res.json({ data: rows });
+  } catch (error) {
+    console.error("Error fetching appointmentqueue:", error);
+    res.status(500).json({ message: "Error fetching appointmentqueue" });
+  }
+});
+
+// สำหรับ API เรียกข้อมูลผู้ป่วยพร้อมรายละเอียดการนัดหมาย
+app.get("/api/appointmentqueue/details", async (req, res) => {
+  const { HN } = req.query;
+  if (!HN) {
+    return res.status(400).json({ error: "HN is required" });
+  }
+  try {
+    const sql = `
+      SELECT a.*, p.*
+      FROM appointmentqueue a
+      JOIN patient p ON a.HN = p.HN
+      WHERE a.HN = ?
+    `;
+    const [results] = await db.query(sql, [HN]);
+    if (results.length > 0) {
+      res.json({ data: results });
+    } else {
+      res.status(404).json({ error: "No patient found with the given HN" });
+    }
+  } catch (error) {
+    console.error("Error fetching patient details:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 // ตรวจสอบว่ามี HN ในคิวแล้วหรือไม่
 app.get("/api/walkinqueue/:HN", async (req, res) => {
   const { HN } = req.params;
   try {
-    const [result] = await db.query("SELECT 1 FROM walkinqueue WHERE HN = ?", [
+    const [result] = await db.query("INSERT INTO walkinqueue (HN) VALUES (?)", [
       HN,
     ]);
+
     if (result.length > 0) {
       res.json({ exists: true });
     } else {
@@ -885,7 +961,6 @@ app.get("/api/medicine_stock", async (req, res) => {
     res.status(500).json({ error: "Error fetching medicine stock data" });
   }
 });
-
 
 app.post("/api/orders", async (req, res) => {
   const { HN, Order_ID, items } = req.body;
