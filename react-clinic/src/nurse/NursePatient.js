@@ -672,7 +672,7 @@ const NursePatient = () => {
                         fullWidth
                         margin="dense"
                         variant="outlined"
-                        style={{ width: "225px" }}
+                        style={{ width: "275px" }}
                         size="small"
                       >
                         <InputLabel>เลือกคำนำหน้า</InputLabel>
@@ -693,7 +693,7 @@ const NursePatient = () => {
                         fullWidth
                         margin="dense"
                         variant="outlined"
-                        style={{ width: "225px" }}
+                        style={{ width: "275px" }}
                         size="small"
                       >
                         <InputLabel>เลือกเพศ</InputLabel>
@@ -866,7 +866,7 @@ const NursePatient = () => {
                       }
                       fullWidth
                       multiline
-                      rows={4}
+                      rows={5}
                     />
                   </Grid>
                 </Grid>
