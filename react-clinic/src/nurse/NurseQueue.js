@@ -136,6 +136,7 @@ const NurseQueue = () => {
     }
   };
 
+  // เพิ่มฟังก์ชันใหม่สำหรับการจองคิวและการเช็คอิน
   const AddQueue = async () => {
     // ตรวจสอบว่ากรอก HN หรือยัง
     if (!queueHN) {
@@ -150,7 +151,7 @@ const NurseQueue = () => {
       const patient = response.data.data[0];
 
       if (patient) {
-        await axios.post("http://localhost:5000/api/walkinqueue", {
+        await axios.post("http://localhost:5000/api/addWalkInQueue", {
           HN: queueHN,
           Heart_Rate: treatmentData.Heart_Rate || null,
           Pressure: treatmentData.Pressure || null,
@@ -158,22 +159,49 @@ const NurseQueue = () => {
           Weight: treatmentData.Weight || null,
           Height: treatmentData.Height || null,
           Symptom: treatmentData.Symptom || null,
-          Treatment_Details: null,
-          Treatment_cost: null,
-          Total_Cost: null,
         });
 
         FetchData();
-        ResetForm(); // รีเซ็ตฟอร์มหลังจากเช็คอินเสร็จสิ้น
+        ResetForm(); // รีเซ็ตฟอร์มหลังจากจองคิวเสร็จสิ้น
         setAddQueuePopup(false);
-        setAddQueueCheckInPopup(false);
-        showMessage("เช็คอินสำเร็จ", "success");
+        showMessage("จองคิวสำเร็จ", "success");
       } else {
         showMessage("ไม่พบ HN ที่ระบุ", "error");
       }
     } catch (error) {
       console.error("Error adding to queue or creating treatment:", error);
       showMessage("เกิดข้อผิดพลาดในการจองคิวหรือเพิ่มข้อมูลการรักษา", "error");
+    }
+  };
+
+  const CheckInAppointment = async () => {
+    // ตรวจสอบว่ากรอก HN หรือยัง
+    if (!queueHN) {
+      showMessage("กรุณาเลือก HN ของผู้ป่วย", "error");
+      return; // หยุดทำงานถ้าไม่กรอก HN
+    }
+
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/patient?HN=${queueHN}`
+      );
+      const patient = response.data.data[0];
+
+      if (patient) {
+        await axios.post("http://localhost:5000/api/checkInAppointmentQueue", {
+          HN: queueHN,
+        });
+
+        FetchData();
+        ResetForm(); // รีเซ็ตฟอร์มหลังจากเช็คอินเสร็จสิ้น
+        setAddQueueCheckInPopup(false);
+        showMessage("เช็คอินสำเร็จ", "success");
+      } else {
+        showMessage("ไม่พบ HN ที่ระบุ", "error");
+      }
+    } catch (error) {
+      console.error("Error during check-in:", error);
+      showMessage("เกิดข้อผิดพลาดในการเช็คอิน", "error");
     }
   };
 
@@ -647,7 +675,7 @@ const NurseQueue = () => {
                 <Button onClick={handleCancel} color="primary">
                   ยกเลิก
                 </Button>
-                <Button onClick={AddQueue} color="primary">
+                <Button onClick={CheckInAppointment} color="primary">
                   เช็คอิน
                 </Button>
               </DialogActions>
