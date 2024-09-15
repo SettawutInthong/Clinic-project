@@ -514,12 +514,19 @@ const NurseQueue = () => {
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
                       <Box display="flex" flexDirection="row" gap={2}>
-                        <FormControl style={{ width: "200px" }}>
+                        <FormControl
+                          fullWidth
+                          margin="dense"
+                          variant="outlined"
+                          style={{ width: "275px" }}
+                          size="small"
+                        >
                           <TextField
                             margin="dense"
                             label="คำนำหน้า"
                             value={newTitle || ""}
                             fullWidth
+                            size="small"
                             disabled
                             sx={{
                               backgroundColor: "rgba(0, 0, 0, 0.1)",
@@ -527,24 +534,46 @@ const NurseQueue = () => {
                             }}
                           />
                         </FormControl>
-                        <TextField
-                          margin="dense"
-                          label="ชื่อ"
-                          value={newFirstName || ""}
+                        <FormControl
                           fullWidth
-                          disabled
-                          sx={{
-                            backgroundColor: "rgba(0, 0, 0, 0.1)",
-                            color: "rgba(255, 255, 255, 0.7)",
-                          }}
-                        />
+                          margin="dense"
+                          variant="outlined"
+                          style={{ width: "275px" }}
+                          size="small"
+                        >
+                          <TextField
+                            margin="dense"
+                            label="เพศ"
+                            value={newGender || ""}
+                            fullWidth
+                            disabled
+                            size="small"
+                            sx={{
+                              backgroundColor: "rgba(0, 0, 0, 0.1)",
+                              color: "rgba(255, 255, 255, 0.7)",
+                            }}
+                          />
+                        </FormControl>
                       </Box>
+                      <TextField
+                        margin="dense"
+                        label="ชื่อ"
+                        value={newFirstName || ""}
+                        fullWidth
+                        disabled
+                        size="small"
+                        sx={{
+                          backgroundColor: "rgba(0, 0, 0, 0.1)",
+                          color: "rgba(255, 255, 255, 0.7)",
+                        }}
+                      />
                       <TextField
                         margin="dense"
                         label="นามสกุล"
                         value={newLastName || ""}
                         fullWidth
                         disabled
+                        size="small"
                         sx={{
                           backgroundColor: "rgba(0, 0, 0, 0.1)",
                           color: "rgba(255, 255, 255, 0.7)",
@@ -555,6 +584,7 @@ const NurseQueue = () => {
                         label="เลขบัตรประชาชน"
                         value={newID || ""}
                         fullWidth
+                        size="small"
                         disabled
                         sx={{
                           backgroundColor: "rgba(0, 0, 0, 0.1)",
@@ -564,6 +594,7 @@ const NurseQueue = () => {
                       <TextField
                         margin="dense"
                         label="วันเกิด"
+                        size="small"
                         value={
                           newBirthdate
                             ? newBirthdate.toLocaleDateString()
@@ -580,6 +611,7 @@ const NurseQueue = () => {
                         margin="dense"
                         label="หมายเลขโทรศัพท์"
                         value={newPhone || ""}
+                        size="small"
                         fullWidth
                         disabled
                         sx={{
@@ -590,6 +622,7 @@ const NurseQueue = () => {
                       <TextField
                         margin="dense"
                         label="โรคประจำตัว"
+                        size="small"
                         value={newDisease || ""}
                         fullWidth
                         disabled
@@ -602,6 +635,7 @@ const NurseQueue = () => {
                         margin="dense"
                         label="แพ้ยา"
                         value={newAllergy || ""}
+                        size="small"
                         fullWidth
                         disabled
                         sx={{
@@ -610,7 +644,7 @@ const NurseQueue = () => {
                         }}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid item xs={12} sm={6} style={{ marginTop: "8px" }}>
                       <TextField
                         margin="dense"
                         label="อัตราการเต้นหัวใจ"
@@ -619,11 +653,13 @@ const NurseQueue = () => {
                         onChange={handleTreatmentChange}
                         fullWidth
                         sx={{ backgroundColor: "white" }}
+                        size="small"
                       />
                       <TextField
                         margin="dense"
                         label="ความดัน"
                         name="Pressure"
+                        size="small"
                         value={treatmentData.Pressure}
                         onChange={handleTreatmentChange}
                         fullWidth
@@ -632,6 +668,7 @@ const NurseQueue = () => {
                       <TextField
                         margin="dense"
                         label="อุณหภูมิ"
+                        size="small"
                         name="Temp"
                         value={treatmentData.Temp}
                         onChange={handleTreatmentChange}
@@ -642,6 +679,7 @@ const NurseQueue = () => {
                         margin="dense"
                         label="น้ำหนัก"
                         name="Weight"
+                        size="small"
                         value={treatmentData.Weight}
                         onChange={handleTreatmentChange}
                         fullWidth
@@ -651,6 +689,7 @@ const NurseQueue = () => {
                         margin="dense"
                         label="ส่วนสูง"
                         name="Height"
+                        size="small"
                         value={treatmentData.Height}
                         onChange={handleTreatmentChange}
                         fullWidth
@@ -660,11 +699,12 @@ const NurseQueue = () => {
                         margin="dense"
                         label="อาการ"
                         name="Symptom"
+                        size="small"
                         value={treatmentData.Symptom}
                         onChange={handleTreatmentChange}
                         fullWidth
                         multiline
-                        rows={4}
+                        rows={6}
                         sx={{ backgroundColor: "white" }}
                       />
                     </Grid>
@@ -713,34 +753,63 @@ const NurseQueue = () => {
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
                       <Box display="flex" flexDirection="row" gap={2}>
-                        <FormControl style={{ width: "200px" }}>
+                        <FormControl
+                          fullWidth
+                          margin="dense"
+                          variant="outlined"
+                          style={{ width: "275px" }}
+                          size="small"
+                        >
                           <TextField
                             margin="dense"
                             label="คำนำหน้า"
                             value={newTitle || ""}
                             fullWidth
                             disabled
+                            size="small"
                             sx={{
                               backgroundColor: "rgba(0, 0, 0, 0.1)",
                               color: "rgba(255, 255, 255, 0.7)",
                             }}
                           />
                         </FormControl>
-                        <TextField
-                          margin="dense"
-                          label="ชื่อ"
-                          value={newFirstName || ""}
+                        <FormControl
                           fullWidth
-                          disabled
-                          sx={{
-                            backgroundColor: "rgba(0, 0, 0, 0.1)",
-                            color: "rgba(255, 255, 255, 0.7)",
-                          }}
-                        />
+                          margin="dense"
+                          variant="outlined"
+                          style={{ width: "275px" }}
+                          size="small"
+                        >
+                          <TextField
+                            margin="dense"
+                            label="เพศ"
+                            value={newGender || ""}
+                            fullWidth
+                            disabled
+                            size="small"
+                            sx={{
+                              backgroundColor: "rgba(0, 0, 0, 0.1)",
+                              color: "rgba(255, 255, 255, 0.7)",
+                            }}
+                          />
+                        </FormControl>
                       </Box>
                       <TextField
                         margin="dense"
+                        label="ชื่อ"
+                        size="small"
+                        value={newFirstName || ""}
+                        fullWidth
+                        disabled
+                        sx={{
+                          backgroundColor: "rgba(0, 0, 0, 0.1)",
+                          color: "rgba(255, 255, 255, 0.7)",
+                        }}
+                      />
+                      <TextField
+                        margin="dense"
                         label="นามสกุล"
+                        size="small"
                         value={newLastName || ""}
                         fullWidth
                         disabled
@@ -752,6 +821,7 @@ const NurseQueue = () => {
                       <TextField
                         margin="dense"
                         label="เลขบัตรประชาชน"
+                        size="small"
                         value={newID || ""}
                         fullWidth
                         disabled
@@ -763,6 +833,7 @@ const NurseQueue = () => {
                       <TextField
                         margin="dense"
                         label="วันเกิด"
+                        size="small"
                         value={
                           newBirthdate
                             ? newBirthdate.toLocaleDateString()
@@ -778,6 +849,7 @@ const NurseQueue = () => {
                       <TextField
                         margin="dense"
                         label="หมายเลขโทรศัพท์"
+                        size="small"
                         value={newPhone || ""}
                         fullWidth
                         disabled
@@ -789,6 +861,7 @@ const NurseQueue = () => {
                       <TextField
                         margin="dense"
                         label="โรคประจำตัว"
+                        size="small"
                         value={newDisease || ""}
                         fullWidth
                         disabled
@@ -800,6 +873,7 @@ const NurseQueue = () => {
                       <TextField
                         margin="dense"
                         label="แพ้ยา"
+                        size="small"
                         value={newAllergy || ""}
                         fullWidth
                         disabled
@@ -809,11 +883,12 @@ const NurseQueue = () => {
                         }}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid item xs={12} sm={6} style={{ marginTop: "8px" }}>
                       <TextField
                         margin="dense"
                         label="อัตราการเต้นหัวใจ"
                         name="Heart_Rate"
+                        size="small"
                         value={treatmentData.Heart_Rate}
                         onChange={handleTreatmentChange}
                         fullWidth
@@ -823,6 +898,7 @@ const NurseQueue = () => {
                         margin="dense"
                         label="ความดัน"
                         name="Pressure"
+                        size="small"
                         value={treatmentData.Pressure}
                         onChange={handleTreatmentChange}
                         fullWidth
@@ -832,6 +908,7 @@ const NurseQueue = () => {
                         margin="dense"
                         label="อุณหภูมิ"
                         name="Temp"
+                        size="small"
                         value={treatmentData.Temp}
                         onChange={handleTreatmentChange}
                         fullWidth
@@ -841,6 +918,7 @@ const NurseQueue = () => {
                         margin="dense"
                         label="น้ำหนัก"
                         name="Weight"
+                        size="small"
                         value={treatmentData.Weight}
                         onChange={handleTreatmentChange}
                         fullWidth
@@ -849,6 +927,7 @@ const NurseQueue = () => {
                       <TextField
                         margin="dense"
                         label="ส่วนสูง"
+                        size="small"
                         name="Height"
                         value={treatmentData.Height}
                         onChange={handleTreatmentChange}
@@ -857,13 +936,14 @@ const NurseQueue = () => {
                       />
                       <TextField
                         margin="dense"
+                        size="small"
                         label="อาการ"
                         name="Symptom"
                         value={treatmentData.Symptom}
                         onChange={handleTreatmentChange}
                         fullWidth
                         multiline
-                        rows={4}
+                        rows={6}
                         sx={{ backgroundColor: "white" }}
                       />
                     </Grid>
