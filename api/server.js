@@ -575,23 +575,35 @@ app.post("/api/walkinqueue", async (req, res) => {
 
     if (appointment.length === 0) {
       return res.status(404).json({
-        error: "No appointment found for the provided HN."
+        error: "No appointment found for the provided HN.",
       });
     }
 
     const queueTime = appointment[0].Queue_Time;
 
+    // Retrieve the maximum Time from walkinqueue
+    const [maxQueueTimeResult] = await db.query(
+      "SELECT MAX(Time) as maxTime FROM walkinqueue"
+    );
+
+    let newQueueTime = queueTime;
+    if (maxQueueTimeResult[0].maxTime) {
+      const maxTime = new Date(`1970-01-01T${maxQueueTimeResult[0].maxTime}`);
+      newQueueTime = new Date(maxTime.getTime() + 15 * 60000) // เพิ่ม 15 นาที
+        .toTimeString()
+        .split(" ")[0];
+    }
+
     // Retrieve the maximum Queue_ID and increment by 1
     const [maxQueue] = await db.query(
       "SELECT MAX(Queue_ID) as maxQueueID FROM walkinqueue"
     );
-
     const newQueueID = maxQueue[0].maxQueueID ? maxQueue[0].maxQueueID + 1 : 1;
 
     // Insert the new record into walkinqueue
     await db.query(
       "INSERT INTO walkinqueue (Queue_ID, HN, Time, Status) VALUES (?, ?, ?, 'checkin')",
-      [newQueueID, HN, queueTime]
+      [newQueueID, HN, newQueueTime]
     );
 
     res.status(201).json({
