@@ -600,6 +600,7 @@ app.post("/api/addWalkInQueue", async (req, res) => {
     res.status(500).json({ error: "Error adding patient to walkinqueue" });
   }
 });
+
 app.post("/api/checkInAppointmentQueue", async (req, res) => {
   const { HN } = req.body;
 
@@ -616,7 +617,19 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
       });
     }
 
-    const queueTime = appointment[0].Queue_Time;
+    let queueTime = appointment[0].Queue_Time;
+
+    // ดึงค่าเวลาสูงสุดจาก walkinqueue และเพิ่ม 15 นาที
+    const [maxQueueTimeResult] = await db.query(
+      "SELECT MAX(Time) as maxTime FROM walkinqueue"
+    );
+
+    if (maxQueueTimeResult[0].maxTime) {
+      const maxTime = new Date(`1970-01-01T${maxQueueTimeResult[0].maxTime}`);
+      queueTime = new Date(maxTime.getTime() + 15 * 60000)
+        .toTimeString()
+        .split(" ")[0];
+    }
 
     // ดึงค่า Queue_ID สูงสุดและเพิ่ม 1
     const [maxQueue] = await db.query(
@@ -624,14 +637,14 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
     );
     const newQueueID = maxQueue[0].maxQueueID ? maxQueue[0].maxQueueID + 1 : 1;
 
-    // เพิ่มข้อมูลเข้า walkinqueue พร้อมกับเวลาจาก appointmentqueue
+    // เพิ่มข้อมูลเข้า walkinqueue พร้อมกับเวลาที่คำนวณแล้ว
     await db.query(
       "INSERT INTO walkinqueue (Queue_ID, HN, Time, Status) VALUES (?, ?, ?, 'checkin')",
       [newQueueID, HN, queueTime]
     );
 
     res.status(201).json({
-      message: "Patient successfully checked in and added to walkinqueue.",
+      message: "Patient successfully checked in with updated queue time.",
     });
   } catch (err) {
     console.error("Error checking in patient to walkinqueue:", err);
