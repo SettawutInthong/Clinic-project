@@ -815,6 +815,21 @@ app.get("/api/appointmentqueue/details", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+app.put("/api/walkinqueue/:HN", async (req, res) => {
+  const { HN } = req.params;
+  const { Status } = req.body;
+
+  try {
+    const [result] = await db.query("UPDATE walkinqueue SET Status = ? WHERE HN = ?", [Status, HN]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "ไม่พบข้อมูลผู้ป่วยที่ระบุ" });
+    }
+    res.status(200).json({ message: "อัพเดตสถานะสำเร็จ" });
+  } catch (error) {
+    console.error("Error updating status:", error);
+    res.status(500).json({ error: "เกิดข้อผิดพลาดในการอัพเดตสถานะ" });
+  }
+});
 
 // ตรวจสอบว่ามี HN ในคิวแล้วหรือไม่
 app.get("/api/walkinqueue/:HN", async (req, res) => {

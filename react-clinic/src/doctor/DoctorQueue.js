@@ -89,7 +89,12 @@ const DoctorQueue = () => {
       });
 
       const patientData = await Promise.all(patientDataPromises);
-      const sortedData = patientData.sort((a, b) => a.Queue_ID - b.Queue_ID);
+      // แก้ไขส่วนนี้เพื่อให้เรียงตามเวลาของ Time
+      const sortedData = patientData.sort((a, b) => {
+        const timeA = new Date(`1970-01-01T${a.Time}`).getTime();
+        const timeB = new Date(`1970-01-01T${b.Time}`).getTime();
+        return timeA - timeB;
+      });
       setData(sortedData);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -190,6 +195,9 @@ const DoctorQueue = () => {
                       เพศ
                     </TableCell>
                     <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                      สถานะ
+                    </TableCell>
+                    <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
                       Actions
                     </TableCell>
                   </TableRow>
@@ -207,7 +215,10 @@ const DoctorQueue = () => {
                         component="th"
                         scope="row"
                       >
-                        {row.Queue_ID || "-"}
+                        {new Date(`1970-01-01T${row.Time}`).toLocaleTimeString(
+                          [],
+                          { hour: "2-digit", minute: "2-digit", hour12: false }
+                        ) || "-"}
                       </TableCell>
                       <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
                         {row.Title || "-"}
@@ -222,6 +233,9 @@ const DoctorQueue = () => {
                         {row.Gender || "-"}
                       </TableCell>
                       <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
+                        {row.Status || "-"}
+                      </TableCell>
+                      <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
                         <ButtonGroup
                           color="primary"
                           aria-label="outlined primary button group"
@@ -230,12 +244,14 @@ const DoctorQueue = () => {
                             onClick={() =>
                               navigate(`/doctor_patientdetail/${row.HN}`)
                             }
+                            disabled={row.Status !== "กำลังตรวจ"} // ปิดปุ่มถ้าสถานะไม่ใช่กำลังตรวจ
                           >
                             <VaccinesIcon />
                           </Button>
                           <Button
                             onClick={() => DeleteQueue(row.HN)}
                             color="error"
+                            disabled={row.Status === "กำลังตรวจ"} // ปุ่มลบจะถูกปิดถ้ากำลังตรวจ
                           >
                             <DeleteIcon />
                           </Button>
@@ -246,21 +262,21 @@ const DoctorQueue = () => {
                 </TableBody>
               </Table>
               <Box display="flex" justifyContent="center" mt={2}>
-                  <Button onClick={prevPage} disabled={currentPage === 1}>
-                    ก่อนหน้า
-                  </Button>
-                  <Typography variant="body1" style={{ margin: "0 15px" }}>
-                    {currentPage}
-                  </Typography>
-                  <Button
-                    onClick={nextPage}
-                    disabled={
-                      currentPage === Math.ceil(data.length / patientsPerPage)
-                    }
-                  >
-                    ถัดไป
-                  </Button>
-                </Box>
+                <Button onClick={prevPage} disabled={currentPage === 1}>
+                  ก่อนหน้า
+                </Button>
+                <Typography variant="body1" style={{ margin: "0 15px" }}>
+                  {currentPage}
+                </Typography>
+                <Button
+                  onClick={nextPage}
+                  disabled={
+                    currentPage === Math.ceil(data.length / patientsPerPage)
+                  }
+                >
+                  ถัดไป
+                </Button>
+              </Box>
             </TableContainer>
 
             <Dialog

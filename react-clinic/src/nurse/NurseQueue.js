@@ -76,6 +76,7 @@ const NurseQueue = () => {
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
   const currentData = data.slice(indexOfFirstRow, indexOfLastRow);
+  const [isInProgress, setIsInProgress] = useState(false);
   const navigate = useNavigate();
 
   const nextPage = () => {
@@ -351,6 +352,19 @@ const NurseQueue = () => {
     }));
   };
 
+  const CallToCheckup = async (HN) => {
+    try {
+      await axios.put(`http://localhost:5000/api/walkinqueue/${HN}`, {
+        Status: "กำลังตรวจ",
+      });
+      FetchData(); // อัพเดทข้อมูลหลังจากเปลี่ยนสถานะ
+      showMessage("เรียกเข้าตรวจสำเร็จ", "success");
+    } catch (error) {
+      console.error("Error calling to checkup:", error);
+      showMessage("เกิดข้อผิดพลาดในการเรียกเข้าตรวจ", "error");
+    }
+  };
+
   useEffect(() => {
     FetchData();
   }, []);
@@ -366,6 +380,13 @@ const NurseQueue = () => {
       fetchAvailablePatients(); // เรียกฟังก์ชันที่กรอง HN ที่ไม่มีใน walkinqueue
     }
   }, [addQueuePopup]);
+
+  useEffect(() => {
+    const checkInProgress = data.some(
+      (patient) => patient.Status === "กำลังตรวจ"
+    );
+    setIsInProgress(checkInProgress); // สร้าง state ใหม่เพื่อตรวจสอบสถานะการตรวจ
+  }, [data]);
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -389,7 +410,7 @@ const NurseQueue = () => {
             <Box display="flex" justifyContent="flex-end" mb={2}>
               <Button
                 variant="contained"
-                style={{ height: "40px", width: "150px" }}
+                style={{ height: "40px", width: "150px", marginRight: "10px" }}
                 color="warning"
                 onClick={() => setAddQueueCheckInPopup(true)}
               >
@@ -468,6 +489,15 @@ const NurseQueue = () => {
                           color="primary"
                           aria-label="outlined primary button group"
                         >
+                          <Button
+                            onClick={() => CallToCheckup(row.HN)}
+                            disabled={
+                              isInProgress || row.Status === "กำลังตรวจ"
+                            } // ถ้ามีสถานะกำลังตรวจ หรือ row นี้กำลังตรวจอยู่
+                            color="primary"
+                          >
+                            เรียกเข้าตรวจ
+                          </Button>
                           <Button onClick={() => ViewOrder(row.HN)}>
                             <WysiwygIcon />
                           </Button>
