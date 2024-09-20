@@ -1,0 +1,19 @@
+.login-box {
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    background-color: #ffffff; /* ใส่สีขาวเพื่อให้มองเห็นกรอบชัดเจนขึ้น */
+  }
+  
+  .container-main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* ทำให้แน่ใจว่า container จะครอบคลุมทั้งหน้าจอ */
+    background-image: url('./assets/img/bg.jpg'); /* พื้นหลังของหน้าเข้าสู่ระบบ */
+    background-size: cover;
+    background-position: center;
+  }
+  
+  /* ใช้ class ใหม่นี้กับ element ที่ครอบ Container ของ React component */
+  

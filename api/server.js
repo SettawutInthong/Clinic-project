@@ -293,6 +293,22 @@ app.post("/api/addPatientWithDetails", async (req, res) => {
   }
 });
 
+//ลบคิว
+app.delete("/api/walkinqueue/:HN", async function (req, res) {
+  const HN = req.params.HN;
+  try {
+    const [result] = await db.query("SELECT * FROM walkinqueue WHERE HN = ?", [HN]);
+    if (result.length === 0) {
+      return res.status(404).json({ error: "ไม่พบ HN ในคิว" });
+    }
+
+    await db.query("DELETE FROM walkinqueue WHERE HN = ?", [HN]);
+    res.status(200).json({ message: "ลบข้อมูลผู้ป่วยจากคิวสำเร็จ" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 //ลบรายชื่อผู้ป่วย
 app.delete("/api/patient/:HN", async function (req, res) {
   const HN = req.params.HN;

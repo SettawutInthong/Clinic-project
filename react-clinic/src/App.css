@@ -38,9 +38,13 @@
 }
 
 .bg {
-  background-image: url(./assets/img/bg.jpg);
+  position: absolute; /* เปลี่ยนเป็น absolute */
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-height: 100%; /* ทำให้ความสูงขั้นต่ำเป็น 100% */
+  z-index: -1; /* อยู่ด้านหลังองค์ประกอบอื่น */
+  background-image: url('./assets/img/bg.jpg');
   background-size: cover;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  min-height: 100vh;
+  background-position: center;
 }

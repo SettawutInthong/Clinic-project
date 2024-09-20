@@ -334,10 +334,10 @@ const NurseQueue = () => {
       await axios.delete(`http://localhost:5000/api/walkinqueue/${selectedHN}`); // เรียกใช้งาน API เพื่อลบคิว
       FetchData(); // ดึงข้อมูลใหม่หลังจากลบเสร็จ
       setDeletePopup(false); // ปิดป๊อปอัพยืนยันการลบ
-      showMessage("ลบข้อมูลผู้ป่วยจากคิวสำเร็จ", "success"); // แสดงข้อความเมื่อการลบสำเร็จ
+      showMessage("ลบคิวผู้ป่วยจากคิวสำเร็จ", "success"); // แสดงข้อความเมื่อการลบสำเร็จ
     } catch (error) {
       console.error("Error deleting queue:", error); // แสดงข้อผิดพลาดในคอนโซล
-      showMessage("เกิดข้อผิดพลาดในการลบข้อมูลผู้ป่วยจากคิว", "error"); // แสดงข้อความเมื่อเกิดข้อผิดพลาด
+      showMessage("เกิดข้อผิดพลาดในการลบคิวผู้ป่วยรายนี้", "error"); // แสดงข้อความเมื่อเกิดข้อผิดพลาด
     }
   };
   const ViewOrder = (HN) => {
@@ -1017,7 +1017,7 @@ const NurseQueue = () => {
               <DialogTitle id="delete-dialog-title">ยืนยันการลบ</DialogTitle>
               <DialogContent>
                 <Typography>
-                  คุณแน่ใจหรือว่าต้องการลบข้อมูลผู้ป่วยรายนี้จากคิว
+                  คุณแน่ใจหรือว่าต้องการลบคิวผู้ป่วยรายนี้
                 </Typography>
               </DialogContent>
               <DialogActions>
