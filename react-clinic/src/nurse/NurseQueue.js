@@ -136,6 +136,37 @@ const NurseQueue = () => {
     }
   };
 
+  const fetchAvailablePatients = async () => {
+    try {
+      // ดึงข้อมูล HN ทั้งหมดจาก patient
+      const responsePatients = await axios.get(
+        "http://localhost:5000/api/patient"
+      );
+      const allPatients = responsePatients.data.data;
+
+      // ดึงข้อมูล HN ทั้งหมดที่มีอยู่แล้วใน walkinqueue
+      const responseQueue = await axios.get(
+        "http://localhost:5000/api/walkinqueue"
+      );
+      const queuePatients = responseQueue.data.data.map((item) => item.HN);
+
+      // กรองเฉพาะ HN ที่ยังไม่มีใน walkinqueue
+      const availablePatients = allPatients.filter(
+        (patient) => !queuePatients.includes(patient.HN)
+      );
+
+      // สร้าง options สำหรับ ReactSelect
+      setPatientOptions(
+        availablePatients.map((patient) => ({
+          value: patient.HN,
+          label: patient.HN,
+        }))
+      );
+    } catch (error) {
+      console.error("Error fetching available patients:", error);
+    }
+  };
+
   // เพิ่มฟังก์ชันใหม่สำหรับการจองคิวและการเช็คอิน
   const AddQueue = async () => {
     // ตรวจสอบว่ากรอก HN หรือยัง
@@ -332,20 +363,7 @@ const NurseQueue = () => {
 
   useEffect(() => {
     if (addQueuePopup) {
-      const fetchPatients = async () => {
-        try {
-          const response = await axios.get("http://localhost:5000/api/patient");
-          setPatientOptions(
-            response.data.data.map((patient) => ({
-              value: patient.HN,
-              label: patient.HN,
-            }))
-          );
-        } catch (error) {
-          console.error("Error fetching patients:", error);
-        }
-      };
-      fetchPatients();
+      fetchAvailablePatients(); // เรียกฟังก์ชันที่กรอง HN ที่ไม่มีใน walkinqueue
     }
   }, [addQueuePopup]);
 
@@ -737,8 +755,8 @@ const NurseQueue = () => {
               <DialogContent>
                 <ReactSelect
                   autoFocus
-                  options={patientOptions}
-                  onChange={handleHNSelect} // ใช้ฟังก์ชัน handleHNSelect
+                  options={patientOptions} // ใช้ข้อมูล HN ที่ดึงมาแล้วถูกกรอง
+                  onChange={handleHNSelect}
                   placeholder="กรอก HN"
                   isClearable
                   isSearchable

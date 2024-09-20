@@ -627,16 +627,25 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
 
     let queueTime = appointment[0].Queue_Time;
 
-    // ดึงค่าเวลาสูงสุดจาก walkinqueue และเพิ่ม 15 นาที
-    const [maxQueueTimeResult] = await db.query(
-      "SELECT MAX(Time) as maxTime FROM walkinqueue"
+    // ตรวจสอบว่ามีแถวไหนใน walkinqueue ที่เวลาซ้ำหรือน้อยกว่าหรือไม่
+    const [conflictingQueue] = await db.query(
+      "SELECT * FROM walkinqueue WHERE Time = ? OR Time > ? ORDER BY Time ASC",
+      [queueTime, queueTime]
     );
 
-    if (maxQueueTimeResult[0].maxTime) {
-      const maxTime = new Date(`1970-01-01T${maxQueueTimeResult[0].maxTime}`);
-      queueTime = new Date(maxTime.getTime() + 15 * 60000)
-        .toTimeString()
-        .split(" ")[0];
+    if (conflictingQueue.length > 0) {
+      // หากมีเวลาที่ซ้ำหรือมากกว่า ให้ทำการปรับเวลา
+      for (let i = 0; i < conflictingQueue.length; i++) {
+        const currentQueue = conflictingQueue[i];
+        let newTime = new Date(`1970-01-01T${currentQueue.Time}`);
+        newTime = new Date(newTime.getTime() + 15 * 60000); // เพิ่ม 15 นาที
+
+        // อัปเดตเวลาของแถวนี้
+        await db.query(
+          "UPDATE walkinqueue SET Time = ? WHERE Queue_ID = ?",
+          [newTime.toTimeString().split(" ")[0], currentQueue.Queue_ID]
+        );
+      }
     }
 
     // ดึงค่า Queue_ID สูงสุดและเพิ่ม 1
@@ -667,7 +676,8 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
     // เพิ่มข้อมูลการรักษาลงในตาราง treatment
     await db.query(
       `INSERT INTO treatment (Treatment_ID, HN, Order_ID, Treatment_Date, Treatment_Details, Treatment_cost, Total_Cost, Symptom, Weight, Height, Temp, Pressure, Heart_Rate)
-      VALUES (?, ?, NULL, NOW(), NULL, NULL, NULL, ?, ?, ?, ?, ?, ?)`,
+      VALUES (?, ?, NULL, NOW(), NULL, NULL, NULL, ?, ?, ?, ?, ?, ?)
+      `,
       [
         newTreatmentID,
         HN,
@@ -684,7 +694,8 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
     await db.query("DELETE FROM appointmentqueue WHERE HN = ?", [HN]);
 
     res.status(201).json({
-      message: "Patient successfully checked in with updated queue time, treatment, and removed from appointmentqueue.",
+      message:
+        "Patient successfully checked in with updated queue time, treatment, and removed from appointmentqueue.",
     });
   } catch (err) {
     console.error("Error checking in patient to walkinqueue:", err);
