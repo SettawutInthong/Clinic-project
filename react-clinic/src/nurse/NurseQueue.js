@@ -29,6 +29,7 @@ import ReactSelect from "react-select";
 import Grid from "@mui/material/Grid";
 import FormControl from "@mui/material/FormControl";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ContentPasteGoIcon from "@mui/icons-material/ContentPasteGo";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(10),
@@ -496,7 +497,7 @@ const NurseQueue = () => {
                             } // ถ้ามีสถานะกำลังตรวจ หรือ row นี้กำลังตรวจอยู่
                             color="primary"
                           >
-                            เรียกเข้าตรวจ
+                            <ContentPasteGoIcon />
                           </Button>
                           <Button onClick={() => ViewOrder(row.HN)}>
                             <WysiwygIcon />
