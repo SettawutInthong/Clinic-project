@@ -325,6 +325,7 @@ const NurseQueue = () => {
     });
     setShowTextFields(false); // ซ่อนฟอร์ม
   };
+
   const DeleteQueue = (HN) => {
     setSelectedHN(HN);
     setDeletePopup(true); // เปิดป๊อปอัพยืนยันการลบ
@@ -341,6 +342,7 @@ const NurseQueue = () => {
       showMessage("เกิดข้อผิดพลาดในการลบคิวผู้ป่วยรายนี้", "error"); // แสดงข้อความเมื่อเกิดข้อผิดพลาด
     }
   };
+  
   const ViewOrder = (HN) => {
     navigate(`/nurse_order?HN=${HN}`);
   };

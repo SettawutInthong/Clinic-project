@@ -35,6 +35,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import SearchIcon from "@mui/icons-material/Search";
 import HistoryIcon from "@mui/icons-material/History";
+import Grid from "@mui/material/Grid";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(10),
@@ -80,6 +81,20 @@ const DoctorPatient = () => {
   const indexOfFirstPatient = indexOfLastPatient - patientsPerPage;
   const currentPatients = data.slice(indexOfFirstPatient, indexOfLastPatient);
   const navigate = useNavigate();
+  const [treatmentData, setTreatmentData] = useState({
+    Heart_Rate: "",
+    Pressure: "",
+    Temp: "",
+    Weight: "",
+    Height: "",
+    Symptom: "",
+  });
+  const [isGenderLocked, setIsGenderLocked] = useState(false); // สำหรับล็อกเพศตามคำนำหน้า
+  const [newID, setNewID] = useState(""); // สำหรับจัดการเลขบัตรประชาชน
+  const [errors, setErrors] = useState({}); // สำหรับจัดการข้อผิดพลาดในฟอร์ม
+  const [appointmentDate, setAppointmentDate] = useState(null);
+  const [addQueuePopup, setAddQueuePopup] = useState(false);
+  const [queueHN, setQueueHN] = useState("");
 
   const nextPage = () => {
     if (currentPage < Math.ceil(data.length / patientsPerPage)) {
@@ -151,41 +166,89 @@ const DoctorPatient = () => {
     setNewTitle("");
     setNewFirstName("");
     setNewLastName("");
+    setNewID("");
     setNewBirthdate(null);
     setNewGender("");
     setNewPhone("");
     setNewDisease("");
     setNewAllergy("");
+    setTreatmentData({
+      Heart_Rate: "",
+      Pressure: "",
+      Temp: "",
+      Weight: "",
+      Height: "",
+      Symptom: "",
+    });
+    setSelectedHN("");
+    setAppointmentDate(null);
+  };
+
+  // ฟังก์ชันสำหรับตรวจสอบข้อมูลในฟอร์ม
+  const validateForm = () => {
+    const newErrors = {};
+
+    // ตรวจสอบค่าที่เป็นตัวเลข (เช่น ID) ต้องไม่ใช่ค่าว่างและเป็นตัวเลข
+    if (!newID) {
+      newErrors.ID = "กรุณากรอกเลขบัตรประชาชน";
+    } else if (isNaN(newID)) {
+      newErrors.ID = "เลขบัตรประชาชนต้องเป็นตัวเลข";
+    }
+
+    // ตรวจสอบข้อมูลอื่น ๆ ตามที่ต้องการ
+    // เช่น Weight, Height ควรเป็นตัวเลข
+    if (treatmentData.Weight && isNaN(treatmentData.Weight)) {
+      newErrors.Weight = "น้ำหนักต้องเป็นตัวเลข";
+    }
+    if (treatmentData.Height && isNaN(treatmentData.Height)) {
+      newErrors.Height = "ส่วนสูงต้องเป็นตัวเลข";
+    }
+
+    setErrors(newErrors);
+
+    // ถ้าไม่มีข้อผิดพลาด (จำนวนข้อผิดพลาดเป็น 0) ให้คืนค่า true
+    return Object.keys(newErrors).length === 0;
   };
 
   const AddPatient = async () => {
+    // ตรวจสอบฟอร์มก่อน
+    if (!validateForm()) {
+      showMessage("ข้อมูลไม่ถูกต้อง", "error");
+      return;
+    }
     try {
-      const newPatient = {
+      const newPatientDetails = {
         Title: newTitle,
         First_Name: newFirstName,
         Last_Name: newLastName,
+        ID: newID,
         Gender: newGender,
         Birthdate: newBirthdate,
         Phone: newPhone,
-        Disease_ID: newDisease.value,
-        Allergy_ID: newAllergy.value,
+        Disease: newDisease,
+        Allergy: newAllergy,
+        Heart_Rate: treatmentData.Heart_Rate,
+        Pressure: treatmentData.Pressure,
+        Temp: treatmentData.Temp,
+        Weight: treatmentData.Weight,
+        Height: treatmentData.Height,
+        Symptom: treatmentData.Symptom,
       };
 
       const response = await axios.post(
-        "http://localhost:5000/api/patient",
-        newPatient
+        "http://localhost:5000/api/addPatientWithDetails",
+        newPatientDetails
       );
 
-      const newHN = response.data.HN;
-      await axios.post("http://localhost:5000/api/walkinqueue", { HN: newHN });
-
-      FetchData();
-      setAddPopup(false);
-      showMessage("เพิ่มข้อมูลผู้ป่วยสำเร็จ");
-      ResetForm();
+      if (response.status === 201) {
+        FetchData();
+        setAddPopup(false);
+        showMessage("เพิ่มข้อมูลผู้ป่วยสำเร็จ", "success");
+        ResetForm();
+      }
     } catch (error) {
       console.error("Error adding patient:", error);
-      showMessage("เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วย");
+      showMessage("เกิดข้อผิดพลาดในการเพิ่มข้อมูลผู้ป่วย", "error");
     }
   };
 
@@ -196,35 +259,15 @@ const DoctorPatient = () => {
 
   const ConfirmDeletePatient = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/walkinqueue/${selectedHN}`);
+      // ลบข้อมูลทั้งหมดที่เกี่ยวข้องกับ HN โดยใช้ API เดียว
       await axios.delete(`http://localhost:5000/api/patient/${selectedHN}`);
-      FetchData();
-      setDeletePopup(false);
-      showMessage("ลบข้อมูลผู้ป่วยสำเร็จ");
+
+      FetchData(); // โหลดข้อมูลใหม่อีกครั้งหลังจากลบสำเร็จ
+      setDeletePopup(false); // ปิด popup การยืนยันการลบ
+      showMessage("ลบข้อมูลผู้ป่วยสำเร็จ", "success");
     } catch (error) {
       console.error("Error deleting patient:", error);
-      showMessage("เกิดข้อผิดพลาดในการลบข้อมูลผู้ป่วย");
-    }
-  };
-
-  const ViewHistory = async (HN) => {
-    try {
-      const treatmentResponse = await axios.get(
-        `http://localhost:5000/api/treatments/${HN}`
-      );
-      setTreatmentHistory(treatmentResponse.data.data);
-      if (treatmentResponse.data.data.length > 0) {
-        const latestTreatment = treatmentResponse.data.data[0];
-        const medicineResponse = await axios.get(
-          `http://localhost:5000/api/medicine_details?Order_ID=${latestTreatment.Order_ID}`
-        );
-        setMedicineDetails(medicineResponse.data.data);
-      }
-
-      setHistoryPopup(true);
-    } catch (error) {
-      console.error("Error fetching history:", error);
-      showMessage("เกิดข้อผิดพลาดในการดูประวัติการรักษา");
+      showMessage("เกิดข้อผิดพลาดในการลบข้อมูลผู้ป่วย", "error");
     }
   };
 
@@ -239,15 +282,12 @@ const DoctorPatient = () => {
         setNewTitle(patient.Title);
         setNewFirstName(patient.First_Name);
         setNewLastName(patient.Last_Name);
+        setNewID(patient.ID);
         setNewBirthdate(new Date(patient.Birthdate));
         setNewGender(patient.Gender);
         setNewPhone(patient.Phone);
-
-        const diseaseID = patient.Disease_ID || "D000";
-        setNewDisease(diseases.find((disease) => disease.value === diseaseID));
-
-        const allergyID = patient.Allergy_ID || "A000";
-        setNewAllergy(allergy.find((allergy) => allergy.value === allergyID));
+        setNewAllergy(patient.Allergy);
+        setNewDisease(patient.Disease);
 
         setSelectedHN(HN);
         setEdit(false);
@@ -270,8 +310,8 @@ const DoctorPatient = () => {
           ? newBirthdate.toISOString().split("T")[0]
           : null,
         Phone: newPhone,
-        Disease_ID: newDisease ? newDisease.value : null,
-        allergy_ID: newAllergy ? newAllergy.value : null,
+        Disease: newDisease,
+        Allergy: newAllergy,
       };
 
       await axios.put(
@@ -287,20 +327,58 @@ const DoctorPatient = () => {
     }
   };
 
-  const BookQueue = async (HN) => {
-    try {
-      await axios.post("http://localhost:5000/api/walkinqueue", { HN });
-      showMessage("จองคิวสำเร็จ");
+  const AddQueue = (HN) => {
+    setQueueHN(HN);
+    setAddQueuePopup(true);
+  };
 
-      setQueueData((prevQueueData) => [...prevQueueData, { HN }]);
+  const ConfirmAddQueue = async () => {
+    try {
+      await axios.post("http://localhost:5000/api/walkinqueue", {
+        HN: queueHN,
+        Heart_Rate: treatmentData.Heart_Rate || null,
+        Pressure: treatmentData.Pressure || null,
+        Temp: treatmentData.Temp || null,
+        Weight: treatmentData.Weight || null,
+        Height: treatmentData.Height || null,
+        Symptom: treatmentData.Symptom || null,
+        Treatment_Details: null,
+        Treatment_cost: null,
+        Total_Cost: null,
+      });
+      showMessage("จองคิวสำเร็จ", "success");
+      setQueueData((prevQueueData) => [...prevQueueData, { HN: queueHN }]);
+      setAddQueuePopup(false);
+      ResetForm();
     } catch (error) {
       console.error("Error booking queue:", error);
-      showMessage("เกิดข้อผิดพลาดในการจองคิว");
+      showMessage("เกิดข้อผิดพลาดในการจองคิว", "error");
     }
   };
 
   const isInQueue = (HN) => {
     return queueData.some((queue) => queue.HN === HN);
+  };
+
+  const ViewHistory = async (HN) => {
+    try {
+      const treatmentResponse = await axios.get(
+        `http://localhost:5000/api/treatments/${HN}`
+      );
+      setTreatmentHistory(treatmentResponse.data.data);
+      if (treatmentResponse.data.data.length > 0) {
+        const latestTreatment = treatmentResponse.data.data[0];
+        const medicineResponse = await axios.get(
+          `http://localhost:5000/api/medicine_details?Order_ID=${latestTreatment.Order_ID}`
+        );
+        setMedicineDetails(medicineResponse.data.data);
+      }
+
+      setHistoryPopup(true);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+      showMessage("เกิดข้อผิดพลาดในการดูประวัติการรักษา");
+    }
   };
 
   useEffect(() => {
@@ -521,7 +599,7 @@ const DoctorPatient = () => {
                             aria-label="outlined primary button group"
                           >
                             <Button
-                              onClick={() => BookQueue(row.HN)}
+                              onClick={() => AddQueue(row.HN)}
                               disabled={isInQueue(row.HN)}
                               color="success"
                               style={{
@@ -576,9 +654,10 @@ const DoctorPatient = () => {
               open={addPopup}
               onClose={() => {
                 setAddPopup(false);
-                ResetForm();
               }}
               aria-labelledby="form-dialog-title"
+              maxWidth="lg"
+              fullWidth
             >
               <DialogTitle
                 id="form-dialog-title"
@@ -587,94 +666,211 @@ const DoctorPatient = () => {
                 เพิ่มผู้ป่วยใหม่
               </DialogTitle>
               <DialogContent>
-                <Box display="flex" flexDirection="row" gap={2}>
-                  <FormControl
-                    fullWidth
-                    margin="dense"
-                    variant="outlined"
-                    style={{ width: "200px" }}
-                  >
-                    <InputLabel>เลือกคำนำหน้า</InputLabel>
-                    <Select
-                      label="เลือกคำนำหน้า"
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                    >
-                      <MenuItem value="- Unknown -">- Unknown -</MenuItem>
-                      <MenuItem value="ด.ช.">ด.ช.</MenuItem>
-                      <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
-                      <MenuItem value="นาย">นาย</MenuItem>
-                      <MenuItem value="นาง">นาง</MenuItem>
-                      <MenuItem value="นางสาว">นางสาว</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <TextField
-                    autoFocus
-                    margin="dense"
-                    label="กรอกชื่อ"
-                    type="text"
-                    fullWidth
-                    value={newFirstName}
-                    onChange={(e) => setNewFirstName(e.target.value)}
-                  />
-                </Box>
-                <TextField
-                  margin="dense"
-                  label="กรอกนามสกุล"
-                  type="text"
-                  fullWidth
-                  value={newLastName}
-                  onChange={(e) => setNewLastName(e.target.value)}
-                />
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DatePicker
-                    label="เลือกวันเกิด"
-                    value={newBirthdate}
-                    onChange={(date) => setNewBirthdate(date)}
-                    inputFormat="dd/MM/yyyy"
-                    slotProps={{
-                      textField: { fullWidth: true, margin: "dense" },
-                    }}
-                  />
-                </LocalizationProvider>
-
-                <TextField
-                  margin="dense"
-                  label="กรอกหมายเลขโทรศัพท์"
-                  type="text"
-                  fullWidth
-                  value={newPhone}
-                  onChange={(e) => setNewPhone(e.target.value)}
-                />
-                <FormControl
-                  fullWidth
-                  margin="dense"
-                  variant="outlined"
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    gap: "10px",
-                  }}
-                >
-                  <Box style={{ flex: 1 }}>
-                    <ReactSelect
-                      placeholder="เลือกโรคประจำตัว"
-                      options={diseases}
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <Box display="flex" flexDirection="row" gap={2}>
+                      <FormControl
+                        fullWidth
+                        margin="dense"
+                        variant="outlined"
+                        style={{ width: "275px" }}
+                        size="small"
+                      >
+                        <InputLabel>เลือกคำนำหน้า</InputLabel>
+                        <Select
+                          label="เลือกคำนำหน้า"
+                          value={newTitle}
+                          onChange={(e) => setNewTitle(e.target.value)}
+                        >
+                          <MenuItem value="- Unknown -">- Unknown -</MenuItem>
+                          <MenuItem value="ด.ช.">ด.ช.</MenuItem>
+                          <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
+                          <MenuItem value="นาย">นาย</MenuItem>
+                          <MenuItem value="นาง">นาง</MenuItem>
+                          <MenuItem value="นางสาว">นางสาว</MenuItem>
+                        </Select>
+                      </FormControl>
+                      <FormControl
+                        fullWidth
+                        margin="dense"
+                        variant="outlined"
+                        style={{ width: "275px" }}
+                        size="small"
+                      >
+                        <InputLabel>เลือกเพศ</InputLabel>
+                        <Select
+                          label="เลือกเพศ"
+                          value={newGender}
+                          onChange={(e) => setNewGender(e.target.value)}
+                          disabled={isGenderLocked} // ล็อกฟิลด์ถ้า isGenderLocked เป็น true
+                        >
+                          <MenuItem value="">- เลือกเพศ -</MenuItem>
+                          <MenuItem value="ชาย">ชาย</MenuItem>
+                          <MenuItem value="หญิง">หญิง</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Box>
+                    <TextField
+                      autoFocus
+                      margin="dense"
+                      label="กรอกชื่อ"
+                      type="text"
+                      fullWidth
+                      value={newFirstName}
+                      onChange={(e) => setNewFirstName(e.target.value)}
+                      size="small"
+                    />
+                    <TextField
+                      margin="dense"
+                      label="กรอกนามสกุล"
+                      type="text"
+                      fullWidth
+                      value={newLastName}
+                      onChange={(e) => setNewLastName(e.target.value)}
+                      size="small"
+                    />
+                    <TextField
+                      margin="dense"
+                      label="กรอกเลขบัตรประชาชน"
+                      type="text"
+                      fullWidth
+                      value={newID}
+                      onChange={(e) => setNewID(e.target.value)}
+                      size="small"
+                      error={Boolean(errors.ID)}
+                      helperText={errors.ID}
+                    />
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <DatePicker
+                        label="เลือกวันเกิด"
+                        value={newBirthdate}
+                        onChange={(date) => setNewBirthdate(date)}
+                        inputFormat="dd/MM/yyyy"
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            margin: "dense",
+                            size: "small",
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
+                    <TextField
+                      margin="dense"
+                      label="กรอกหมายเลขโทรศัพท์"
+                      type="text"
+                      fullWidth
+                      value={newPhone}
+                      onChange={(e) => setNewPhone(e.target.value)}
+                      size="small"
+                    />
+                    <TextField
+                      margin="dense"
+                      label="โรคประจำตัว"
+                      type="text"
+                      fullWidth
                       value={newDisease}
-                      onChange={setNewDisease}
-                      size="medium"
+                      onChange={(e) => setNewDisease(e.target.value)}
+                      size="small"
                     />
-                  </Box>
-                  <Box style={{ flex: 1 }}>
-                    <ReactSelect
-                      options={allergy}
+                    <TextField
+                      margin="dense"
+                      label="แพ้ยา"
+                      type="text"
+                      fullWidth
                       value={newAllergy}
-                      onChange={setNewAllergy}
-                      placeholder="เลือกการแพ้ยา"
+                      onChange={(e) => setNewAllergy(e.target.value)}
+                      size="small"
                     />
-                  </Box>
-                </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      margin="dense"
+                      label="อัตราการเต้นหัวใจ"
+                      name="อัตราการเต้นหัวใจ"
+                      value={treatmentData.Heart_Rate}
+                      onChange={(e) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Heart_Rate: e.target.value,
+                        })
+                      }
+                      fullWidth
+                      size="small"
+                    />
+                    <TextField
+                      margin="dense"
+                      label="ความดัน"
+                      name="ความดัน"
+                      value={treatmentData.Pressure}
+                      onChange={(e) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Pressure: e.target.value,
+                        })
+                      }
+                      fullWidth
+                      size="small"
+                    />
+                    <TextField
+                      margin="dense"
+                      label="อุณหภูมิ"
+                      name="อุณหภูมิ"
+                      value={treatmentData.Temp}
+                      onChange={(e) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Temp: e.target.value,
+                        })
+                      }
+                      fullWidth
+                      size="small"
+                    />
+                    <TextField
+                      margin="dense"
+                      label="น้ำหนัก"
+                      name="น้ำหนัก"
+                      value={treatmentData.Weight}
+                      onChange={(e) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Weight: e.target.value,
+                        })
+                      }
+                      fullWidth
+                      size="small"
+                    />
+                    <TextField
+                      margin="dense"
+                      label="ส่วนสูง"
+                      name="ส่วนสูง"
+                      value={treatmentData.Height}
+                      onChange={(e) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Height: e.target.value,
+                        })
+                      }
+                      fullWidth
+                      size="small"
+                    />
+                    <TextField
+                      margin="dense"
+                      label="อาการ"
+                      name="อาการ"
+                      value={treatmentData.Symptom}
+                      onChange={(e) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Symptom: e.target.value,
+                        })
+                      }
+                      fullWidth
+                      multiline
+                      rows={5}
+                    />
+                  </Grid>
+                </Grid>
               </DialogContent>
 
               <DialogActions>
@@ -698,6 +894,7 @@ const DoctorPatient = () => {
                 </Button>
               </DialogActions>
             </Dialog>
+
             <Dialog
               open={viewPopup}
               onClose={() => setViewPopup(false)}
@@ -710,39 +907,92 @@ const DoctorPatient = () => {
                 ข้อมูลผู้ป่วย
               </DialogTitle>
               <DialogContent>
-                <Box display="flex" flexDirection="row" gap={2}>
-                  <FormControl
-                    fullWidth
-                    margin="dense"
-                    variant="outlined"
-                    style={{ width: "200px" }}
-                  >
-                    <InputLabel>คำนำหน้า</InputLabel>
-                    <Select
-                      label="คำนำหน้า"
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      disabled={!edit}
-                    >
-                      <MenuItem value="- Unknown -">- Unknown -</MenuItem>
-                      <MenuItem value="ด.ช.">ด.ช.</MenuItem>
-                      <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
-                      <MenuItem value="นาย">นาย</MenuItem>
-                      <MenuItem value="นาง">นาง</MenuItem>
-                      <MenuItem value="นางสาว">นางสาว</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <TextField
-                    autoFocus
-                    margin="dense"
-                    label="ชื่อ"
-                    type="text"
-                    fullWidth
-                    value={newFirstName}
-                    onChange={(e) => setNewFirstName(e.target.value)}
-                    disabled={!edit}
-                  />
+                <Box display="flex" justifyContent="space-between" gap={2}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <FormControl
+                        fullWidth
+                        variant="outlined"
+                        sx={{
+                          backgroundColor: edit
+                            ? "white"
+                            : "rgba(0, 0, 0, 0.1)",
+                        }}
+                      >
+                        <InputLabel id="title-label">คำนำหน้า</InputLabel>
+                        <Select
+                          labelId="title-label"
+                          label="คำนำหน้า"
+                          value={newTitle}
+                          onChange={(e) => setNewTitle(e.target.value)}
+                          disabled={!edit}
+                          sx={{
+                            backgroundColor: edit
+                              ? "white"
+                              : "rgba(0, 0, 0, 0.1)",
+                            color: edit
+                              ? "inherit"
+                              : "rgba(255, 255, 255, 0.7)",
+                          }}
+                        >
+                          <MenuItem value="- Unknown -">- Unknown -</MenuItem>
+                          <MenuItem value="ด.ช.">ด.ช.</MenuItem>
+                          <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
+                          <MenuItem value="นาย">นาย</MenuItem>
+                          <MenuItem value="นาง">นาง</MenuItem>
+                          <MenuItem value="นางสาว">นางสาว</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControl
+                        fullWidth
+                        variant="outlined"
+                        sx={{
+                          backgroundColor: edit
+                            ? "white"
+                            : "rgba(0, 0, 0, 0.1)",
+                        }}
+                      >
+                        <InputLabel id="gender-label">เลือกเพศ</InputLabel>
+                        <Select
+                          labelId="gender-label"
+                          label="เลือกเพศ"
+                          value={newGender}
+                          onChange={(e) => setNewGender(e.target.value)}
+                          disabled={!edit}
+                          sx={{
+                            backgroundColor: edit
+                              ? "white"
+                              : "rgba(0, 0, 0, 0.1)",
+                            color: edit
+                              ? "inherit"
+                              : "rgba(255, 255, 255, 0.7)",
+                          }}
+                        >
+                          <MenuItem value="">- เลือกเพศ -</MenuItem>
+                          <MenuItem value="ชาย">ชาย</MenuItem>
+                          <MenuItem value="หญิง">หญิง</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  </Grid>
                 </Box>
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  label="ชื่อ"
+                  type="text"
+                  fullWidth
+                  value={newFirstName}
+                  onChange={(e) => setNewFirstName(e.target.value)}
+                  disabled={!edit}
+                  sx={{
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                  }}
+                />
+
                 <TextField
                   margin="dense"
                   label="นามสกุล"
@@ -751,6 +1001,23 @@ const DoctorPatient = () => {
                   value={newLastName}
                   onChange={(e) => setNewLastName(e.target.value)}
                   disabled={!edit}
+                  sx={{
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                  }}
+                />
+                <TextField
+                  margin="dense"
+                  label="เลขบัตรประชาชน"
+                  type="text"
+                  fullWidth
+                  value={newID}
+                  onChange={(e) => setNewID(e.target.value)}
+                  disabled={!edit}
+                  sx={{
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                  }}
                 />
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <DatePicker
@@ -764,6 +1031,12 @@ const DoctorPatient = () => {
                         fullWidth: true,
                         margin: "dense",
                         disabled: !edit,
+                        sx: {
+                          backgroundColor: edit
+                            ? "white"
+                            : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                          color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                        },
                       },
                     }}
                   />
@@ -776,38 +1049,39 @@ const DoctorPatient = () => {
                   value={newPhone}
                   onChange={(e) => setNewPhone(e.target.value)}
                   disabled={!edit}
-                />
-                <FormControl
-                  fullWidth
-                  margin="dense"
-                  variant="outlined"
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    gap: "10px",
+                  sx={{
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
                   }}
-                >
-                  <Box style={{ flex: 1 }}>
-                    <ReactSelect
-                      placeholder="เลือกโรคประจำตัว"
-                      options={diseases}
-                      value={newDisease}
-                      onChange={setNewDisease}
-                      isDisabled={!edit}
-                    />
-                  </Box>
-                  <Box style={{ flex: 1 }}>
-                    <ReactSelect
-                      options={allergy}
-                      value={newAllergy}
-                      onChange={setNewAllergy}
-                      placeholder="เลือกการแพ้ยา"
-                      isDisabled={!edit}
-                    />
-                  </Box>
-                </FormControl>
+                />
+                <TextField
+                  margin="dense"
+                  label="โรคประจำตัว"
+                  type="text"
+                  fullWidth
+                  value={newDisease}
+                  onChange={(e) => setNewDisease(e.target.value)}
+                  disabled={!edit}
+                  sx={{
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                  }}
+                />
+                <TextField
+                  margin="dense"
+                  label="การแพ้ยา"
+                  type="text"
+                  fullWidth
+                  value={newAllergy}
+                  onChange={(e) => setNewAllergy(e.target.value)}
+                  disabled={!edit}
+                  sx={{
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                  }}
+                />
               </DialogContent>
+
               <DialogActions>
                 {edit ? (
                   <>
@@ -828,6 +1102,7 @@ const DoctorPatient = () => {
                 </Button>
               </DialogActions>
             </Dialog>
+
             <Dialog
               open={historyPopup}
               onClose={() => setHistoryPopup(false)}
@@ -886,6 +1161,107 @@ const DoctorPatient = () => {
                 </Button>
                 <Button onClick={ConfirmDeletePatient} color="primary">
                   ลบ
+                </Button>
+              </DialogActions>
+            </Dialog>
+
+            <Dialog
+              open={addQueuePopup}
+              onClose={() => {
+                setAddQueuePopup(false);
+                ResetForm();
+              }}
+              aria-labelledby="add-queue-dialog-title"
+            >
+              <DialogTitle
+                id="add-queue-dialog-title"
+                style={{ textAlign: "center" }}
+              >
+                จองคิว
+              </DialogTitle>
+              <DialogContent>
+                <TextField
+                  margin="dense"
+                  label="อัตราการเต้นหัวใจ"
+                  name="อัตราการเต้นหัวใจ"
+                  value={treatmentData.Heart_Rate}
+                  onChange={(e) =>
+                    setTreatmentData({
+                      ...treatmentData,
+                      Heart_Rate: e.target.value,
+                    })
+                  }
+                  fullWidth
+                />
+                <TextField
+                  margin="dense"
+                  label="ความดัน"
+                  name="ความดัน"
+                  value={treatmentData.Pressure}
+                  onChange={(e) =>
+                    setTreatmentData({
+                      ...treatmentData,
+                      Pressure: e.target.value,
+                    })
+                  }
+                  fullWidth
+                />
+                <TextField
+                  margin="dense"
+                  label="อุณหภูมิ"
+                  name="อุณหภูมิ"
+                  value={treatmentData.Temp}
+                  onChange={(e) =>
+                    setTreatmentData({ ...treatmentData, Temp: e.target.value })
+                  }
+                  fullWidth
+                />
+                <TextField
+                  margin="dense"
+                  label="น้ำหนัก"
+                  name="น้ำหนัก"
+                  value={treatmentData.Weight}
+                  onChange={(e) =>
+                    setTreatmentData({
+                      ...treatmentData,
+                      Weight: e.target.value,
+                    })
+                  }
+                  fullWidth
+                />
+                <TextField
+                  margin="dense"
+                  label="ส่วนสูง"
+                  name="ส่วนสูง"
+                  value={treatmentData.Height}
+                  onChange={(e) =>
+                    setTreatmentData({
+                      ...treatmentData,
+                      Height: e.target.value,
+                    })
+                  }
+                  fullWidth
+                />
+                <TextField
+                  margin="dense"
+                  label="อาการ"
+                  name="อาการ"
+                  value={treatmentData.Symptom}
+                  onChange={(e) =>
+                    setTreatmentData({
+                      ...treatmentData,
+                      Symptom: e.target.value,
+                    })
+                  }
+                  fullWidth
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setAddQueuePopup(false)} color="primary">
+                  ยกเลิก
+                </Button>
+                <Button onClick={ConfirmAddQueue} color="primary">
+                  จองคิว
                 </Button>
               </DialogActions>
             </Dialog>

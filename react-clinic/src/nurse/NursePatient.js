@@ -1006,51 +1006,92 @@ const NursePatient = () => {
                 ข้อมูลผู้ป่วย
               </DialogTitle>
               <DialogContent>
-                <Box display="flex" flexDirection="row" gap={2}>
-                  <FormControl
-                    fullWidth
-                    margin="dense"
-                    variant="outlined"
-                    style={{ width: "200px" }}
-                    sx={{
-                      backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                      color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
-                    }}
-                  >
-                    <InputLabel>คำนำหน้า</InputLabel>
-                    <Select
-                      label="คำนำหน้า"
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      disabled={!edit}
-                      sx={{
-                        backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                        color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
-                      }}
-                    >
-                      <MenuItem value="- Unknown -">- Unknown -</MenuItem>
-                      <MenuItem value="ด.ช.">ด.ช.</MenuItem>
-                      <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
-                      <MenuItem value="นาย">นาย</MenuItem>
-                      <MenuItem value="นาง">นาง</MenuItem>
-                      <MenuItem value="นางสาว">นางสาว</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <TextField
-                    autoFocus
-                    margin="dense"
-                    label="ชื่อ"
-                    type="text"
-                    fullWidth
-                    value={newFirstName}
-                    onChange={(e) => setNewFirstName(e.target.value)}
-                    disabled={!edit}
-                    sx={{
-                      backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                      color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
-                    }}
-                  />
+                <Box display="flex" justifyContent="space-between" gap={2}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <FormControl
+                        fullWidth
+                        variant="outlined"
+                        sx={{
+                          backgroundColor: edit
+                            ? "white"
+                            : "rgba(0, 0, 0, 0.1)",
+                        }}
+                      >
+                        <InputLabel id="title-label">คำนำหน้า</InputLabel>
+                        <Select
+                          labelId="title-label"
+                          label="คำนำหน้า"
+                          value={newTitle}
+                          onChange={(e) => setNewTitle(e.target.value)}
+                          disabled={!edit}
+                          sx={{
+                            backgroundColor: edit
+                              ? "white"
+                              : "rgba(0, 0, 0, 0.1)",
+                            color: edit
+                              ? "inherit"
+                              : "rgba(255, 255, 255, 0.7)",
+                          }}
+                        >
+                          <MenuItem value="- Unknown -">- Unknown -</MenuItem>
+                          <MenuItem value="ด.ช.">ด.ช.</MenuItem>
+                          <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
+                          <MenuItem value="นาย">นาย</MenuItem>
+                          <MenuItem value="นาง">นาง</MenuItem>
+                          <MenuItem value="นางสาว">นางสาว</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControl
+                        fullWidth
+                        variant="outlined"
+                        sx={{
+                          backgroundColor: edit
+                            ? "white"
+                            : "rgba(0, 0, 0, 0.1)",
+                        }}
+                      >
+                        <InputLabel id="gender-label">เลือกเพศ</InputLabel>
+                        <Select
+                          labelId="gender-label"
+                          label="เลือกเพศ"
+                          value={newGender}
+                          onChange={(e) => setNewGender(e.target.value)}
+                          disabled={!edit}
+                          sx={{
+                            backgroundColor: edit
+                              ? "white"
+                              : "rgba(0, 0, 0, 0.1)",
+                            color: edit
+                              ? "inherit"
+                              : "rgba(255, 255, 255, 0.7)",
+                          }}
+                        >
+                          <MenuItem value="">- เลือกเพศ -</MenuItem>
+                          <MenuItem value="ชาย">ชาย</MenuItem>
+                          <MenuItem value="หญิง">หญิง</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  </Grid>
                 </Box>
+
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  label="ชื่อ"
+                  type="text"
+                  fullWidth
+                  value={newFirstName}
+                  onChange={(e) => setNewFirstName(e.target.value)}
+                  disabled={!edit}
+                  sx={{
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                  }}
+                />
                 <TextField
                   margin="dense"
                   label="นามสกุล"
