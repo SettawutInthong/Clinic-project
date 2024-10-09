@@ -488,21 +488,26 @@ app.get("/api/appointmentqueue", async (req, res) => {
 
 //เพิ่มคิว
 app.post("/api/addWalkInQueue", async (req, res) => {
-  const { HN, Symptom, Weight, Height, Temp, Pressure, Heart_Rate } = req.body;
+  const { HN, Heart_Rate, Pressure, Temp, Weight, Height, Symptom } = req.body;
 
   try {
-    // ดึงเวลาสูงสุดจาก walkinqueue และเพิ่ม 15 นาที
+    // ดึงเวลาสูงสุดจาก walkinqueue
     const [maxQueueTimeResult] = await db.query(
       "SELECT MAX(Time) as maxTime FROM walkinqueue"
     );
 
-    let newQueueTime = new Date();
-    if (maxQueueTimeResult[0].maxTime) {
-      const maxTime = new Date(`1970-01-01T${maxQueueTimeResult[0].maxTime}`);
-      newQueueTime = new Date(maxTime.getTime() + 15 * 60000); // เพิ่ม 15 นาที
-    }
+    let newQueueTime;
 
-    const formattedQueueTime = newQueueTime.toTimeString().split(" ")[0];
+    if (!maxQueueTimeResult[0].maxTime) {
+      // ถ้าไม่มีคิวในระบบ ให้กำหนดเวลาเริ่มต้นเป็น 08:30
+      newQueueTime = "08:30:00";
+    } else {
+      // ถ้ามีคิวอยู่แล้ว เพิ่ม 15 นาทีจากเวลาสูงสุดในระบบ
+      const maxTime = new Date(`1970-01-01T${maxQueueTimeResult[0].maxTime}`);
+      newQueueTime = new Date(maxTime.getTime() + 15 * 60000)
+        .toTimeString()
+        .split(" ")[0];
+    }
 
     // ดึงค่า Queue_ID สูงสุดและเพิ่ม 1
     const [maxQueue] = await db.query(
@@ -510,13 +515,13 @@ app.post("/api/addWalkInQueue", async (req, res) => {
     );
     const newQueueID = maxQueue[0].maxQueueID ? maxQueue[0].maxQueueID + 1 : 1;
 
-    // เพิ่มข้อมูลใหม่เข้า walkinqueue
+    // เพิ่มข้อมูลเข้า walkinqueue
     await db.query(
       "INSERT INTO walkinqueue (Queue_ID, HN, Time, Status) VALUES (?, ?, ?, 'checkin')",
-      [newQueueID, HN, formattedQueueTime]
+      [newQueueID, HN, newQueueTime]
     );
 
-    // สร้าง Treatment_ID ใหม่
+    // เพิ่มข้อมูลการรักษา
     const [maxTreatmentResult] = await db.query(
       "SELECT MAX(Treatment_ID) as maxTreatmentID FROM treatment"
     );
@@ -529,10 +534,9 @@ app.post("/api/addWalkInQueue", async (req, res) => {
         .padStart(5, "0")}`;
     }
 
-    // เพิ่มข้อมูลการรักษาลงในตาราง treatment
     await db.query(
-      `INSERT INTO treatment (Treatment_ID, HN, Order_ID, Treatment_Date, Treatment_Details, Treatment_cost, Total_Cost, Symptom, Weight, Height, Temp, Pressure, Heart_Rate)
-      VALUES (?, ?, NULL, NOW(), NULL, NULL, NULL, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO treatment (Treatment_ID, HN, Order_ID, Treatment_Date, Symptom, Weight, Height, Temp, Pressure, Heart_Rate)
+       VALUES (?, ?, NULL, NOW(), ?, ?, ?, ?, ?, ?)`,
       [
         newTreatmentID,
         HN,
@@ -573,24 +577,41 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
 
     let queueTime = appointment[0].Queue_Time;
 
-    // ตรวจสอบว่ามีแถวไหนใน walkinqueue ที่เวลาซ้ำหรือน้อยกว่าหรือไม่
-    const [conflictingQueue] = await db.query(
-      "SELECT * FROM walkinqueue WHERE Time = ? OR Time > ? ORDER BY Time ASC",
-      [queueTime, queueTime]
+    // ดึงเวลาล่าสุดจาก walkinqueue
+    const [lastQueue] = await db.query(
+      "SELECT Time FROM walkinqueue ORDER BY Time DESC LIMIT 1"
     );
 
-    if (conflictingQueue.length > 0) {
-      // หากมีเวลาที่ซ้ำหรือมากกว่า ให้ทำการปรับเวลา
-      for (let i = 0; i < conflictingQueue.length; i++) {
-        const currentQueue = conflictingQueue[i];
-        let newTime = new Date(`1970-01-01T${currentQueue.Time}`);
-        newTime = new Date(newTime.getTime() + 15 * 60000); // เพิ่ม 15 นาที
+    let newQueueTime = queueTime; // กำหนดค่าเริ่มต้นเป็นเวลาจาก appointmentqueue
 
-        // อัปเดตเวลาของแถวนี้
-        await db.query(
-          "UPDATE walkinqueue SET Time = ? WHERE Queue_ID = ?",
-          [newTime.toTimeString().split(" ")[0], currentQueue.Queue_ID]
+    // ตรวจสอบว่าเวลาล่าสุดใน walkinqueue มีค่าน้อยกว่าเวลานัดหมายหรือไม่
+    if (lastQueue.length > 0) {
+      let lastQueueTime = new Date(`1970-01-01T${lastQueue[0].Time}`);
+
+      // ถ้าเวลาคิวล่าสุดมากกว่าเวลานัดหมาย ให้แทรกคิวโดยใช้เวลาจาก queueTime และปรับเวลาที่ทับซ้อน
+      if (lastQueueTime >= new Date(`1970-01-01T${queueTime}`)) {
+        const [conflictingQueue] = await db.query(
+          "SELECT * FROM walkinqueue WHERE Time >= ? ORDER BY Time ASC",
+          [queueTime]
         );
+
+        // ปรับเวลาคิวที่ทับซ้อน โดยเพิ่มทีละ 15 นาที
+        for (let i = 0; i < conflictingQueue.length; i++) {
+          const currentQueue = conflictingQueue[i];
+          let newTime = new Date(`1970-01-01T${currentQueue.Time}`);
+          newTime = new Date(newTime.getTime() + 15 * 60000); // เพิ่ม 15 นาที
+
+          // อัปเดตเวลาของแถวนี้
+          await db.query("UPDATE walkinqueue SET Time = ? WHERE Queue_ID = ?", [
+            newTime.toTimeString().split(" ")[0],
+            currentQueue.Queue_ID,
+          ]);
+        }
+      } else {
+        // ถ้าเวลาคิวล่าสุดน้อยกว่าเวลานัดหมาย ให้ใช้เวลาคิวล่าสุด + 15 นาที
+        newQueueTime = new Date(lastQueueTime.getTime() + 15 * 60000)
+          .toTimeString()
+          .split(" ")[0];
       }
     }
 
@@ -603,7 +624,7 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
     // เพิ่มข้อมูลเข้า walkinqueue พร้อมกับเวลาที่คำนวณแล้ว
     await db.query(
       "INSERT INTO walkinqueue (Queue_ID, HN, Time, Status) VALUES (?, ?, ?, 'checkin')",
-      [newQueueID, HN, queueTime]
+      [newQueueID, HN, newQueueTime]
     );
 
     // สร้าง Treatment_ID ใหม่
@@ -678,7 +699,9 @@ app.get("/api/appointmentqueue/details", async (req, res) => {
 app.delete("/api/walkinqueue/:HN", async function (req, res) {
   const HN = req.params.HN;
   try {
-    const [result] = await db.query("SELECT * FROM walkinqueue WHERE HN = ?", [HN]);
+    const [result] = await db.query("SELECT * FROM walkinqueue WHERE HN = ?", [
+      HN,
+    ]);
     if (result.length === 0) {
       return res.status(404).json({ error: "ไม่พบ HN ในคิว" });
     }
@@ -696,7 +719,10 @@ app.put("/api/walkinqueue/:HN", async (req, res) => {
   const { Status } = req.body;
 
   try {
-    const [result] = await db.query("UPDATE walkinqueue SET Status = ? WHERE HN = ?", [Status, HN]);
+    const [result] = await db.query(
+      "UPDATE walkinqueue SET Status = ? WHERE HN = ?",
+      [Status, HN]
+    );
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: "ไม่พบข้อมูลผู้ป่วยที่ระบุ" });
     }
@@ -778,7 +804,7 @@ app.post("/api/addPatientWithDetails", async (req, res) => {
     const [maxQueueTimeResult] = await db.query(
       "SELECT MAX(Time) as maxTime FROM walkinqueue"
     );
-    
+
     let newQueueTime = new Date();
     if (maxQueueTimeResult[0].maxTime) {
       const maxTime = new Date(`1970-01-01T${maxQueueTimeResult[0].maxTime}`);
@@ -787,7 +813,8 @@ app.post("/api/addPatientWithDetails", async (req, res) => {
 
     const formattedQueueTime = newQueueTime.toTimeString().split(" ")[0];
 
-    const addQueueSql = "INSERT INTO walkinqueue (HN, Time, Status) VALUES (?, ?, 'checkin')";
+    const addQueueSql =
+      "INSERT INTO walkinqueue (HN, Time, Status) VALUES (?, ?, 'checkin')";
     await db.execute(addQueueSql, [newHN, formattedQueueTime]);
 
     // เพิ่มข้อมูลในตาราง treatment

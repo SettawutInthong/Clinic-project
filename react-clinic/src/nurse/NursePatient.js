@@ -141,7 +141,23 @@ const NursePatient = () => {
   };
 
   const SearchTitleChange = (event) => {
-    setSearchTitle(event.target.value);
+    const selectedTitle = event.target.value;
+    setSearchTitle(selectedTitle);
+
+    if (selectedTitle === "นาย" || selectedTitle === "ด.ช.") {
+      setSearchGender("ชาย");
+      setIsGenderLocked(true);
+    } else if (
+      selectedTitle === "นาง" ||
+      selectedTitle === "นางสาว" ||
+      selectedTitle === "ด.ญ."
+    ) {
+      setSearchGender("หญิง");
+      setIsGenderLocked(true);
+    } else {
+      setSearchGender("");
+      setIsGenderLocked(false);
+    }
   };
 
   const SearchFirstNameChange = (event) => {
@@ -153,7 +169,9 @@ const NursePatient = () => {
   };
 
   const SearchGenderChange = (event) => {
-    setSearchGender(event.target.value);
+    if (!isGenderLocked) {
+      setSearchGender(event.target.value);
+    }
   };
 
   const SearchSubmit = async (event) => {
@@ -331,10 +349,10 @@ const NursePatient = () => {
     setQueueHN(HN);
     setAddQueuePopup(true);
   };
-
+  
   const ConfirmAddQueue = async () => {
     try {
-      await axios.post("http://localhost:5000/api/walkinqueue", {
+      await axios.post("http://localhost:5000/api/addWalkInQueue", {
         HN: queueHN,
         Heart_Rate: treatmentData.Heart_Rate || null,
         Pressure: treatmentData.Pressure || null,
@@ -346,8 +364,13 @@ const NursePatient = () => {
         Treatment_cost: null,
         Total_Cost: null,
       });
+  
       showMessage("จองคิวสำเร็จ", "success");
+  
+      // อัพเดต queueData ทันทีหลังจากจองคิวเสร็จ
       setQueueData((prevQueueData) => [...prevQueueData, { HN: queueHN }]);
+  
+      // รีเซ็ตฟอร์มและปิด Popup
       setAddQueuePopup(false);
       ResetForm();
     } catch (error) {
@@ -355,10 +378,12 @@ const NursePatient = () => {
       showMessage("เกิดข้อผิดพลาดในการจองคิว", "error");
     }
   };
-
+  
+  // ฟังก์ชันตรวจสอบว่าผู้ป่วยอยู่ในคิวหรือยัง
   const isInQueue = (HN) => {
     return queueData.some((queue) => queue.HN === HN);
   };
+  
 
   const ScheduleAppointment = (HN) => {
     setSelectedHN(HN);
@@ -480,7 +505,7 @@ const NursePatient = () => {
                     onChange={SearchTitleChange}
                     label="เลือกคำนำหน้า"
                   >
-                    <MenuItem value="- Unknown -">- Unknown -</MenuItem>
+                    <MenuItem value="">เลือกคำนำหน้า</MenuItem>
                     <MenuItem value="ด.ช.">ด.ช.</MenuItem>
                     <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
                     <MenuItem value="นาย">นาย</MenuItem>
@@ -512,8 +537,9 @@ const NursePatient = () => {
                     variant="outlined"
                     size="small"
                     label="เลือกเพศ"
+                    disabled={isGenderLocked}
                   >
-                    <MenuItem value="- Unknown -">- Unknown -</MenuItem>
+                    <MenuItem value="">เลือกเพศ</MenuItem>
                     <MenuItem value="ชาย">ชาย</MenuItem>
                     <MenuItem value="หญิง">หญิง</MenuItem>
                   </Select>
@@ -1077,7 +1103,6 @@ const NursePatient = () => {
                     </Grid>
                   </Grid>
                 </Box>
-
                 <TextField
                   autoFocus
                   margin="dense"
