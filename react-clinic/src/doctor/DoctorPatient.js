@@ -334,7 +334,7 @@ const DoctorPatient = () => {
 
   const ConfirmAddQueue = async () => {
     try {
-      await axios.post("http://localhost:5000/api/walkinqueue", {
+      await axios.post("http://localhost:5000/api/addWalkInQueue", {
         HN: queueHN,
         Heart_Rate: treatmentData.Heart_Rate || null,
         Pressure: treatmentData.Pressure || null,
@@ -346,8 +346,13 @@ const DoctorPatient = () => {
         Treatment_cost: null,
         Total_Cost: null,
       });
+  
       showMessage("จองคิวสำเร็จ", "success");
+  
+      // อัพเดต queueData ทันทีหลังจากจองคิวเสร็จ
       setQueueData((prevQueueData) => [...prevQueueData, { HN: queueHN }]);
+  
+      // รีเซ็ตฟอร์มและปิด Popup
       setAddQueuePopup(false);
       ResetForm();
     } catch (error) {
@@ -355,7 +360,7 @@ const DoctorPatient = () => {
       showMessage("เกิดข้อผิดพลาดในการจองคิว", "error");
     }
   };
-
+  
   const isInQueue = (HN) => {
     return queueData.some((queue) => queue.HN === HN);
   };
