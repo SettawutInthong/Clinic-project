@@ -289,7 +289,14 @@ const NurseQueue = () => {
           setNewPhone(patient.Phone);
           setNewAllergy(patient.Allergy);
           setNewDisease(patient.Disease);
-          setQueueTime(patient.Queue_Time);
+
+          // ดึงข้อมูลวันที่และเวลา
+          const queueDate = new Date(patient.Queue_Date);
+          const queueTime = patient.Queue_Time;
+          setQueueTime({
+            date: queueDate,
+            time: queueTime,
+          });
         }
       } catch (error) {
         console.error("Error fetching patient details:", error);
@@ -299,17 +306,21 @@ const NurseQueue = () => {
     }
   };
 
-  const formatDateTime = (dateTime) => {
-    const date = new Date(`1970-01-01T${dateTime}`);
-    return `${date.toLocaleDateString("th-TH", {
+  const formatDateTime = (date, time) => {
+    const formattedDate = date.toLocaleDateString("th-TH", {
       year: "numeric",
       month: "long",
       day: "numeric",
-    })} เวลา ${date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    })}`;
+    });
+    const formattedTime = new Date(`1970-01-01T${time}`).toLocaleTimeString(
+      [],
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }
+    );
+    return `${formattedDate} เวลา ${formattedTime}`;
   };
 
   const handleCancel = () => {
@@ -582,9 +593,11 @@ const NurseQueue = () => {
                     variant="body1"
                     style={{ marginTop: "10px", color: "#555" }}
                   >
-                    วันและเวลานัดหมาย: {formatDateTime(queueTime)}
+                    วันและเวลานัดหมาย:{" "}
+                    {formatDateTime(queueTime.date, queueTime.time)}
                   </Typography>
                 )}
+
                 {showTextFields && (
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>

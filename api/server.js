@@ -819,11 +819,19 @@ app.post("/api/addPatientWithDetails", async (req, res) => {
 
     // เพิ่มข้อมูลในตาราง treatment
     const addTreatmentSql = `
-      INSERT INTO treatment (HN, Symptom, Weight, Height, Temp, Pressure, Heart_Rate, Treatment_Date)
-      VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
-    `;
+INSERT INTO treatment (Treatment_ID, HN, Symptom, Weight, Height, Temp, Pressure, Heart_Rate, Treatment_Date)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+`;
+
+    // ต้องแน่ใจว่า generateID ถูกเรียกใช้เพื่อสร้าง Treatment_ID ใหม่
+    const [maxTreatmentResult] = await db.query(
+      "SELECT MAX(Treatment_ID) as maxTreatmentID FROM treatment"
+    );
+    let newTreatmentID = generateID(maxTreatmentResult[0].maxTreatmentID, "T");
+
     await db.execute(addTreatmentSql, [
-      newHN,
+      newTreatmentID, // ใช้ Treatment_ID ใหม่ที่สร้างขึ้น
+      newHN, // ใช้ HN ของผู้ป่วยใหม่
       Symptom,
       Weight,
       Height,
@@ -841,7 +849,6 @@ app.post("/api/addPatientWithDetails", async (req, res) => {
   }
 });
 
-//ลบรายชื่อผู้ป่วย
 app.delete("/api/patient/:HN", async function (req, res) {
   const HN = req.params.HN;
 
@@ -869,6 +876,9 @@ app.delete("/api/patient/:HN", async function (req, res) {
 
     // ลบข้อมูลในตาราง walkinqueue ที่อ้างอิงถึง HN นี้
     await db.query("DELETE FROM walkinqueue WHERE HN = ?", [HN]);
+
+    // ลบข้อมูลในตาราง appointmentqueue ที่อ้างอิงถึง HN นี้
+    await db.query("DELETE FROM appointmentqueue WHERE HN = ?", [HN]);
 
     // ลบข้อมูลในตาราง patient
     await db.query("DELETE FROM patient WHERE HN = ?", [HN]);
