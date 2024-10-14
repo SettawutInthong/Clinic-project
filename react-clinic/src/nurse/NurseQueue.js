@@ -78,6 +78,7 @@ const NurseQueue = () => {
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
   const currentData = data.slice(indexOfFirstRow, indexOfLastRow);
   const [isInProgress, setIsInProgress] = useState(false);
+  const [queueTime, setQueueTime] = useState(null);
   const navigate = useNavigate();
 
   const nextPage = () => {
@@ -288,6 +289,7 @@ const NurseQueue = () => {
           setNewPhone(patient.Phone);
           setNewAllergy(patient.Allergy);
           setNewDisease(patient.Disease);
+          setQueueTime(patient.Queue_Time);
         }
       } catch (error) {
         console.error("Error fetching patient details:", error);
@@ -295,6 +297,19 @@ const NurseQueue = () => {
     } else {
       ResetForm();
     }
+  };
+
+  const formatDateTime = (dateTime) => {
+    const date = new Date(`1970-01-01T${dateTime}`);
+    return `${date.toLocaleDateString("th-TH", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })} เวลา ${date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    })}`;
   };
 
   const handleCancel = () => {
@@ -342,7 +357,7 @@ const NurseQueue = () => {
       showMessage("เกิดข้อผิดพลาดในการลบคิวผู้ป่วยรายนี้", "error"); // แสดงข้อความเมื่อเกิดข้อผิดพลาด
     }
   };
-  
+
   const ViewOrder = (HN) => {
     navigate(`/nurse_order?HN=${HN}`);
   };
@@ -561,6 +576,15 @@ const NurseQueue = () => {
                     menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                   }}
                 />
+
+                {queueTime && (
+                  <Typography
+                    variant="body1"
+                    style={{ marginTop: "10px", color: "#555" }}
+                  >
+                    วันและเวลานัดหมาย: {formatDateTime(queueTime)}
+                  </Typography>
+                )}
                 {showTextFields && (
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
