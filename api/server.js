@@ -528,15 +528,18 @@ app.post("/api/addWalkInQueue", async (req, res) => {
     let newTreatmentID = "T00001";
     if (maxTreatmentResult[0].maxTreatmentID !== null) {
       const maxTreatmentID = maxTreatmentResult[0].maxTreatmentID;
-      const treatmentNumberPart = parseInt(maxTreatmentID.substring(1), 10);
-      newTreatmentID = `T${(treatmentNumberPart + 1)
-        .toString()
-        .padStart(5, "0")}`;
+      if (typeof maxTreatmentID === "string") {
+        const treatmentNumberPart = parseInt(maxTreatmentID.substring(1), 10);
+        newTreatmentID = `T${(treatmentNumberPart + 1)
+          .toString()
+          .padStart(5, "0")}`;
+      }
     }
 
     await db.query(
       `INSERT INTO treatment (Treatment_ID, HN, Order_ID, Treatment_Date, Symptom, Weight, Height, Temp, Pressure, Heart_Rate)
        VALUES (?, ?, NULL, NOW(), ?, ?, ?, ?, ?, ?)`,
+
       [
         newTreatmentID,
         HN,
@@ -1003,6 +1006,39 @@ app.put("/api/patient/:HN", function (req, res) {
       res.json({ message: "แก้ไขข้อมูลผู้ป่วยสำเร็จ" });
     }
   );
+});
+
+//เพิ่มรายละเอียดรักษากับค่ารักษา
+app.post('/api/treatments', async (req, res) => {
+  const { HN, treatmentDetails, treatmentCost } = req.body;
+
+  // ตรวจสอบข้อมูลที่รับเข้ามา
+  if (!HN || !treatmentDetails || !treatmentCost) {
+    return res.status(400).json({ message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
+  }
+
+  try {
+    // คำสั่ง SQL สำหรับเพิ่มข้อมูลการรักษา
+    const query = `
+      INSERT INTO treatment 
+      (HN, Treatment_Details, Treatment_cost, Treatment_Date)
+      VALUES (?, ?, ?, NOW())
+    `;
+    const values = [HN, treatmentDetails, treatmentCost];
+
+    // ดำเนินการคำสั่ง SQL
+    const [result] = await db.execute(query, values);
+
+    // ส่งกลับผลลัพธ์เมื่อเพิ่มข้อมูลสำเร็จ
+    return res.status(201).json({
+      message: 'เพิ่มข้อมูลการรักษาสำเร็จ',
+      Treatment_ID: result.insertId
+    });
+  } catch (error) {
+    // ส่งกลับ error หากมีปัญหา
+    console.error('Error adding treatment:', error);
+    return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการเพิ่มข้อมูลการรักษา' });
+  }
 });
 
 app.listen(5000, function () {
