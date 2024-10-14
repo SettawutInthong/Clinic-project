@@ -174,7 +174,7 @@ app.post("/api/walkinqueue", async (req, res) => {
 
     // Insert the new record into walkinqueue
     await db.query(
-      "INSERT INTO walkinqueue (Queue_ID, HN, Time, Status) VALUES (?, ?, ?, 'checkin')",
+      "INSERT INTO walkinqueue (Queue_ID, HN, Time, Status) VALUES (?, ?, ?, 'รอตรวจ')",
       [newQueueID, HN, newQueueTime]
     );
 
@@ -517,7 +517,7 @@ app.post("/api/addWalkInQueue", async (req, res) => {
 
     // เพิ่มข้อมูลเข้า walkinqueue
     await db.query(
-      "INSERT INTO walkinqueue (Queue_ID, HN, Time, Status) VALUES (?, ?, ?, 'checkin')",
+      "INSERT INTO walkinqueue (Queue_ID, HN, Time, Status) VALUES (?, ?, ?, 'รอตรวจ')",
       [newQueueID, HN, newQueueTime]
     );
 
