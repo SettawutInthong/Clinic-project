@@ -553,8 +553,22 @@ app.post("/api/addWalkInQueue", async (req, res) => {
     let newQueueTime;
 
     if (!maxQueueTimeResult[0].maxTime) {
-      // ถ้าไม่มีคิวในระบบ ให้กำหนดเวลาเริ่มต้นเป็น 08:30
-      newQueueTime = "08:30:00";
+      // ถ้าไม่มีคิวในระบบ ให้กำหนดเวลาเริ่มต้นเป็นเวลาใกล้เคียงกับนาที 00, 15, 30, 45
+      let currentTime = new Date();
+      const currentMinutes = currentTime.getMinutes();
+
+      // คำนวณเวลาใกล้เคียงกับนาทีที่ลงท้ายด้วย 00, 15, 30, 45
+      const nextSlotMinutes = Math.ceil(currentMinutes / 15) * 15;
+
+      // ถ้าเกิน 60 นาที ให้อัพเดตชั่วโมง
+      if (nextSlotMinutes === 60) {
+        currentTime.setHours(currentTime.getHours() + 1);
+        currentTime.setMinutes(0);
+      } else {
+        currentTime.setMinutes(nextSlotMinutes);
+      }
+
+      newQueueTime = currentTime.toTimeString().split(" ")[0];
     } else {
       // ถ้ามีคิวอยู่แล้ว เพิ่ม 15 นาทีจากเวลาสูงสุดในระบบ
       const maxTime = new Date(`1970-01-01T${maxQueueTimeResult[0].maxTime}`);
@@ -628,8 +642,9 @@ app.post("/api/addWalkInQueue", async (req, res) => {
     );
 
     res.status(201).json({
-      message: "Patient successfully added to walkinqueue with treatment and order.",
-      Order_ID: newOrderID
+      message:
+        "Patient successfully added to walkinqueue with treatment and order.",
+      Order_ID: newOrderID,
     });
   } catch (err) {
     console.error("Error adding patient to walkinqueue:", err);
@@ -663,34 +678,54 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
 
     let newQueueTime = queueTime; // กำหนดค่าเริ่มต้นเป็นเวลาจาก appointmentqueue
 
-    // ตรวจสอบว่าเวลาล่าสุดใน walkinqueue มีค่าน้อยกว่าเวลานัดหมายหรือไม่
-    if (lastQueue.length > 0) {
-      let lastQueueTime = new Date(`1970-01-01T${lastQueue[0].Time}`);
+    // ตรวจสอบว่ามีคิวใน walkinqueue หรือไม่
+    if (lastQueue.length === 0) {
+      // ถ้าไม่มีคิวในระบบ ให้กำหนดเวลาเริ่มต้นเป็นเวลาใกล้เคียงกับนาที 00, 15, 30, 45
+      let currentTime = new Date();
+      const currentMinutes = currentTime.getMinutes();
 
-      // ถ้าเวลาคิวล่าสุดมากกว่าเวลานัดหมาย ให้แทรกคิวโดยใช้เวลาจาก queueTime และปรับเวลาที่ทับซ้อน
-      if (lastQueueTime >= new Date(`1970-01-01T${queueTime}`)) {
-        const [conflictingQueue] = await db.query(
-          "SELECT * FROM walkinqueue WHERE Time >= ? ORDER BY Time ASC",
-          [queueTime]
-        );
+      // คำนวณเวลาใกล้เคียงกับนาทีที่ลงท้ายด้วย 00, 15, 30, 45
+      const nextSlotMinutes = Math.ceil(currentMinutes / 15) * 15;
 
-        // ปรับเวลาคิวที่ทับซ้อน โดยเพิ่มทีละ 15 นาที
-        for (let i = 0; i < conflictingQueue.length; i++) {
-          const currentQueue = conflictingQueue[i];
-          let newTime = new Date(`1970-01-01T${currentQueue.Time}`);
-          newTime = new Date(newTime.getTime() + 15 * 60000); // เพิ่ม 15 นาที
-
-          // อัปเดตเวลาของแถวนี้
-          await db.query("UPDATE walkinqueue SET Time = ? WHERE Queue_ID = ?", [
-            newTime.toTimeString().split(" ")[0],
-            currentQueue.Queue_ID,
-          ]);
-        }
+      // ถ้าเกิน 60 นาที ให้อัพเดตชั่วโมง
+      if (nextSlotMinutes === 60) {
+        currentTime.setHours(currentTime.getHours() + 1);
+        currentTime.setMinutes(0);
       } else {
-        // ถ้าเวลาคิวล่าสุดน้อยกว่าเวลานัดหมาย ให้ใช้เวลาคิวล่าสุด + 15 นาที
-        newQueueTime = new Date(lastQueueTime.getTime() + 15 * 60000)
-          .toTimeString()
-          .split(" ")[0];
+        currentTime.setMinutes(nextSlotMinutes);
+      }
+
+      newQueueTime = currentTime.toTimeString().split(" ")[0];
+    } else {
+      // ตรวจสอบว่าเวลาล่าสุดใน walkinqueue มีค่าน้อยกว่าเวลานัดหมายหรือไม่
+      if (lastQueue.length > 0) {
+        let lastQueueTime = new Date(`1970-01-01T${lastQueue[0].Time}`);
+
+        // ถ้าเวลาคิวล่าสุดมากกว่าเวลานัดหมาย ให้แทรกคิวโดยใช้เวลาจาก queueTime และปรับเวลาที่ทับซ้อน
+        if (lastQueueTime >= new Date(`1970-01-01T${queueTime}`)) {
+          const [conflictingQueue] = await db.query(
+            "SELECT * FROM walkinqueue WHERE Time >= ? ORDER BY Time ASC",
+            [queueTime]
+          );
+
+          // ปรับเวลาคิวที่ทับซ้อน โดยเพิ่มทีละ 15 นาที
+          for (let i = 0; i < conflictingQueue.length; i++) {
+            const currentQueue = conflictingQueue[i];
+            let newTime = new Date(`1970-01-01T${currentQueue.Time}`);
+            newTime = new Date(newTime.getTime() + 15 * 60000); // เพิ่ม 15 นาที
+
+            // อัปเดตเวลาของแถวนี้
+            await db.query(
+              "UPDATE walkinqueue SET Time = ? WHERE Queue_ID = ?",
+              [newTime.toTimeString().split(" ")[0], currentQueue.Queue_ID]
+            );
+          }
+        } else {
+          // ถ้าเวลาคิวล่าสุดน้อยกว่าเวลานัดหมาย ให้ใช้เวลาคิวล่าสุด + 15 นาที
+          newQueueTime = new Date(lastQueueTime.getTime() + 15 * 60000)
+            .toTimeString()
+            .split(" ")[0];
+        }
       }
     }
 
@@ -762,7 +797,7 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
     res.status(201).json({
       message:
         "Patient successfully checked in with updated queue time, treatment, and removed from appointmentqueue.",
-      Order_ID: newOrderID
+      Order_ID: newOrderID,
     });
   } catch (err) {
     console.error("Error checking in patient to walkinqueue:", err);
