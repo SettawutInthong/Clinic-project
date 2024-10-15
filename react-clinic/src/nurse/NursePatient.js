@@ -349,7 +349,7 @@ const NursePatient = () => {
     setQueueHN(HN);
     setAddQueuePopup(true);
   };
-  
+
   const ConfirmAddQueue = async () => {
     try {
       await axios.post("http://localhost:5000/api/addWalkInQueue", {
@@ -364,12 +364,12 @@ const NursePatient = () => {
         Treatment_cost: null,
         Total_Cost: null,
       });
-  
+
       showMessage("จองคิวสำเร็จ", "success");
-  
+
       // อัพเดต queueData ทันทีหลังจากจองคิวเสร็จ
       setQueueData((prevQueueData) => [...prevQueueData, { HN: queueHN }]);
-  
+
       // รีเซ็ตฟอร์มและปิด Popup
       setAddQueuePopup(false);
       ResetForm();
@@ -378,12 +378,11 @@ const NursePatient = () => {
       showMessage("เกิดข้อผิดพลาดในการจองคิว", "error");
     }
   };
-  
+
   // ฟังก์ชันตรวจสอบว่าผู้ป่วยอยู่ในคิวหรือยัง
   const isInQueue = (HN) => {
     return queueData.some((queue) => queue.HN === HN);
   };
-  
 
   const ScheduleAppointment = (HN) => {
     setSelectedHN(HN);
@@ -1269,7 +1268,6 @@ const NursePatient = () => {
                     label="เลือกวันที่และเวลา"
                     value={appointmentDate}
                     onChange={(date) => setAppointmentDate(date)}
-                    minutesStep={15} // ล็อกให้เลือกนาทีทีละ 15 นาที
                     ampm={false} // ใช้รูปแบบ 24 ชั่วโมง
                     minTime={setHours(setMinutes(new Date(), 0), 8)} // จำกัดเวลาเริ่มต้นเป็น 08:00
                     maxTime={setHours(setMinutes(new Date(), 0), 20)} // จำกัดเวลาสิ้นสุดเป็น 20:00
