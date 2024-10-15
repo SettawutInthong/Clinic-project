@@ -72,9 +72,11 @@ const MedDetail = () => {
               <TableCell>รหัสยา</TableCell>
               <TableCell>ชื่อยา</TableCell>
               <TableCell>คำอธิบาย</TableCell>
-              <TableCell>ราคาต่อหน่วย (บาท)</TableCell>
-              <TableCell>ประเภทหน่วยนับ</TableCell>
+              <TableCell>ประเภทยา</TableCell>
               <TableCell>คงเหลือในคลัง</TableCell>
+              <TableCell>ประเภทหน่วยนับ</TableCell>
+              <TableCell>ราคา(บาท)</TableCell>
+              
             </TableRow>
           </TableHead>
           <TableBody>
@@ -83,9 +85,11 @@ const MedDetail = () => {
                 <TableCell>{medicine.Medicine_ID}</TableCell>
                 <TableCell>{medicine.Medicine_Name}</TableCell>
                 <TableCell>{medicine.Description}</TableCell>
-                <TableCell>{medicine.Med_Cost}</TableCell>
-                <TableCell>{medicine.Quantity_type}</TableCell>
+                <TableCell>{medicine.medicine_type}</TableCell>
                 <TableCell>{medicine.Quantity}</TableCell>
+                <TableCell>{medicine.Quantity_type}</TableCell>
+                <TableCell>{medicine.Med_Cost}</TableCell>
+                
               </TableRow>
             ))}
           </TableBody>

@@ -358,7 +358,7 @@ app.get("/api/medicine_stock", async (req, res) => {
 
   try {
     const sql = `
-      SELECT Medicine_ID, Medicine_Name, Description, Med_Cost, Quantity_type, Quantity
+      SELECT Medicine_ID, Medicine_Name, Description, Med_Cost, Quantity_type, Quantity,medicine_type
       FROM medicine 
       WHERE Medicine_Name LIKE ?
     `;
@@ -415,9 +415,16 @@ app.post("/api/stocks", async (req, res) => {
 
       console.log("New Stock_ID:", newStockID);
 
+      // เพิ่มรายการลงในตาราง stock
       await connection.promise().query(
         `INSERT INTO stock (Stock_ID, Medicine_ID, Quantity_insert, Inovic_ID) VALUES (?, ?, ?, ?)`,
         [newStockID, Medicine_ID, Quantity_insert, newInovicID]
+      );
+
+      // อัปเดตจำนวนคงเหลือในตาราง medicine โดยบวก Quantity_insert เข้าไป
+      await connection.promise().query(
+        `UPDATE medicine SET Quantity = Quantity + ? WHERE Medicine_ID = ?`,
+        [Quantity_insert, Medicine_ID]
       );
     }
 
