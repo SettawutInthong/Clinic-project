@@ -994,12 +994,16 @@ app.get("/api/treatments/:HN", function (req, res) {
   });
 });
 
-// generate ID
 function generateID(currentMaxID, prefix) {
-  if (!currentMaxID) return `${prefix}00001`;
-  const nextNumber = parseInt(currentMaxID.substring(1), 10) + 1;
+  if (!currentMaxID || isNaN(parseInt(currentMaxID.substring(3), 10))) {
+      // ถ้าไม่มีค่า currentMaxID หรือแปลงเป็นตัวเลขไม่ได้ ให้เริ่มต้นที่ INO00001
+      return `${prefix}00001`;
+  }
+  const nextNumber = parseInt(currentMaxID.substring(3), 10) + 1;
   return `${prefix}${nextNumber.toString().padStart(5, "0")}`;
 }
+
+
 
 // API เพิ่มการรักษาและสร้าง Order_ID ใหม่
 // app.post("/api/treatments", async (req, res) => {
@@ -1147,20 +1151,66 @@ app.get("/api/medicine_stock", async (req, res) => {
   }
 });
 
-app.post("/api/orders", async (req, res) => {
-  const { HN, Order_ID, items } = req.body;
+app.post("/api/stocks", async (req, res) => {
+  const { items } = req.body;
+  const inovicDate = new Date().toISOString().split("T")[0];
 
-  const sql = `INSERT INTO orders (Order_ID, HN, Order_Date) VALUES (?, ?, NOW())`;
-  await db.execute(sql, [Order_ID, HN]);
+  try {
+    if (!items || items.length === 0) {
+      return res.status(400).json({ error: "ไม่มีรายการสต็อกในคำขอ" });
+    }
 
-  for (const item of items) {
-    const { Medicine_ID, Quantity } = item;
-    const sqlItem = `INSERT INTO order_medicine (Order_ID, Medicine_ID, Quantity_Order) VALUES (?, ?, ?)`;
-    await db.execute(sqlItem, [Order_ID, Medicine_ID, Quantity]);
+    console.log("Received items:", items);
+
+    // ดึงค่า Inovic_ID สูงสุดปัจจุบัน
+    const [inovicResult] = await connection.promise().query(`
+      SELECT MAX(Inovic_ID) as maxInovicID FROM inovic
+    `);
+
+    console.log("Inovic Result:", inovicResult);
+
+    // ตรวจสอบว่า maxInovicID มีค่าหรือไม่ ถ้าไม่มีให้เริ่มที่ 'INO00001'
+    const newInovicID = inovicResult[0].maxInovicID ? generateID(inovicResult[0].maxInovicID, "INO") : "INO00001";
+
+    console.log("New Inovic_ID:", newInovicID);
+
+    // เพิ่มรายการลงในตาราง inovic
+    await connection.promise().query(
+      `INSERT INTO inovic (Inovic_ID, Inovic_Date) VALUES (?, ?)`,
+      [newInovicID, inovicDate]
+    );
+
+    for (const item of items) {
+      const { Medicine_ID, Quantity_insert } = item;
+
+      if (!Medicine_ID || !Quantity_insert) {
+        return res.status(400).json({ error: "Medicine_ID หรือ Quantity_insert ไม่ครบถ้วน" });
+      }
+
+      const [stockResult] = await connection.promise().query(`
+        SELECT MAX(Stock_ID) as maxStockID FROM stock
+      `);
+
+      const newStockID = stockResult[0].maxStockID ? generateID(stockResult[0].maxStockID, "ST") : "ST00001";
+
+      console.log("New Stock_ID:", newStockID);
+
+      await connection.promise().query(
+        `INSERT INTO stock (Stock_ID, Medicine_ID, Quantity_insert, Inovic_ID) VALUES (?, ?, ?, ?)`,
+        [newStockID, Medicine_ID, Quantity_insert, newInovicID]
+      );
+    }
+
+    res.status(201).json({ message: "เพิ่มรายการสต็อกสำเร็จ" });
+  } catch (error) {
+    console.error("Error adding stock:", error.stack);
+    res.status(500).json({ error: "เกิดข้อผิดพลาดในการเพิ่มสต็อก" });
   }
-
-  res.json({ message: "Order created successfully" });
 });
+
+
+
+
 
 app.listen(5000, function () {
   console.log("port  5000");

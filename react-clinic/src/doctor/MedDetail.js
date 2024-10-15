@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {Box,Button,TextField,Typography,Paper,Table,TableBody,TableCell,TableContainer,TableHead,TableRow,Snackbar,Alert} from "@mui/material";
+import { useNavigate } from "react-router-dom"; // ใช้สำหรับนำทาง
 
-const MedicineStock = () => {
+const MedDetail = () => {
   const [medicines, setMedicines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState(""); // คีย์เวิร์ดการค้นหา
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const navigate = useNavigate(); // สำหรับใช้ navigate ไปยังหน้าอื่น
 
   useEffect(() => {
     fetchMedicineStock();
@@ -33,8 +35,7 @@ const MedicineStock = () => {
     setSnackbarOpen(false);
   };
 
-  if (loading) return <Typography>Loading...</Typography>;
-  if (error) return <Typography>Error: {error}</Typography>;
+
 
   return (
     <Box sx={{ padding: 3 }}>
@@ -56,6 +57,10 @@ const MedicineStock = () => {
           <Button variant="contained" color="primary" onClick={handleSearch}>
             ค้นหา
           </Button>
+          <Button variant="contained" color="secondary" onClick={() => navigate(`/doctor_addstock`)}>
+            เพิ่มสต็อก
+          </Button>
+          
         </Box>
       </Paper>
 
@@ -93,12 +98,10 @@ const MedicineStock = () => {
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert onClose={handleSnackbarClose} severity="success">
-          บันทึกออเดอร์สำเร็จ
-        </Alert>
+        
       </Snackbar>
     </Box>
   );
 };
 
-export default MedicineStock;
+export default MedDetail;

@@ -244,7 +244,7 @@ const DoctorQueue = () => {
                             onClick={() =>
                               navigate(`/doctor_patientdetail/${row.HN}`)
                             }
-                            disabled={row.Status !== "กำลังตรวจ"} // ปิดปุ่มถ้าสถานะไม่ใช่กำลังตรวจ
+                           // disabled={row.Status !== "กำลังตรวจ"} // ปิดปุ่มถ้าสถานะไม่ใช่กำลังตรวจ
                           >
                             <VaccinesIcon />
                           </Button>

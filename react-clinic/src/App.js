@@ -17,6 +17,7 @@ import AddTreatment from "./doctor/AddTreatment";
 import AddOrder from "./doctor/AddOrder";
 import DoctorPatient from "./doctor/DoctorPatient";
 import MedDetail from "./doctor/MedDetail";
+import AddStock from "./doctor/AddStock";
 
 const App = () => {
   const token = localStorage.getItem("accessToken");
@@ -57,6 +58,7 @@ const App = () => {
               <Route path="/doctor_addorder/:HN/:orderID" element={<AddOrder />} />
               <Route path="/doctor_patient" element={<DoctorPatient />} />
               <Route path="/doctor_meddetail" element={<MedDetail />} />
+              <Route path="/doctor_addstock" element={<AddStock />} />
             </>
           ) : null}
         </Routes>
