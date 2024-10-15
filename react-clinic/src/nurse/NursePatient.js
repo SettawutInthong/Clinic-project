@@ -141,7 +141,23 @@ const NursePatient = () => {
   };
 
   const SearchTitleChange = (event) => {
-    setSearchTitle(event.target.value);
+    const selectedTitle = event.target.value;
+    setSearchTitle(selectedTitle);
+
+    if (selectedTitle === "นาย" || selectedTitle === "ด.ช.") {
+      setSearchGender("ชาย");
+      setIsGenderLocked(true);
+    } else if (
+      selectedTitle === "นาง" ||
+      selectedTitle === "นางสาว" ||
+      selectedTitle === "ด.ญ."
+    ) {
+      setSearchGender("หญิง");
+      setIsGenderLocked(true);
+    } else {
+      setSearchGender("");
+      setIsGenderLocked(false);
+    }
   };
 
   const SearchFirstNameChange = (event) => {
@@ -153,7 +169,9 @@ const NursePatient = () => {
   };
 
   const SearchGenderChange = (event) => {
-    setSearchGender(event.target.value);
+    if (!isGenderLocked) {
+      setSearchGender(event.target.value);
+    }
   };
 
   const SearchSubmit = async (event) => {
@@ -331,10 +349,10 @@ const NursePatient = () => {
     setQueueHN(HN);
     setAddQueuePopup(true);
   };
-
+  
   const ConfirmAddQueue = async () => {
     try {
-      await axios.post("http://localhost:5000/api/walkinqueue", {
+      await axios.post("http://localhost:5000/api/addWalkInQueue", {
         HN: queueHN,
         Heart_Rate: treatmentData.Heart_Rate || null,
         Pressure: treatmentData.Pressure || null,
@@ -346,8 +364,13 @@ const NursePatient = () => {
         Treatment_cost: null,
         Total_Cost: null,
       });
+  
       showMessage("จองคิวสำเร็จ", "success");
+  
+      // อัพเดต queueData ทันทีหลังจากจองคิวเสร็จ
       setQueueData((prevQueueData) => [...prevQueueData, { HN: queueHN }]);
+  
+      // รีเซ็ตฟอร์มและปิด Popup
       setAddQueuePopup(false);
       ResetForm();
     } catch (error) {
@@ -355,10 +378,12 @@ const NursePatient = () => {
       showMessage("เกิดข้อผิดพลาดในการจองคิว", "error");
     }
   };
-
+  
+  // ฟังก์ชันตรวจสอบว่าผู้ป่วยอยู่ในคิวหรือยัง
   const isInQueue = (HN) => {
     return queueData.some((queue) => queue.HN === HN);
   };
+  
 
   const ScheduleAppointment = (HN) => {
     setSelectedHN(HN);
@@ -480,7 +505,7 @@ const NursePatient = () => {
                     onChange={SearchTitleChange}
                     label="เลือกคำนำหน้า"
                   >
-                    <MenuItem value="- Unknown -">- Unknown -</MenuItem>
+                    <MenuItem value="">เลือกคำนำหน้า</MenuItem>
                     <MenuItem value="ด.ช.">ด.ช.</MenuItem>
                     <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
                     <MenuItem value="นาย">นาย</MenuItem>
@@ -512,8 +537,9 @@ const NursePatient = () => {
                     variant="outlined"
                     size="small"
                     label="เลือกเพศ"
+                    disabled={isGenderLocked}
                   >
-                    <MenuItem value="- Unknown -">- Unknown -</MenuItem>
+                    <MenuItem value="">เลือกเพศ</MenuItem>
                     <MenuItem value="ชาย">ชาย</MenuItem>
                     <MenuItem value="หญิง">หญิง</MenuItem>
                   </Select>
@@ -1006,51 +1032,91 @@ const NursePatient = () => {
                 ข้อมูลผู้ป่วย
               </DialogTitle>
               <DialogContent>
-                <Box display="flex" flexDirection="row" gap={2}>
-                  <FormControl
-                    fullWidth
-                    margin="dense"
-                    variant="outlined"
-                    style={{ width: "200px" }}
-                    sx={{
-                      backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                      color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
-                    }}
-                  >
-                    <InputLabel>คำนำหน้า</InputLabel>
-                    <Select
-                      label="คำนำหน้า"
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      disabled={!edit}
-                      sx={{
-                        backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                        color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
-                      }}
-                    >
-                      <MenuItem value="- Unknown -">- Unknown -</MenuItem>
-                      <MenuItem value="ด.ช.">ด.ช.</MenuItem>
-                      <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
-                      <MenuItem value="นาย">นาย</MenuItem>
-                      <MenuItem value="นาง">นาง</MenuItem>
-                      <MenuItem value="นางสาว">นางสาว</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <TextField
-                    autoFocus
-                    margin="dense"
-                    label="ชื่อ"
-                    type="text"
-                    fullWidth
-                    value={newFirstName}
-                    onChange={(e) => setNewFirstName(e.target.value)}
-                    disabled={!edit}
-                    sx={{
-                      backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                      color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
-                    }}
-                  />
+                <Box display="flex" justifyContent="space-between" gap={2}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <FormControl
+                        fullWidth
+                        variant="outlined"
+                        sx={{
+                          backgroundColor: edit
+                            ? "white"
+                            : "rgba(0, 0, 0, 0.1)",
+                        }}
+                      >
+                        <InputLabel id="title-label">คำนำหน้า</InputLabel>
+                        <Select
+                          labelId="title-label"
+                          label="คำนำหน้า"
+                          value={newTitle}
+                          onChange={(e) => setNewTitle(e.target.value)}
+                          disabled={!edit}
+                          sx={{
+                            backgroundColor: edit
+                              ? "white"
+                              : "rgba(0, 0, 0, 0.1)",
+                            color: edit
+                              ? "inherit"
+                              : "rgba(255, 255, 255, 0.7)",
+                          }}
+                        >
+                          <MenuItem value="- Unknown -">- Unknown -</MenuItem>
+                          <MenuItem value="ด.ช.">ด.ช.</MenuItem>
+                          <MenuItem value="ด.ญ.">ด.ญ.</MenuItem>
+                          <MenuItem value="นาย">นาย</MenuItem>
+                          <MenuItem value="นาง">นาง</MenuItem>
+                          <MenuItem value="นางสาว">นางสาว</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControl
+                        fullWidth
+                        variant="outlined"
+                        sx={{
+                          backgroundColor: edit
+                            ? "white"
+                            : "rgba(0, 0, 0, 0.1)",
+                        }}
+                      >
+                        <InputLabel id="gender-label">เลือกเพศ</InputLabel>
+                        <Select
+                          labelId="gender-label"
+                          label="เลือกเพศ"
+                          value={newGender}
+                          onChange={(e) => setNewGender(e.target.value)}
+                          disabled={!edit}
+                          sx={{
+                            backgroundColor: edit
+                              ? "white"
+                              : "rgba(0, 0, 0, 0.1)",
+                            color: edit
+                              ? "inherit"
+                              : "rgba(255, 255, 255, 0.7)",
+                          }}
+                        >
+                          <MenuItem value="">- เลือกเพศ -</MenuItem>
+                          <MenuItem value="ชาย">ชาย</MenuItem>
+                          <MenuItem value="หญิง">หญิง</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  </Grid>
                 </Box>
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  label="ชื่อ"
+                  type="text"
+                  fullWidth
+                  value={newFirstName}
+                  onChange={(e) => setNewFirstName(e.target.value)}
+                  disabled={!edit}
+                  sx={{
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                  }}
+                />
                 <TextField
                   margin="dense"
                   label="นามสกุล"

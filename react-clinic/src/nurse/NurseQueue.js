@@ -78,6 +78,7 @@ const NurseQueue = () => {
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
   const currentData = data.slice(indexOfFirstRow, indexOfLastRow);
   const [isInProgress, setIsInProgress] = useState(false);
+  const [queueTime, setQueueTime] = useState(null);
   const navigate = useNavigate();
 
   const nextPage = () => {
@@ -288,6 +289,14 @@ const NurseQueue = () => {
           setNewPhone(patient.Phone);
           setNewAllergy(patient.Allergy);
           setNewDisease(patient.Disease);
+
+          // ดึงข้อมูลวันที่และเวลา
+          const queueDate = new Date(patient.Queue_Date);
+          const queueTime = patient.Queue_Time;
+          setQueueTime({
+            date: queueDate,
+            time: queueTime,
+          });
         }
       } catch (error) {
         console.error("Error fetching patient details:", error);
@@ -295,6 +304,23 @@ const NurseQueue = () => {
     } else {
       ResetForm();
     }
+  };
+
+  const formatDateTime = (date, time) => {
+    const formattedDate = date.toLocaleDateString("th-TH", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    const formattedTime = new Date(`1970-01-01T${time}`).toLocaleTimeString(
+      [],
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }
+    );
+    return `${formattedDate} เวลา ${formattedTime}`;
   };
 
   const handleCancel = () => {
@@ -325,6 +351,7 @@ const NurseQueue = () => {
     });
     setShowTextFields(false); // ซ่อนฟอร์ม
   };
+
   const DeleteQueue = (HN) => {
     setSelectedHN(HN);
     setDeletePopup(true); // เปิดป๊อปอัพยืนยันการลบ
@@ -341,6 +368,7 @@ const NurseQueue = () => {
       showMessage("เกิดข้อผิดพลาดในการลบคิวผู้ป่วยรายนี้", "error"); // แสดงข้อความเมื่อเกิดข้อผิดพลาด
     }
   };
+
   const ViewOrder = (HN) => {
     navigate(`/nurse_order?HN=${HN}`);
   };
@@ -559,6 +587,17 @@ const NurseQueue = () => {
                     menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                   }}
                 />
+
+                {queueTime && (
+                  <Typography
+                    variant="body1"
+                    style={{ marginTop: "10px", color: "#555" }}
+                  >
+                    วันและเวลานัดหมาย:{" "}
+                    {formatDateTime(queueTime.date, queueTime.time)}
+                  </Typography>
+                )}
+
                 {showTextFields && (
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>

@@ -2,6 +2,7 @@ import React, { useState  ,useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import {Paper,TextField,Button,Typography,Snackbar,Alert,Box,Grid,ButtonGroup,} from "@mui/material";
+
 const AddTreatment = () => {
   const { HN } = useParams();
   const [treatmentDetails, setTreatmentDetails] = useState(
@@ -38,8 +39,8 @@ const AddTreatment = () => {
       setSnackbarOpen(true);
 
       // Clear localStorage after successful submission
-      localStorage.removeItem("treatmentDetails");
-      localStorage.removeItem("treatmentCost");
+      // localStorage.removeItem("treatmentDetails");
+      // localStorage.removeItem("treatmentCost");
     } catch (error) {
       console.error("Error adding treatment:", error);
     }
