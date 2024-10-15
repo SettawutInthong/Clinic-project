@@ -281,8 +281,8 @@ app.get("/api/treatments/:HN", function (req, res) {
 
 function generateID(currentMaxID, prefix) {
   if (!currentMaxID || isNaN(parseInt(currentMaxID.substring(3), 10))) {
-      // ถ้าไม่มีค่า currentMaxID หรือแปลงเป็นตัวเลขไม่ได้ ให้เริ่มต้นที่ INO00001
-      return `${prefix}00001`;
+    // ถ้าไม่มีค่า currentMaxID หรือแปลงเป็นตัวเลขไม่ได้ ให้เริ่มต้นที่ INO00001
+    return `${prefix}00001`;
   }
   const nextNumber = parseInt(currentMaxID.substring(3), 10) + 1;
   return `${prefix}${nextNumber.toString().padStart(5, "0")}`;
@@ -390,41 +390,42 @@ app.post("/api/stocks", async (req, res) => {
     console.log("Inovic Result:", inovicResult);
 
     // ตรวจสอบว่า maxInovicID มีค่าหรือไม่ ถ้าไม่มีให้เริ่มที่ 'INO00001'
-    const newInovicID = inovicResult[0].maxInovicID ? generateID(inovicResult[0].maxInovicID, "INO") : "INO00001";
+    const newInovicID = inovicResult[0].maxInovicID
+      ? generateID(inovicResult[0].maxInovicID, "INO")
+      : "INO00001";
 
     console.log("New Inovic_ID:", newInovicID);
 
     // เพิ่มรายการลงในตาราง inovic
-    await connection.promise().query(
-      `INSERT INTO inovic (Inovic_ID, Inovic_Date) VALUES (?, ?)`,
-      [newInovicID, inovicDate]
-    );
+    await connection
+      .promise()
+      .query(`INSERT INTO inovic (Inovic_ID, Inovic_Date) VALUES (?, ?)`, [
+        newInovicID,
+        inovicDate,
+      ]);
 
     for (const item of items) {
       const { Medicine_ID, Quantity_insert } = item;
 
       if (!Medicine_ID || !Quantity_insert) {
-        return res.status(400).json({ error: "Medicine_ID หรือ Quantity_insert ไม่ครบถ้วน" });
+        return res
+          .status(400)
+          .json({ error: "Medicine_ID หรือ Quantity_insert ไม่ครบถ้วน" });
       }
 
       const [stockResult] = await connection.promise().query(`
         SELECT MAX(Stock_ID) as maxStockID FROM stock
       `);
 
-      const newStockID = stockResult[0].maxStockID ? generateID(stockResult[0].maxStockID, "ST") : "ST00001";
+      const newStockID = stockResult[0].maxStockID
+        ? generateID(stockResult[0].maxStockID, "ST")
+        : "ST00001";
 
       console.log("New Stock_ID:", newStockID);
 
-      // เพิ่มรายการลงในตาราง stock
       await connection.promise().query(
         `INSERT INTO stock (Stock_ID, Medicine_ID, Quantity_insert, Inovic_ID) VALUES (?, ?, ?, ?)`,
         [newStockID, Medicine_ID, Quantity_insert, newInovicID]
-      );
-
-      // อัปเดตจำนวนคงเหลือในตาราง medicine โดยบวก Quantity_insert เข้าไป
-      await connection.promise().query(
-        `UPDATE medicine SET Quantity = Quantity + ? WHERE Medicine_ID = ?`,
-        [Quantity_insert, Medicine_ID]
       );
     }
 
@@ -550,8 +551,22 @@ app.post("/api/addWalkInQueue", async (req, res) => {
     let newQueueTime;
 
     if (!maxQueueTimeResult[0].maxTime) {
-      // ถ้าไม่มีคิวในระบบ ให้กำหนดเวลาเริ่มต้นเป็น 08:30
-      newQueueTime = "08:30:00";
+      // ถ้าไม่มีคิวในระบบ ให้กำหนดเวลาเริ่มต้นเป็นเวลาใกล้เคียงกับนาที 00, 15, 30, 45
+      let currentTime = new Date();
+      const currentMinutes = currentTime.getMinutes();
+
+      // คำนวณเวลาใกล้เคียงกับนาทีที่ลงท้ายด้วย 00, 15, 30, 45
+      const nextSlotMinutes = Math.ceil(currentMinutes / 15) * 15;
+
+      // ถ้าเกิน 60 นาที ให้อัพเดตชั่วโมง
+      if (nextSlotMinutes === 60) {
+        currentTime.setHours(currentTime.getHours() + 1);
+        currentTime.setMinutes(0);
+      } else {
+        currentTime.setMinutes(nextSlotMinutes);
+      }
+
+      newQueueTime = currentTime.toTimeString().split(" ")[0];
     } else {
       // ถ้ามีคิวอยู่แล้ว เพิ่ม 15 นาทีจากเวลาสูงสุดในระบบ
       const maxTime = new Date(`1970-01-01T${maxQueueTimeResult[0].maxTime}`);
@@ -572,11 +587,30 @@ app.post("/api/addWalkInQueue", async (req, res) => {
       [newQueueID, HN, newQueueTime]
     );
 
-    // เพิ่มข้อมูลการรักษา
+    // สร้าง Order_ID ใหม่
+    const [maxOrderResult] = await db.query(
+      "SELECT MAX(Order_ID) as maxOrderID FROM orders"
+    );
+    let newOrderID = "O00001"; // กำหนดค่าเริ่มต้นสำหรับ Order_ID
+    if (maxOrderResult[0].maxOrderID !== null) {
+      const maxOrderID = maxOrderResult[0].maxOrderID;
+      if (typeof maxOrderID === "string") {
+        const orderNumberPart = parseInt(maxOrderID.substring(1), 10);
+        newOrderID = `O${(orderNumberPart + 1).toString().padStart(5, "0")}`;
+      }
+    }
+
+    // เพิ่มข้อมูลเข้า orders
+    await db.query(
+      "INSERT INTO orders (Order_ID, HN, Order_Date) VALUES (?, ?, NOW())",
+      [newOrderID, HN]
+    );
+
+    // สร้าง Treatment_ID ใหม่
     const [maxTreatmentResult] = await db.query(
       "SELECT MAX(Treatment_ID) as maxTreatmentID FROM treatment"
     );
-    let newTreatmentID = "T00001";
+    let newTreatmentID = "T00001"; // กำหนดค่าเริ่มต้นสำหรับ Treatment_ID
     if (maxTreatmentResult[0].maxTreatmentID !== null) {
       const maxTreatmentID = maxTreatmentResult[0].maxTreatmentID;
       if (typeof maxTreatmentID === "string") {
@@ -587,13 +621,15 @@ app.post("/api/addWalkInQueue", async (req, res) => {
       }
     }
 
+    // เพิ่มข้อมูลการรักษาใน treatment โดยใช้ Order_ID
     await db.query(
       `INSERT INTO treatment (Treatment_ID, HN, Order_ID, Treatment_Date, Symptom, Weight, Height, Temp, Pressure, Heart_Rate)
-       VALUES (?, ?, NULL, NOW(), ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?)`,
 
       [
         newTreatmentID,
         HN,
+        newOrderID,
         Symptom || null,
         Weight || null,
         Height || null,
@@ -604,7 +640,9 @@ app.post("/api/addWalkInQueue", async (req, res) => {
     );
 
     res.status(201).json({
-      message: "Patient successfully added to walkinqueue with treatment.",
+      message:
+        "Patient successfully added to walkinqueue with treatment and order.",
+      Order_ID: newOrderID,
     });
   } catch (err) {
     console.error("Error adding patient to walkinqueue:", err);
@@ -638,34 +676,54 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
 
     let newQueueTime = queueTime; // กำหนดค่าเริ่มต้นเป็นเวลาจาก appointmentqueue
 
-    // ตรวจสอบว่าเวลาล่าสุดใน walkinqueue มีค่าน้อยกว่าเวลานัดหมายหรือไม่
-    if (lastQueue.length > 0) {
-      let lastQueueTime = new Date(`1970-01-01T${lastQueue[0].Time}`);
+    // ตรวจสอบว่ามีคิวใน walkinqueue หรือไม่
+    if (lastQueue.length === 0) {
+      // ถ้าไม่มีคิวในระบบ ให้กำหนดเวลาเริ่มต้นเป็นเวลาใกล้เคียงกับนาที 00, 15, 30, 45
+      let currentTime = new Date();
+      const currentMinutes = currentTime.getMinutes();
 
-      // ถ้าเวลาคิวล่าสุดมากกว่าเวลานัดหมาย ให้แทรกคิวโดยใช้เวลาจาก queueTime และปรับเวลาที่ทับซ้อน
-      if (lastQueueTime >= new Date(`1970-01-01T${queueTime}`)) {
-        const [conflictingQueue] = await db.query(
-          "SELECT * FROM walkinqueue WHERE Time >= ? ORDER BY Time ASC",
-          [queueTime]
-        );
+      // คำนวณเวลาใกล้เคียงกับนาทีที่ลงท้ายด้วย 00, 15, 30, 45
+      const nextSlotMinutes = Math.ceil(currentMinutes / 15) * 15;
 
-        // ปรับเวลาคิวที่ทับซ้อน โดยเพิ่มทีละ 15 นาที
-        for (let i = 0; i < conflictingQueue.length; i++) {
-          const currentQueue = conflictingQueue[i];
-          let newTime = new Date(`1970-01-01T${currentQueue.Time}`);
-          newTime = new Date(newTime.getTime() + 15 * 60000); // เพิ่ม 15 นาที
-
-          // อัปเดตเวลาของแถวนี้
-          await db.query("UPDATE walkinqueue SET Time = ? WHERE Queue_ID = ?", [
-            newTime.toTimeString().split(" ")[0],
-            currentQueue.Queue_ID,
-          ]);
-        }
+      // ถ้าเกิน 60 นาที ให้อัพเดตชั่วโมง
+      if (nextSlotMinutes === 60) {
+        currentTime.setHours(currentTime.getHours() + 1);
+        currentTime.setMinutes(0);
       } else {
-        // ถ้าเวลาคิวล่าสุดน้อยกว่าเวลานัดหมาย ให้ใช้เวลาคิวล่าสุด + 15 นาที
-        newQueueTime = new Date(lastQueueTime.getTime() + 15 * 60000)
-          .toTimeString()
-          .split(" ")[0];
+        currentTime.setMinutes(nextSlotMinutes);
+      }
+
+      newQueueTime = currentTime.toTimeString().split(" ")[0];
+    } else {
+      // ตรวจสอบว่าเวลาล่าสุดใน walkinqueue มีค่าน้อยกว่าเวลานัดหมายหรือไม่
+      if (lastQueue.length > 0) {
+        let lastQueueTime = new Date(`1970-01-01T${lastQueue[0].Time}`);
+
+        // ถ้าเวลาคิวล่าสุดมากกว่าเวลานัดหมาย ให้แทรกคิวโดยใช้เวลาจาก queueTime และปรับเวลาที่ทับซ้อน
+        if (lastQueueTime >= new Date(`1970-01-01T${queueTime}`)) {
+          const [conflictingQueue] = await db.query(
+            "SELECT * FROM walkinqueue WHERE Time >= ? ORDER BY Time ASC",
+            [queueTime]
+          );
+
+          // ปรับเวลาคิวที่ทับซ้อน โดยเพิ่มทีละ 15 นาที
+          for (let i = 0; i < conflictingQueue.length; i++) {
+            const currentQueue = conflictingQueue[i];
+            let newTime = new Date(`1970-01-01T${currentQueue.Time}`);
+            newTime = new Date(newTime.getTime() + 15 * 60000); // เพิ่ม 15 นาที
+
+            // อัปเดตเวลาของแถวนี้
+            await db.query(
+              "UPDATE walkinqueue SET Time = ? WHERE Queue_ID = ?",
+              [newTime.toTimeString().split(" ")[0], currentQueue.Queue_ID]
+            );
+          }
+        } else {
+          // ถ้าเวลาคิวล่าสุดน้อยกว่าเวลานัดหมาย ให้ใช้เวลาคิวล่าสุด + 15 นาที
+          newQueueTime = new Date(lastQueueTime.getTime() + 15 * 60000)
+            .toTimeString()
+            .split(" ")[0];
+        }
       }
     }
 
@@ -677,15 +735,34 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
 
     // เพิ่มข้อมูลเข้า walkinqueue พร้อมกับเวลาที่คำนวณแล้ว
     await db.query(
-      "INSERT INTO walkinqueue (Queue_ID, HN, Time, Status) VALUES (?, ?, ?, 'checkin')",
+      "INSERT INTO walkinqueue (Queue_ID, HN, Time, Status) VALUES (?, ?, ?, 'รอตรวจ')",
       [newQueueID, HN, newQueueTime]
+    );
+
+    // สร้าง Order_ID ใหม่
+    const [maxOrderResult] = await db.query(
+      "SELECT MAX(Order_ID) as maxOrderID FROM orders"
+    );
+    let newOrderID = "O00001"; // กำหนดค่าเริ่มต้นสำหรับ Order_ID
+    if (maxOrderResult[0].maxOrderID !== null) {
+      const maxOrderID = maxOrderResult[0].maxOrderID;
+      if (typeof maxOrderID === "string") {
+        const orderNumberPart = parseInt(maxOrderID.substring(1), 10);
+        newOrderID = `O${(orderNumberPart + 1).toString().padStart(5, "0")}`;
+      }
+    }
+
+    // เพิ่มข้อมูลเข้า orders
+    await db.query(
+      "INSERT INTO orders (Order_ID, HN, Order_Date) VALUES (?, ?, NOW())",
+      [newOrderID, HN]
     );
 
     // สร้าง Treatment_ID ใหม่
     const [maxTreatmentResult] = await db.query(
       "SELECT MAX(Treatment_ID) as maxTreatmentID FROM treatment"
     );
-    let newTreatmentID = "T00001";
+    let newTreatmentID = "T00001"; // กำหนดค่าเริ่มต้นสำหรับ Treatment_ID
     if (maxTreatmentResult[0].maxTreatmentID !== null) {
       const maxTreatmentID = maxTreatmentResult[0].maxTreatmentID;
       const treatmentNumberPart = parseInt(maxTreatmentID.substring(1), 10);
@@ -697,11 +774,12 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
     // เพิ่มข้อมูลการรักษาลงในตาราง treatment
     await db.query(
       `INSERT INTO treatment (Treatment_ID, HN, Order_ID, Treatment_Date, Treatment_Details, Treatment_cost, Total_Cost, Symptom, Weight, Height, Temp, Pressure, Heart_Rate)
-      VALUES (?, ?, NULL, NOW(), NULL, NULL, NULL, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, NOW(), NULL, NULL, NULL, ?, ?, ?, ?, ?, ?)
       `,
       [
         newTreatmentID,
         HN,
+        newOrderID,
         Symptom || null,
         Weight || null,
         Height || null,
@@ -717,6 +795,7 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
     res.status(201).json({
       message:
         "Patient successfully checked in with updated queue time, treatment, and removed from appointmentqueue.",
+      Order_ID: newOrderID,
     });
   } catch (err) {
     console.error("Error checking in patient to walkinqueue:", err);
@@ -868,7 +947,7 @@ app.post("/api/addPatientWithDetails", async (req, res) => {
     const formattedQueueTime = newQueueTime.toTimeString().split(" ")[0];
 
     const addQueueSql =
-      "INSERT INTO walkinqueue (HN, Time, Status) VALUES (?, ?, 'checkin')";
+      "INSERT INTO walkinqueue (HN, Time, Status) VALUES (?, ?, 'รอตรวจ')";
     await db.execute(addQueueSql, [newHN, formattedQueueTime]);
 
     // เพิ่มข้อมูลในตาราง treatment
@@ -1060,12 +1139,12 @@ app.put("/api/patient/:HN", function (req, res) {
 });
 
 //เพิ่มรายละเอียดรักษากับค่ารักษา
-app.post('/api/treatments', async (req, res) => {
+app.post("/api/treatments", async (req, res) => {
   const { HN, treatmentDetails, treatmentCost } = req.body;
 
   // ตรวจสอบข้อมูลที่รับเข้ามา
   if (!HN || !treatmentDetails || !treatmentCost) {
-    return res.status(400).json({ message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
+    return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
   }
 
   try {
@@ -1082,13 +1161,15 @@ app.post('/api/treatments', async (req, res) => {
 
     // ส่งกลับผลลัพธ์เมื่อเพิ่มข้อมูลสำเร็จ
     return res.status(201).json({
-      message: 'เพิ่มข้อมูลการรักษาสำเร็จ',
-      Treatment_ID: result.insertId
+      message: "เพิ่มข้อมูลการรักษาสำเร็จ",
+      Treatment_ID: result.insertId,
     });
   } catch (error) {
     // ส่งกลับ error หากมีปัญหา
-    console.error('Error adding treatment:', error);
-    return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการเพิ่มข้อมูลการรักษา' });
+    console.error("Error adding treatment:", error);
+    return res
+      .status(500)
+      .json({ message: "เกิดข้อผิดพลาดในการเพิ่มข้อมูลการรักษา" });
   }
 });
 
