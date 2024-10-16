@@ -384,14 +384,13 @@ const DoctorQueue = () => {
                             onClick={() =>
                               navigate(`/doctor_patientdetail/${row.HN}`)
                             }
-                           // disabled={row.Status !== "กำลังตรวจ"} // ปิดปุ่มถ้าสถานะไม่ใช่กำลังตรวจ
+                            disabled={row.Status !== "กำลังตรวจ"} // ปิดปุ่มถ้าสถานะไม่ใช่กำลังตรวจ
                           >
                             <VaccinesIcon />
                           </Button>
                           <Button
                             onClick={() => DeleteQueue(row.HN)}
                             color="error"
-                            disabled={row.Status === "กำลังตรวจ"} // ปุ่มลบจะถูกปิดถ้ากำลังตรวจ
                           >
                             <DeleteIcon />
                           </Button>

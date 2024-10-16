@@ -587,19 +587,21 @@ const NurseQueue = () => {
                     menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                   }}
                 />
-
-                {queueTime && (
-                  <Typography
-                    variant="body1"
-                    style={{ marginTop: "10px", color: "#555" }}
-                  >
-                    วันและเวลานัดหมาย:{" "}
-                    {formatDateTime(queueTime.date, queueTime.time)}
-                  </Typography>
-                )}
-
                 {showTextFields && (
                   <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          marginTop: "16px", // เพิ่มระยะห่างจากช่อง HN
+                        }}
+                      >
+                        วันและเวลานัดหมาย :
+                        {queueTime
+                          ? formatDateTime(queueTime.date, queueTime.time)
+                          : "ไม่มีข้อมูลวันและเวลานัดหมาย"}
+                      </Typography>
+                    </Grid>
                     <Grid item xs={12} sm={6}>
                       <Box display="flex" flexDirection="row" gap={2}>
                         <FormControl

@@ -1262,7 +1262,6 @@ const NursePatient = () => {
                 นัดหมายผู้ป่วย
               </DialogTitle>
               <DialogContent sx={{ minHeight: "70vh" }}>
-                {/* ฟอร์มสำหรับเลือกวันที่และเวลา */}
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <DateTimePicker
                     label="เลือกวันที่และเวลา"

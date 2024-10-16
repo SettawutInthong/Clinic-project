@@ -1,19 +1,29 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import {Box,ButtonGroup,Grid,Typography,Paper,Table,TableBody,TableCell,TableContainer,TableHead,TableRow,Button,
-  Dialog,DialogTitle,DialogContent,List,ListItem,ListItemText,} from "@mui/material";
+import {
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  List,
+  ListItem,
+  ListItemText,
+  Typography,
+} from "@mui/material";
 
-const TreatmentHistory = () => {
-  const { HN } = useParams();
+const TreatmentHistory = ({ HN }) => {
+  // รับค่า HN จาก props
   const [treatments, setTreatments] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState([]);
   const [dialogState, setDialogState] = useState({
     open: false,
     selectedOrder: [],
   });
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTreatments = async () => {
@@ -26,7 +36,6 @@ const TreatmentHistory = () => {
         console.error("Error fetching treatment data:", error);
       }
     };
-
     fetchTreatments();
   }, [HN]);
 
@@ -47,11 +56,8 @@ const TreatmentHistory = () => {
   };
 
   return (
-    <Paper>
-      <Typography variant="h6" style={{ margin: "20px" }}>
-        ประวัติการรักษาของผู้ป่วย HN: {HN}
-      </Typography>
-      <TableContainer component={Paper}>
+    <>
+      <TableContainer>
         <Table>
           <TableHead>
             <TableRow>
@@ -117,29 +123,7 @@ const TreatmentHistory = () => {
           )}
         </DialogContent>
       </Dialog>
-      <Grid item xs={12}>
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-          <Button
-            variant="outlined"
-            style={{
-              color: "#1976d2",
-              borderColor: "#1976d2",
-              textTransform: "none",
-              marginRight: "10px",
-            }}
-            onClick={() => navigate(`/doctor_patientdetail/${HN}`)}
-          >
-            กลับ
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => navigate(`/doctor_addtreatment/${HN}`)}
-          >
-            ถัดไป
-          </Button>
-        </Box>
-      </Grid>
-    </Paper>
+    </>
   );
 };
 

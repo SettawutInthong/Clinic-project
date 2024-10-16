@@ -288,22 +288,23 @@ function generateID(currentMaxID, prefix) {
   return `${prefix}${nextNumber.toString().padStart(5, "0")}`;
 }
 
-app.get("/api/treatments/latest/:HN", async (req, res) => {
+//ดึงข้อมูลการรักษา
+app.get("/api/treatment/:HN/latest", async (req, res) => {
   const { HN } = req.params;
+
   try {
-    const [result] = await connection
-      .promise()
-      .query(
-        "SELECT * FROM treatment WHERE HN = ? ORDER BY Treatment_Date DESC LIMIT 1",
-        [HN]
-      );
-    if (result.length > 0) {
-      res.json(result[0]);
-    } else {
-      res.status(404).json({ message: "Treatment not found" });
+    const [treatment] = await db.query(
+      "SELECT * FROM treatment WHERE HN = ? ORDER BY Treatment_Date DESC LIMIT 1",
+      [HN]
+    );
+
+    if (treatment.length === 0) {
+      return res.status(404).json({ message: "Treatment not found" });
     }
+
+    res.status(200).json({ data: treatment[0] });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Error fetching treatment" });
   }
 });
 
