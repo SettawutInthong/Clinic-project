@@ -7,6 +7,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import {
   Grid,
+  Switch,
   TextField,
   Typography,
   Button,
@@ -19,6 +20,13 @@ import {
 import { Card, CardContent } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import TreatmentHistory from "./TreatmentHistory";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import {
+  DateTimePicker,
+  LocalizationProvider,
+  DatePicker,
+} from "@mui/x-date-pickers";
+import { setHours, setMinutes } from "date-fns";
 
 const DoctorPatientDetail = () => {
   const { HN } = useParams();
@@ -36,7 +44,19 @@ const DoctorPatientDetail = () => {
   const [treatmentType, setTreatmentType] = useState(""); // สร้าง state สำหรับประเภทการรักษา
   const [historyPopupOpen, setHistoryPopupOpen] = useState(false);
   const [treatmentHistory, setTreatmentHistory] = useState([]);
+  const [isContraceptionVisible, setContraceptionVisible] = useState(false); // สถานะสำหรับเปิด/ปิดข้อ 1
+  const [isPregnancyVisible, setPregnancyVisible] = useState(false); // สถานะสำหรับเปิด/ปิดข้อ 2
+  const [appointmentPopup, setAppointmentPopup] = useState(false);
+  const [appointmentDate, setAppointmentDate] = useState(null);
   const navigate = useNavigate();
+
+  const handleOpenAppointmentPopup = () => {
+    setAppointmentPopup(true);
+  };
+
+  const handleCloseAppointmentPopup = () => {
+    setAppointmentPopup(false);
+  };
 
   const handleOpenHistoryPopup = () => {
     setHistoryPopupOpen(true);
@@ -44,6 +64,12 @@ const DoctorPatientDetail = () => {
 
   const handleCloseHistoryPopup = () => {
     setHistoryPopupOpen(false);
+  };
+
+  const ConfirmAppointment = () => {
+    // ฟังก์ชันสำหรับบันทึกการนัดหมายผู้ป่วย
+    console.log("นัดหมายผู้ป่วยที่:", appointmentDate);
+    handleCloseAppointmentPopup();
   };
 
   useEffect(() => {
@@ -106,63 +132,225 @@ const DoctorPatientDetail = () => {
           >
             ดูประวัติการรักษา
           </Button>
+          <Grid item xs={12}>
+            <Grid item xs={12} >
+              <Typography variant="h6" gutterBottom>
+                1. การรักษา
+              </Typography>
+            </Grid>
+            <TextField
+              label="การวินิจฉัยเบื้องต้น"
+              fullWidth
+              value={treatmentData.Symptom}
+              margin="dense"
+              multiline
+              size="small"
+            />
+
+            <TextField
+              label="รายละเอียดการรักษา"
+              fullWidth
+              margin="dense"
+              multiline
+              rows={10}
+            />
+
+            <Button variant="outlined" onClick={handleOpenAppointmentPopup}>
+              นัดหมายผู้ป่วย
+            </Button>
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="h6" gutterBottom>
+              2. บันทึกเพิ่มเติม
+            </Typography>
+          </Grid>
           <TextField
-            label="อาการ"
+            label="บันทึกเพิ่มเติม"
             fullWidth
-            value={treatmentData.Symptom}
             margin="dense"
+            size="small"
             multiline
-            rows={4}
-          />
-          <TextField
-            label="อัตราการเต้นหัวใจ"
-            fullWidth
-            value={treatmentData.Heart_Rate}
-            margin="dense"
-          />
-          <TextField
-            label="ความดัน"
-            fullWidth
-            value={treatmentData.Pressure}
-            margin="dense"
-          />
-          <TextField
-            label="อุณหภูมิ"
-            fullWidth
-            value={treatmentData.Temp}
-            margin="dense"
+            rows={5}
           />
         </>
       );
     } else if (treatmentType === "ฉีดยาคุม") {
       return (
         <>
-          <Grid item xs={12} sm={6}></Grid>
-          <TextField
-            label="วันที่ฉีดยาคุม"
-            fullWidth
-            margin="dense"
-            size="small"
-          />
-          <TextField
-            label="ประจำเดือนครั้งสุดท้าย"
-            fullWidth
-            margin="dense"
-            size="small"
-          />
-          <TextField
-            label="ยี่ห้อยาคุม"
-            fullWidth
-            margin="dense"
-            size="small"
-          />
-          <TextField
-            label="รายละเอียดการรักษา"
-            fullWidth
-            margin="dense"
-            multiline
-            rows={4}
-          />
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={handleOpenHistoryPopup} // เมื่อกดปุ่มนี้จะเปิด popup
+          >
+            ดูประวัติการรักษา
+          </Button>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom>
+                  1. ประวัติการคุมกำเนิด
+                </Typography>
+                <Switch
+                  checked={isContraceptionVisible}
+                  onChange={() =>
+                    setContraceptionVisible(!isContraceptionVisible)
+                  }
+                />
+              </Grid>
+              {isContraceptionVisible && (
+                <>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth margin="dense" size="small">
+                      <InputLabel>ประเภทของการคุมกำเนิด</InputLabel>
+                      <Select defaultValue="" label="ประเภทของการคุมกำเนิด">
+                        <MenuItem value="ยาคุมกำเนิด">ยาคุมกำเนิด</MenuItem>
+                        <MenuItem value="ฉีดยาคุม">ฉีดยาคุม</MenuItem>
+                        <MenuItem value="ใส่ห่วงอนามัย">ใส่ห่วงอนามัย</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    <DatePicker
+                      label="วันที่ฉีดครั้งล่าสุด"
+                      inputFormat="dd/MM/yyyy"
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          margin: "dense",
+                          size: "small",
+                        },
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="ระยะเวลาที่ผ่านมาหลังจากการฉีดครั้งสุดท้าย"
+                      fullWidth
+                      margin="dense"
+                      size="small"
+                      type="number" // ใช้สำหรับระยะเวลาที่ผ่านมาหลังจากการฉีด
+                    />
+
+                    <FormControl fullWidth margin="dense" size="small">
+                      <InputLabel>ความถี่ในการฉีดยาคุมกำเนิด</InputLabel>
+                      <Select
+                        defaultValue=""
+                        label="ความถี่ในการฉีดยาคุมกำเนิด"
+                      >
+                        <MenuItem value="1 เดือนครั้ง">1 เดือนครั้ง</MenuItem>
+                        <MenuItem value="3 เดือนครั้ง">3 เดือนครั้ง</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      label="ปัญหาหรืออาการข้างเคียงจากการใช้ยาคุม"
+                      fullWidth
+                      margin="dense"
+                      size="small"
+                      multiline
+                      rows={3}
+                    />
+                  </Grid>
+                </>
+              )}
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom>
+                  2. ประวัติการตั้งครรภ์และการมีบุตร
+                </Typography>
+                <Switch
+                  checked={isPregnancyVisible}
+                  onChange={() => setPregnancyVisible(!isPregnancyVisible)}
+                />
+              </Grid>
+              {isPregnancyVisible && (
+                <>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="จำนวนการตั้งครรภ์ที่เคยมี"
+                      fullWidth
+                      margin="dense"
+                      size="small"
+                      type="number" // ใช้ประเภท number สำหรับตัวเลข
+                    />
+
+                    <TextField
+                      label="จำนวนการคลอดบุตร"
+                      fullWidth
+                      margin="dense"
+                      size="small"
+                      type="number"
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <DatePicker
+                      label="การตั้งครรภ์ล่าสุด (ถ้ามี)"
+                      inputFormat="dd/MM/yyyy"
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          margin: "dense",
+                          size: "small",
+                        },
+                      }}
+                    />
+
+                    <TextField
+                      label="การแท้งบุตรหรือการตั้งครรภ์นอกมดลูก (ถ้ามี)"
+                      fullWidth
+                      margin="dense"
+                      size="small"
+                    />
+                  </Grid>
+                </>
+              )}
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom>
+                  3. รายละเอียดการรักษา
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="ชนิดของยาคุมกำเนิดที่ฉีด"
+                  fullWidth
+                  margin="dense"
+                  size="small"
+                />
+
+                <Button variant="outlined" onClick={handleOpenAppointmentPopup}>
+                  นัดหมายผู้ป่วย
+                </Button>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="จำนวนยา"
+                  fullWidth
+                  margin="dense"
+                  size="small"
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom>
+                  4. บันทึกเพิ่มเติม
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  label="บันทึกเพิ่มเติม"
+                  fullWidth
+                  margin="dense"
+                  size="small"
+                  multiline
+                  rows={5}
+                />
+              </Grid>
+            </Grid>
+          </LocalizationProvider>
         </>
       );
     }
@@ -386,7 +574,7 @@ const DoctorPatientDetail = () => {
                     onChange={(e) => setTreatmentType(e.target.value)}
                   >
                     <MenuItem value="ทั่วไป">การรักษาทั่วไป</MenuItem>
-                    <MenuItem value="ฉีดยาคุม">ฉีดยาคุม</MenuItem>
+                    <MenuItem value="ฉีดยาคุม">การคุมกำเนิด</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -426,6 +614,50 @@ const DoctorPatientDetail = () => {
       ) : (
         <p>ไม่พบข้อมูลผู้ป่วย</p>
       )}
+
+      <Dialog
+        open={appointmentPopup}
+        onClose={handleCloseAppointmentPopup}
+        aria-labelledby="appointment-dialog-title"
+        maxWidth="sm"
+        fullWidth
+        sx={{ "& .MuiDialog-paper": { minHeight: "80vh" } }} // เพิ่มบรรทัดนี้
+      >
+        <DialogTitle
+          id="appointment-dialog-title"
+          style={{ flexGrow: 1, textAlign: "center" }}
+        >
+          นัดหมายผู้ป่วย
+        </DialogTitle>
+        <DialogContent sx={{ minHeight: "70vh" }}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DateTimePicker
+              label="เลือกวันที่และเวลา"
+              value={appointmentDate}
+              onChange={(date) => setAppointmentDate(date)}
+              ampm={false} // ใช้รูปแบบ 24 ชั่วโมง
+              minTime={setHours(setMinutes(new Date(), 0), 8)} // จำกัดเวลาเริ่มต้นเป็น 08:00
+              maxTime={setHours(setMinutes(new Date(), 0), 20)} // จำกัดเวลาสิ้นสุดเป็น 20:00
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  margin: "dense",
+                  size: "small",
+                },
+              }}
+            />
+          </LocalizationProvider>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseAppointmentPopup} color="primary">
+            ยกเลิก
+          </Button>
+          <Button onClick={ConfirmAppointment} color="primary">
+            บันทึก
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Dialog
         open={historyPopupOpen}
         onClose={handleCloseHistoryPopup}
