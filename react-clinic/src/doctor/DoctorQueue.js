@@ -373,7 +373,24 @@ const DoctorQueue = () => {
                         {row.Gender || "-"}
                       </TableCell>
                       <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                        {row.Status || "-"}
+                        <Typography
+                          sx={{
+                            display: "inline-block",
+                            padding: "4px 12px", // เพิ่มพื้นที่ในกรอบ
+                            borderRadius: "16px", // ปรับให้ขอบโค้งมนมากขึ้น
+                            backgroundColor:
+                              row.Status === "รอจ่ายยา"
+                                ? "rgba(144, 238, 144, 0.2)" // พื้นหลังสีเขียวอ่อน (รอจ่ายยา)
+                                : row.Status === "กำลังตรวจ"
+                                ? "rgba(255, 182, 193, 0.2)" // พื้นหลังสีแดงอ่อน (กำลังตรวจ)
+                                : row.Status === "รอตรวจ"
+                                ? "rgba(255, 255, 0, 0.2)" // พื้นหลังสีเหลืองอ่อน (รอตรวจ)
+                                : "transparent", // ไม่มีพื้นหลังสำหรับสถานะอื่น
+                            color: row.Status === "กำลังตรวจ" ? "red" : "black", // เปลี่ยนสีข้อความตามสถานะ
+                          }}
+                        >
+                          {row.Status || "-"}
+                        </Typography>
                       </TableCell>
                       <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
                         <ButtonGroup

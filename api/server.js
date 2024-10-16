@@ -424,10 +424,12 @@ app.post("/api/stocks", async (req, res) => {
 
       console.log("New Stock_ID:", newStockID);
 
-      await connection.promise().query(
-        `INSERT INTO stock (Stock_ID, Medicine_ID, Quantity_insert, Inovic_ID) VALUES (?, ?, ?, ?)`,
-        [newStockID, Medicine_ID, Quantity_insert, newInovicID]
-      );
+      await connection
+        .promise()
+        .query(
+          `INSERT INTO stock (Stock_ID, Medicine_ID, Quantity_insert, Inovic_ID) VALUES (?, ?, ?, ?)`,
+          [newStockID, Medicine_ID, Quantity_insert, newInovicID]
+        );
     }
 
     res.status(201).json({ message: "เพิ่มรายการสต็อกสำเร็จ" });
@@ -511,7 +513,14 @@ app.get("/api/walkinqueue", function (req, res) {
     SELECT w.Queue_ID, w.HN, w.Time, w.Status, p.Title, p.First_Name, p.Last_Name, p.Gender
     FROM walkinqueue w
     JOIN patient p ON w.HN = p.HN
-    ORDER BY w.Time ASC
+    ORDER BY 
+      CASE 
+        WHEN w.Status = 'รอจ่ายยา' THEN 1
+        WHEN w.Status = 'กำลังตรวจ' THEN 2
+        WHEN w.Status = 'รอตรวจ' THEN 3
+        ELSE 4 
+      END, 
+      w.Time ASC
   `;
   connection.execute(sql, function (err, results) {
     if (err) {

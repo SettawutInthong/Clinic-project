@@ -511,7 +511,24 @@ const NurseQueue = () => {
                         {row.Gender || "-"}
                       </TableCell>
                       <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
-                        {row.Status || "-"}
+                        <Typography
+                          sx={{
+                            display: "inline-block",
+                            padding: "4px 12px", // เพิ่มพื้นที่ในกรอบ
+                            borderRadius: "16px", // ปรับให้ขอบโค้งมนมากขึ้น
+                            backgroundColor:
+                              row.Status === "รอจ่ายยา"
+                                ? "rgba(144, 238, 144, 0.2)" // พื้นหลังสีเขียวอ่อน (รอจ่ายยา)
+                                : row.Status === "กำลังตรวจ"
+                                ? "rgba(255, 182, 193, 0.2)" // พื้นหลังสีแดงอ่อน (กำลังตรวจ)
+                                : row.Status === "รอตรวจ"
+                                ? "rgba(255, 255, 0, 0.2)" // พื้นหลังสีเหลืองอ่อน (รอตรวจ)
+                                : "transparent", // ไม่มีพื้นหลังสำหรับสถานะอื่น
+                            color: row.Status === "กำลังตรวจ" ? "red" : "black", // เปลี่ยนสีข้อความตามสถานะ
+                          }}
+                        >
+                          {row.Status || "-"}
+                        </Typography>
                       </TableCell>
                       <TableCell style={{ flexGrow: 1, textAlign: "center" }}>
                         <ButtonGroup
@@ -521,13 +538,19 @@ const NurseQueue = () => {
                           <Button
                             onClick={() => CallToCheckup(row.HN)}
                             disabled={
-                              isInProgress || row.Status === "กำลังตรวจ"
-                            } // ถ้ามีสถานะกำลังตรวจ หรือ row นี้กำลังตรวจอยู่
+                              row.Status === "รอจ่ายยา" ||
+                              isInProgress ||
+                              row.Status === "กำลังตรวจ"
+                            } // รวมเงื่อนไขทั้งสองเข้าไว้ด้วยกัน
                             color="primary"
                           >
                             <ContentPasteGoIcon />
                           </Button>
-                          <Button onClick={() => ViewOrder(row.HN)}>
+
+                          <Button
+                            disabled={row.Status !== "รอจ่ายยา"}
+                            onClick={() => ViewOrder(row.HN)}
+                          >
                             <WysiwygIcon />
                           </Button>
                           <Button

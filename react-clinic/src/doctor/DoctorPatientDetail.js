@@ -66,12 +66,28 @@ const DoctorPatientDetail = () => {
     setHistoryPopupOpen(false);
   };
 
-  const ConfirmAppointment = () => {
-    // ฟังก์ชันสำหรับบันทึกการนัดหมายผู้ป่วย
-    console.log("นัดหมายผู้ป่วยที่:", appointmentDate);
-    handleCloseAppointmentPopup();
-  };
+  const ConfirmAppointment = async () => {
+    if (!HN || !appointmentDate) {
+      console.error("กรุณาเลือกวันที่นัดหมาย");
+      return;
+    }
 
+    try {
+      const date = appointmentDate.toISOString().split("T")[0];
+      const time = appointmentDate.toLocaleTimeString("it-IT");
+
+      await axios.post(`http://localhost:5000/api/appointments`, {
+        HN,
+        Queue_Date: date,
+        Queue_Time: time,
+      });
+
+      console.log("บันทึกการนัดหมายสำเร็จ");
+      handleCloseAppointmentPopup();
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดในการบันทึกการนัดหมาย:", error);
+    }
+  };
   useEffect(() => {
     const fetchPatientData = async () => {
       try {
@@ -598,13 +614,14 @@ const DoctorPatientDetail = () => {
                   </Button>
                   <Button
                     variant="contained"
+                    color="secondary"
                     onClick={() =>
                       navigate(
                         `/doctor_addorder/${patientData.HN}/${treatmentData.Order_ID}`
                       )
                     }
                   >
-                    ถัดไป
+                    บันทึกการรักษา
                   </Button>
                 </Box>
               </Grid>

@@ -66,6 +66,11 @@ const AddOrder = () => {
           `http://localhost:5000/api/orders/${orderID}/items`,
           orderData
         );
+
+        await axios.put(`http://localhost:5000/api/walkinqueue/${HN}`, {
+          Status: "รอจ่ายยา",
+        });
+        
         setOpenSnackbar(true);
         setOrderItems([]);
         navigate("/doctor_queue");
