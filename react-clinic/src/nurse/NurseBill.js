@@ -56,7 +56,7 @@ const NurseBill = () => {
       );
       const treatmentCost = treatmentResponse.data.Treatment_cost;
 
-      let totalCost = treatmentCost; 
+      let totalCost = treatmentCost;
       const billDetails = medicines.map((item) => {
         const itemTotal = item.Med_Cost * item.Quantity_Order;
         totalCost += itemTotal;
@@ -77,6 +77,23 @@ const NurseBill = () => {
       setTotalCost(totalCost);
     } catch (error) {
       console.error("Error fetching bill data:", error);
+    }
+  };
+
+  const updateQueueStatus = async () => {
+    const params = new URLSearchParams(window.location.search);
+    const HN = params.get("HN");
+
+    try {
+      await axios.put(`http://localhost:5000/api/update_queue_status`, {
+        HN: HN,
+        status: "เสร็จสิ้น", // เปลี่ยนสถานะเป็น 'เสร็จสิ้น'
+      });
+
+      console.log("สถานะคิวอัปเดตสำเร็จ");
+      navigate("/nurse_queue"); // เปลี่ยนเส้นทางกลับไปยังคิว
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดในการอัปเดตสถานะคิว:", error);
     }
   };
 
@@ -160,9 +177,9 @@ const NurseBill = () => {
             <Button
               variant="contained"
               color="success"
-              onClick={() => navigate("/nurse_queue")}
+              onClick={updateQueueStatus} // เรียกใช้ฟังก์ชัน updateQueueStatus เมื่อกดปุ่ม
             >
-              เสร็จสิ้น
+              บันทึกใบเสร็จ
             </Button>
           </Box>
         </PaperStyled>

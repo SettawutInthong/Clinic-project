@@ -1,5 +1,8 @@
 {
   "dependencies": {
+    "chart.js": "^4.4.5",
+    "react-calendar": "^5.0.0",
+    "react-chartjs-2": "^5.2.0",
     "uuid": "^10.0.0"
   }
 }

@@ -507,12 +507,13 @@ app.get("/api/treatment_cost", function (req, res) {
   });
 });
 
-//ดึงข้อมูลคิวผู้ป่วย (Walk-In Queue)
+// ดึงข้อมูลคิวผู้ป่วย (Walk-In Queue)
 app.get("/api/walkinqueue", function (req, res) {
   const sql = `
     SELECT w.Queue_ID, w.HN, w.Time, w.Status, p.Title, p.First_Name, p.Last_Name, p.Gender
     FROM walkinqueue w
     JOIN patient p ON w.HN = p.HN
+    WHERE w.Status != 'เสร็จสิ้น' -- ซ่อนสถานะ 'เสร็จสิ้น'
     ORDER BY 
       CASE 
         WHEN w.Status = 'รอจ่ายยา' THEN 1
@@ -529,6 +530,7 @@ app.get("/api/walkinqueue", function (req, res) {
     res.json({ data: results });
   });
 });
+
 
 // API สำหรับดึงข้อมูลจาก appointmentqueue ตาม HN
 app.get("/api/appointmentqueue", async (req, res) => {
@@ -1181,6 +1183,80 @@ app.post("/api/treatments", async (req, res) => {
       .status(500)
       .json({ message: "เกิดข้อผิดพลาดในการเพิ่มข้อมูลการรักษา" });
   }
+});
+
+// ฟังก์ชันดึงข้อมูลผู้ป่วยใหม่ในวันนี้
+app.get("/api/new_patients", (req, res) => {
+  const sql = `
+    SELECT COUNT(DISTINCT w.HN) AS newPatientCount
+    FROM walkinqueue w
+    JOIN patient p ON w.HN = p.HN
+    WHERE DATE(p.created_at) = CURDATE();
+  `;
+
+  connection.execute(sql, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ newPatients: results[0].newPatientCount }); // ส่งชื่อให้ตรงกับที่ frontend ใช้
+  });
+});
+
+// ฟังก์ชันดึงข้อมูลผู้ป่วยเก่าที่จองคิวที่ไม่ใช่วันนี้
+app.get("/api/repeat_patients", (req, res) => {
+  const sql = `
+    SELECT COUNT(DISTINCT w.HN) AS repeatPatientCount
+    FROM walkinqueue w
+    JOIN patient p ON w.HN = p.HN
+    WHERE DATE(p.created_at) != CURDATE();
+  `;
+
+  connection.execute(sql, (err, results) => {
+    if (err) {
+      console.error("Error executing SQL:", err.message);
+      return res.status(500).json({ error: err.message });
+    }
+
+    if (results.length > 0) {
+      res.json({ repeatPatients: results[0].repeatPatientCount });
+    } else {
+      res.json({ repeatPatients: 0 });
+    }
+  });
+});
+
+app.put("/api/update_queue_status", (req, res) => {
+  const { HN, status } = req.body;
+
+  const sql = `
+    UPDATE walkinqueue
+    SET Status = ?
+    WHERE HN = ? AND Status != 'เสร็จสิ้น'
+  `;
+
+  connection.execute(sql, [status, HN], (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ message: "อัปเดตสถานะคิวสำเร็จ" });
+  });
+});
+
+// ฟังก์ชันลบรายการใน walkinqueue ที่ created_at ไม่ตรงกับวันนี้
+app.delete("/api/remove_old_queue", (req, res) => {
+  const sql = `
+    DELETE w 
+    FROM walkinqueue w
+    JOIN patient p ON w.HN = p.HN
+    WHERE DATE(p.created_at) != CURDATE();
+  `;
+
+  connection.execute(sql, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ message: "ลบคิวผู้ป่วยที่ไม่ใช่ผู้ป่วยใหม่สำเร็จ" });
+  });
 });
 
 app.listen(5000, function () {

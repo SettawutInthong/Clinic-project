@@ -595,7 +595,7 @@ const NurseQueue = () => {
                 id="add-queue-dialog-title"
                 style={{ flexGrow: 1, textAlign: "center" }}
               >
-                เช็คอิน
+                ผู้ป่วยนัดหมาย
               </DialogTitle>
               <DialogContent>
                 <ReactSelect
@@ -830,7 +830,7 @@ const NurseQueue = () => {
                   ยกเลิก
                 </Button>
                 <Button onClick={CheckInAppointment} color="primary">
-                  เช็คอิน
+                  จองคิว
                 </Button>
               </DialogActions>
             </Dialog>

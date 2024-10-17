@@ -170,6 +170,13 @@ const DoctorPatientDetail = () => {
               multiline
               rows={10}
             />
+            <TextField
+              label="รายละเอียดตรวจร่างกาย"
+              fullWidth
+              margin="dense"
+              multiline
+              rows={10}
+            />
 
             <Button variant="outlined" onClick={handleOpenAppointmentPopup}>
               นัดหมายผู้ป่วย
@@ -391,7 +398,6 @@ const DoctorPatientDetail = () => {
   return (
     <Box sx={{ flexGrow: 1, padding: 3 }}>
       {patientData ? (
-        <Card sx={{ borderRadius: 3 }}>
           <CardContent>
             <Grid container spacing={2}>
               <Grid item xs={12}>
@@ -627,7 +633,6 @@ const DoctorPatientDetail = () => {
               </Grid>
             </Grid>
           </CardContent>
-        </Card>
       ) : (
         <p>ไม่พบข้อมูลผู้ป่วย</p>
       )}
