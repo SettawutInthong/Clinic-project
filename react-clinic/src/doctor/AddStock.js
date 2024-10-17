@@ -105,181 +105,186 @@ const AddStock = () => {
   };
 
   return (
-    <Paper sx={{ padding: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        เพิ่มสต็อกยา
-      </Typography>
+    <Box sx={{ flexGrow: 1, padding: 3 }}>
+      <Paper sx={{ padding: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          เพิ่มสต็อกยา
+        </Typography>
 
-      <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-        <TextField
-          label="ค้นหายา"
-          variant="outlined"
-          fullWidth
-          value={searchName}
-          onChange={(e) => setSearchName(e.target.value)}
-        />
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => setOpenMedicineDialog(true)}
-        >
-          ค้นหา
-        </Button>
-      </Box>
+        <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+          <TextField
+            label="ค้นหายา"
+            variant="outlined"
+            fullWidth
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setOpenMedicineDialog(true)}
+          >
+            ค้นหา
+          </Button>
+        </Box>
 
-      <TableContainer component={Paper} sx={{ mb: 2 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ชื่อยา</TableCell>
-              <TableCell>จำนวน</TableCell>
-              <TableCell>ลบ</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {stockItems.map((item, index) => (
-              <TableRow key={index}>
-                <TableCell>{item.Medicine_Name}</TableCell>
-                <TableCell>{item.Quantity_insert}</TableCell>
-                <TableCell>
-                  <IconButton
-                    onClick={() => handleRemoveItem(index)}
-                    color="error"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
+        <TableContainer component={Paper} sx={{ mb: 2 }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>ชื่อยา</TableCell>
+                <TableCell>จำนวน</TableCell>
+                <TableCell>ลบ</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={handleSubmitStock}
-          disabled={stockItems.length === 0} // ปิดปุ่มหากยังไม่มีรายการยาที่เพิ่ม
-        >
-          บันทึกสต็อก
-        </Button>
-      </Box>
-
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={3000}
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert onClose={handleSnackbarClose} severity="success">
-          บันทึกสต็อกสำเร็จ
-        </Alert>
-      </Snackbar>
-
-      <Dialog
-        open={openMedicineDialog}
-        onClose={() => setOpenMedicineDialog(false)}
-      >
-        <DialogTitle>ค้นหายา</DialogTitle>
-        <DialogContent>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>ชื่อยา</TableCell>
-                  <TableCell>เลือก</TableCell>
+            </TableHead>
+            <TableBody>
+              {stockItems.map((item, index) => (
+                <TableRow key={index}>
+                  <TableCell>{item.Medicine_Name}</TableCell>
+                  <TableCell>{item.Quantity_insert}</TableCell>
+                  <TableCell>
+                    <IconButton
+                      onClick={() => handleRemoveItem(index)}
+                      color="error"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {medicines.map((medicine) => (
-                  <TableRow key={medicine.Medicine_ID}>
-                    <TableCell>{medicine.Medicine_ID}</TableCell>
-                    <TableCell>{medicine.Medicine_Name}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => {
-                          setSelectedMedicine(medicine);
-                        }}
-                      >
-                        เลือก
-                      </Button>
-                    </TableCell>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={handleSubmitStock}
+            disabled={stockItems.length === 0} // ปิดปุ่มหากยังไม่มีรายการยาที่เพิ่ม
+          >
+            บันทึกสต็อก
+          </Button>
+        </Box>
+
+        <Snackbar
+          open={openSnackbar}
+          autoHideDuration={3000}
+          onClose={handleSnackbarClose}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert onClose={handleSnackbarClose} severity="success">
+            บันทึกสต็อกสำเร็จ
+          </Alert>
+        </Snackbar>
+
+        <Dialog
+          open={openMedicineDialog}
+          onClose={() => setOpenMedicineDialog(false)}
+        >
+          <DialogTitle>ค้นหายา</DialogTitle>
+          <DialogContent>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>ID</TableCell>
+                    <TableCell>ชื่อยา</TableCell>
+                    <TableCell>เลือก</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          {selectedMedicine && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle1" gutterBottom>
-                ยาที่เลือก: {selectedMedicine.Medicine_Name}
-              </Typography>
-              <TextField
-                label="จำนวน"
-                type="number"
-                variant="outlined"
-                fullWidth
-                value={quantityInsert}
-                onChange={(e) => setQuantityInsert(e.target.value)}
-              />
-              <Button
-                variant="contained"
-                color="primary"
-                sx={{ mt: 2 }}
-                onClick={() => {
-                  handleAddMedicine();
-                  setOpenMedicineDialog(false);
-                }}
-              >
-                เพิ่มในสต็อก
-              </Button>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenMedicineDialog(false)} color="primary">
-            ปิด
-          </Button>
-        </DialogActions>
-      </Dialog>
+                </TableHead>
+                <TableBody>
+                  {medicines.map((medicine) => (
+                    <TableRow key={medicine.Medicine_ID}>
+                      <TableCell>{medicine.Medicine_ID}</TableCell>
+                      <TableCell>{medicine.Medicine_Name}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => {
+                            setSelectedMedicine(medicine);
+                          }}
+                        >
+                          เลือก
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            {selectedMedicine && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  ยาที่เลือก: {selectedMedicine.Medicine_Name}
+                </Typography>
+                <TextField
+                  label="จำนวน"
+                  type="number"
+                  variant="outlined"
+                  fullWidth
+                  value={quantityInsert}
+                  onChange={(e) => setQuantityInsert(e.target.value)}
+                />
+                <Button
+                  variant="contained"
+                  color="primary"
+                  sx={{ mt: 2 }}
+                  onClick={() => {
+                    handleAddMedicine();
+                    setOpenMedicineDialog(false);
+                  }}
+                >
+                  เพิ่มในสต็อก
+                </Button>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => setOpenMedicineDialog(false)}
+              color="primary"
+            >
+              ปิด
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      <Dialog
-        open={confirmDialogOpen}
-        onClose={() => setConfirmDialogOpen(false)}
-      >
-        <DialogTitle>ยืนยันการบันทึกสต็อก</DialogTitle>
-        <DialogContent>
-          <Typography>คุณต้องการบันทึกสต็อกใช่หรือไม่?</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmDialogOpen(false)} color="primary">
-            ยกเลิก
-          </Button>
-          <Button onClick={handleConfirmSubmit} color="secondary">
-            ยืนยัน
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <Dialog
+          open={confirmDialogOpen}
+          onClose={() => setConfirmDialogOpen(false)}
+        >
+          <DialogTitle>ยืนยันการบันทึกสต็อก</DialogTitle>
+          <DialogContent>
+            <Typography>คุณต้องการบันทึกสต็อกใช่หรือไม่?</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConfirmDialogOpen(false)} color="primary">
+              ยกเลิก
+            </Button>
+            <Button onClick={handleConfirmSubmit} color="secondary">
+              ยืนยัน
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      <Dialog // Popup ยืนยันหลังจากบันทึกสำเร็จ
-        open={popupConfirmOpen}
-        onClose={handlePopupClose}
-      >
-        <DialogTitle>บันทึกสำเร็จ</DialogTitle>
-        <DialogContent>
-          <Typography>การบันทึกข้อมูลสต็อกสำเร็จแล้ว</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handlePopupClose} color="primary">
-            ตกลง
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Paper>
+        <Dialog // Popup ยืนยันหลังจากบันทึกสำเร็จ
+          open={popupConfirmOpen}
+          onClose={handlePopupClose}
+        >
+          <DialogTitle>บันทึกสำเร็จ</DialogTitle>
+          <DialogContent>
+            <Typography>การบันทึกข้อมูลสต็อกสำเร็จแล้ว</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handlePopupClose} color="primary">
+              ตกลง
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Paper>
+    </Box>
   );
 };
 

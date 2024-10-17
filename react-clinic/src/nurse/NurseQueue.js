@@ -524,7 +524,8 @@ const NurseQueue = () => {
                                 : row.Status === "รอตรวจ"
                                 ? "rgba(255, 255, 0, 0.2)" // พื้นหลังสีเหลืองอ่อน (รอตรวจ)
                                 : "transparent", // ไม่มีพื้นหลังสำหรับสถานะอื่น
-                            color: row.Status === "กำลังตรวจ" ? "red" : "black", // เปลี่ยนสีข้อความตามสถานะ
+                            color: row.Status === "กำลังตรวจ" ? "red" : "black",
+                            fontSize: "0.9rem", // เปลี่ยนสีข้อความตามสถานะ
                           }}
                         >
                           {row.Status || "-"}
