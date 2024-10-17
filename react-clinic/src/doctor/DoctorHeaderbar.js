@@ -12,6 +12,7 @@ import MenuItem from "@mui/material/MenuItem";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/img/+.png";
 import LogoutIcon from "@mui/icons-material/Logout";
+import axios from "axios";
 
 const pages = [
   { title: "หน้าแรก", icon: "", to: "/doctor_dashboard" },
@@ -32,7 +33,10 @@ function DoctorHeader() {
     setAnchorElNav(null);
   };
 
-  const handleMenuItemClick = (to) => {
+  const handleMenuItemClick = async (to) => {
+    if (to === "/doctor__queue") {
+      await deleteOldHNFromQueue(); // ลบข้อมูลก่อนเปลี่ยนหน้า
+    }
     navigate(to);
     handleCloseNavMenu();
   };
@@ -40,6 +44,15 @@ function DoctorHeader() {
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     window.location.href = "/";
+  };
+
+  const deleteOldHNFromQueue = async () => {
+    try {
+      await axios.delete("http://localhost:5000/api/remove_old_queue");
+      console.log("ลบคิวที่ไม่ใช่ผู้ป่วยใหม่สำเร็จ");
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดในการลบคิว:", error);
+    }
   };
 
   return (
