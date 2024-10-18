@@ -176,8 +176,7 @@ const NursePatient = () => {
 
   const SearchSubmit = async (event) => {
     event.preventDefault();
-    setShowTable(true);
-    FetchData();
+    FetchData(); // ดึงข้อมูลที่ถูกค้นหามาแสดง
   };
 
   const ResetForm = () => {
@@ -421,21 +420,19 @@ const NursePatient = () => {
   useEffect(() => {
     const fetchQueueData = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/walkinqueue"
-        );
+        const response = await axios.get("http://localhost:5000/api/walkinqueue");
         setQueueData(response.data.data);
       } catch (error) {
         console.error("Error fetching queue data:", error);
       }
     };
-
-    if (showTable) {
-      FetchData();
-      fetchQueueData();
-    }
-  }, [showTable]);
-
+  
+    // ให้แสดงตารางทันทีเมื่อ component ถูกสร้าง
+    setShowTable(true);
+    FetchData();
+    fetchQueueData();
+  }, []);
+  
   useEffect(() => {
     if (newTitle === "นาย" || newTitle === "ด.ช.") {
       setNewGender("ชาย");
