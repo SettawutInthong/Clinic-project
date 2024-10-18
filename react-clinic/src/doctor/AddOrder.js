@@ -75,32 +75,33 @@ const AddOrder = () => {
 
   const handleConfirmSubmit = async () => {
     setConfirmDialogOpen(false);
-    if (orderItems.length > 0) {
-      try {
+  
+    try {
+      if (orderItems.length > 0) {
         const orderData = {
           items: orderItems,
         };
-
+  
+        // บันทึกออเดอร์ยาลงฐานข้อมูล
         await axios.post(
           `http://localhost:5000/api/orders/${orderID}/items`,
           orderData
         );
-
-        await axios.put(`http://localhost:5000/api/walkinqueue/${HN}`, {
-          Status: "รอจ่ายยา",
-        });
-
-        setOpenSnackbar(true);
-        setOrderItems([]);
-        navigate("/doctor_queue");
-      } catch (error) {
-        console.error("Error submitting order:", error.message);
       }
-    } else {
-      navigate("/doctor_queue");
+  
+      // อัปเดตสถานะของคิวเป็น "รอจ่ายยา"
+      await axios.put(`http://localhost:5000/api/walkinqueue/${HN}`, {
+        Status: "รอจ่ายยา",
+      });
+  
+      setOpenSnackbar(true);
+      setOrderItems([]);
+      navigate("/doctor_queue"); // ย้ายไปยังหน้าคิวหลังจากบันทึกสำเร็จ
+    } catch (error) {
+      console.error("Error submitting order:", error.message);
     }
   };
-
+  
   const handleSnackbarClose = () => {
     setOpenSnackbar(false);
   };

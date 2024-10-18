@@ -176,7 +176,7 @@ const NurseBill = () => {
             </Button>
             <Button
               variant="contained"
-              color="success"
+              color="secondary"
               onClick={updateQueueStatus} // เรียกใช้ฟังก์ชัน updateQueueStatus เมื่อกดปุ่ม
             >
               บันทึกใบเสร็จ

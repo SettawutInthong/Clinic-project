@@ -112,18 +112,14 @@ const DoctorQueue = () => {
       });
 
       const patientData = await Promise.all(patientDataPromises);
-      // แก้ไขส่วนนี้เพื่อให้เรียงตามเวลาของ Time
-      const sortedData = patientData.sort((a, b) => {
-        const timeA = new Date(`1970-01-01T${a.Time}`).getTime();
-        const timeB = new Date(`1970-01-01T${b.Time}`).getTime();
-        return timeA - timeB;
-      });
-      setData(sortedData);
+      // ตรวจสอบว่าข้อมูลเรียงตามเวลาจาก API หรือไม่ ถ้าไม่ต้องปรับใน API
+      
+      setData(patientData);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
-
+  
   const AddQueue = async () => {
     // ตรวจสอบว่ากรอก HN หรือยัง
     if (!queueHN) {

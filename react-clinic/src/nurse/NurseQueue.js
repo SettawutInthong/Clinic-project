@@ -117,6 +117,7 @@ const NurseQueue = () => {
 
       const patientData = await Promise.all(patientDataPromises);
       // ตรวจสอบว่าข้อมูลเรียงตามเวลาจาก API หรือไม่ ถ้าไม่ต้องปรับใน API
+      
       setData(patientData);
     } catch (error) {
       console.error("Error fetching data:", error);

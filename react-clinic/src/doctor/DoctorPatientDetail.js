@@ -149,7 +149,7 @@ const DoctorPatientDetail = () => {
             ดูประวัติการรักษา
           </Button>
           <Grid item xs={12}>
-            <Grid item xs={12} >
+            <Grid item xs={12}>
               <Typography variant="h6" gutterBottom>
                 1. การรักษา
               </Typography>
@@ -162,16 +162,15 @@ const DoctorPatientDetail = () => {
               multiline
               size="small"
             />
-
             <TextField
-              label="รายละเอียดการรักษา"
+              label="รายละเอียดตรวจร่างกาย"
               fullWidth
               margin="dense"
               multiline
-              rows={10}
+              rows={5}
             />
             <TextField
-              label="รายละเอียดตรวจร่างกาย"
+              label="รายละเอียดการรักษา"
               fullWidth
               margin="dense"
               multiline
@@ -398,6 +397,7 @@ const DoctorPatientDetail = () => {
   return (
     <Box sx={{ flexGrow: 1, padding: 3 }}>
       {patientData ? (
+        <Card sx={{ borderRadius: 1 }}>
           <CardContent>
             <Grid container spacing={2}>
               <Grid item xs={12}>
@@ -633,6 +633,7 @@ const DoctorPatientDetail = () => {
               </Grid>
             </Grid>
           </CardContent>
+        </Card>
       ) : (
         <p>ไม่พบข้อมูลผู้ป่วย</p>
       )}

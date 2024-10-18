@@ -541,7 +541,6 @@ app.get("/api/walkinqueue", function (req, res) {
   });
 });
 
-
 // API สำหรับดึงข้อมูลจาก appointmentqueue ตาม HN
 app.get("/api/appointmentqueue", async (req, res) => {
   const HN = req.query.HN;
