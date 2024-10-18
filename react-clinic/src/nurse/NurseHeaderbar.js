@@ -54,7 +54,6 @@ function NurseHeaderbar() {
     }
   };
   
-
   return (
     <AppBar position="sticky" sx={{ backgroundColor: "#1A5319" }}>
       <Container maxWidth="xl">
