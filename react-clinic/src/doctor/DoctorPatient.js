@@ -384,39 +384,6 @@ const DoctorPatient = () => {
   };
 
   useEffect(() => {
-    const fetchallergy = async () => {
-      try {
-        const response = await axios.get("http://localhost:5000/api/allergy");
-        setAllergy(
-          response.data.data.map((item) => ({
-            value: item.Allergy_ID,
-            label: item.Allergy_Details,
-          }))
-        );
-      } catch (error) {
-        console.error("Error fetching allergy:", error);
-      }
-    };
-
-    const fetchDiseases = async () => {
-      try {
-        const response = await axios.get("http://localhost:5000/api/diseases");
-        setDiseases(
-          response.data.data.map((item) => ({
-            value: item.Disease_ID,
-            label: item.disease_name,
-          }))
-        );
-      } catch (error) {
-        console.error("Error fetching diseases:", error);
-      }
-    };
-
-    fetchallergy();
-    fetchDiseases();
-  }, []);
-
-  useEffect(() => {
     const fetchQueueData = async () => {
       try {
         const response = await axios.get("http://localhost:5000/api/walkinqueue");
@@ -432,6 +399,23 @@ const DoctorPatient = () => {
     fetchQueueData();
   }, []);
   
+  useEffect(() => {
+    if (newTitle === "นาย" || newTitle === "ด.ช.") {
+      setNewGender("ชาย");
+      setIsGenderLocked(true); // ล็อกฟิลด์เพศ
+    } else if (
+      newTitle === "นาง" ||
+      newTitle === "นางสาว" ||
+      newTitle === "ด.ญ."
+    ) {
+      setNewGender("หญิง");
+      setIsGenderLocked(true); // ล็อกฟิลด์เพศ
+    } else {
+      setNewGender(""); // หรือให้เป็นค่าว่างถ้าไม่ตรงกับเงื่อนไขใด
+      setIsGenderLocked(false); // ปลดล็อกฟิลด์เพศ
+    }
+  }, [newTitle]);
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <ContainerStyled maxWidth="lg">

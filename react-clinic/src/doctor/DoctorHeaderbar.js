@@ -15,7 +15,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import axios from "axios";
 
 const pages = [
-  { title: "หน้าแรก", icon: "", to: "/doctor_dashboard" },
+  { title: "หน้าแรก", icon: "", to: "/nurse_dashboard" },
   { title: "รายชื่อผู้ป่วย", icon: "", to: "/doctor_patient" },
   { title: "คิว", icon: "", to: "/doctor_queue" },
   { title: "รายการยา", icon: "", to: "/doctor_meddetail" },

@@ -50,7 +50,7 @@ const App = () => {
           ) : userRole === 0 ? (
             <>
               <Route path="/" element={<DoctorDashboard />} />
-              <Route path="/doctor_dashboard" element={<DoctorDashboard />} />
+              <Route path="/nurse_dashboard" element={<NurseDashboard />} />
               <Route path="/doctor_queue" element={<DoctorQueue />} />
               <Route path="/doctor_patientdetail/:HN" element={<DoctorPatientDetail />} />
               <Route path="/doctor_treatmenthistory/:HN" element={<TreatmentHistory />} />
