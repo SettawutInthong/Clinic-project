@@ -188,10 +188,8 @@ const DoctorPatient = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    // ตรวจสอบค่าที่เป็นตัวเลข (เช่น ID) ต้องไม่ใช่ค่าว่างและเป็นตัวเลข
-    if (!newID) {
-      newErrors.ID = "กรุณากรอกเลขบัตรประชาชน";
-    } else if (isNaN(newID)) {
+    // ตรวจสอบว่าถ้ามีการกรอก ID ต้องเป็นตัวเลขเท่านั้น
+    if (newID && isNaN(newID)) {
       newErrors.ID = "เลขบัตรประชาชนต้องเป็นตัวเลข";
     }
 

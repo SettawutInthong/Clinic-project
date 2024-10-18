@@ -6,6 +6,7 @@ import Box from "@mui/material/Box";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
+import axios from "axios"; // ใช้ axios เพื่อเรียก API
 
 async function loginUser(credentials) {
   return fetch("http://localhost:5000/clinic/users", {
@@ -17,25 +18,43 @@ async function loginUser(credentials) {
   }).then((data) => data.json());
 }
 
+// ฟังก์ชันสำหรับลบคิวที่ไม่ใช่ผู้ป่วยใหม่
+const deleteOldQueue = async () => {
+  try {
+    await axios.delete("http://localhost:5000/api/remove_old_queue");
+    console.log("ลบคิวที่ไม่ใช่ผู้ป่วยใหม่สำเร็จ");
+  } catch (error) {
+    console.error("เกิดข้อผิดพลาดในการลบคิว:", error);
+  }
+};
+
 const Login = () => {
   const [username, setUsername] = useState();
   const [password, setPassword] = useState();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    
     const response = await loginUser({
       username,
       password,
     });
-    console.log(response);
+
     if ("accessToken" in response) {
       localStorage.setItem("accessToken", response.accessToken);
       localStorage.setItem("user", JSON.stringify(response.user));
+
+      // ลบคิวเมื่อเข้าสู่ระบบสำเร็จ
+      await deleteOldQueue(); // เรียกใช้ฟังก์ชันลบคิว
+
+      // ตรวจสอบ Role_ID เพื่อนำทางไปยังหน้า dashboard
       if (response.user.Role_ID === 1) {
         window.location.href = "/nurse_dashboard";
       } else if (response.user.Role_ID === 0) {
         window.location.href = "/doctor_dashboard";
       }
+    } else {
+      console.error("เข้าสู่ระบบไม่สำเร็จ");
     }
   };
 
@@ -48,12 +67,12 @@ const Login = () => {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            bgcolor: "background.paper", // ใช้สีพื้นหลังมาตรฐานของ theme หรือสามารถกำหนดเป็น 'white'
-            p: 3, // การเพิ่ม padding
-            borderRadius: 2, // มนขอบ
-            boxShadow: 1, // เพิ่มเงา เลือกจากเงาใน theme หรือใช้ '0 3px 5px rgba(0,0,0,0.1)'
-            maxWidth: 400, // จำกัดความกว้างของกล่อง
-            width: "100%", // ให้กล่องเต็มความกว้างที่กำหนด
+            bgcolor: "background.paper",
+            p: 3,
+            borderRadius: 2,
+            boxShadow: 1,
+            maxWidth: 400,
+            width: "100%",
           }}
         >
           <Typography component="h1" variant="h5">

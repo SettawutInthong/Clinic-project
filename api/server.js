@@ -1255,10 +1255,8 @@ app.put("/api/update_queue_status", (req, res) => {
 // ฟังก์ชันลบรายการใน walkinqueue ที่ created_at ไม่ตรงกับวันนี้
 app.delete("/api/remove_old_queue", (req, res) => {
   const sql = `
-    DELETE w 
-    FROM walkinqueue w
-    JOIN patient p ON w.HN = p.HN
-    WHERE DATE(p.created_at) != CURDATE();
+    DELETE FROM walkinqueue
+    WHERE DATE(created_at) != CURDATE();
   `;
 
   connection.execute(sql, (err, results) => {
