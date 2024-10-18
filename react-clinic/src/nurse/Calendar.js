@@ -7,13 +7,17 @@ const Calendar = ({ appointments }) => {
     <div>
       <h3>Calendar</h3>
       <ReactCalendar
-        tileContent={({ date, view }) => {
-          const appointment = appointments.find(
-            (app) => new Date(app.date).toDateString() === date.toDateString()
-          );
-          return appointment ? <p>{appointment.title}</p> : null;
-        }}
-      />
+  tileContent={({ date, view }) => {
+    // ตรวจสอบว่า appointments เป็น array ก่อนเรียกใช้ find
+    const appointment =
+      Array.isArray(appointments) &&
+      appointments.find(
+        (app) => new Date(app.Queue_Date).toDateString() === date.toDateString()
+      );
+    return appointment ? <p>{appointment.title}</p> : null;
+  }}
+/>
+
     </div>
   );
 };
