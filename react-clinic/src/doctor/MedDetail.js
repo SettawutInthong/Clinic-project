@@ -138,7 +138,7 @@ const MedDetail = () => {
             sx={{ flex: 1 }} // ให้กล่องขยายเต็มพื้นที่
           >
             <MenuItem value="">
-              <em>เลือกประเภทยา</em>
+              <div>เลือกประเภทยา</div>
             </MenuItem>
             <MenuItem value="ยาแก้ปวด">ยาแก้ปวด</MenuItem>
             <MenuItem value="ยาฆ่าเชื้อ">ยาฆ่าเชื้อ</MenuItem>

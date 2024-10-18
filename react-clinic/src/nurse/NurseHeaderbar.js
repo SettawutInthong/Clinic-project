@@ -33,28 +33,18 @@ function NurseHeaderbar() {
   };
 
   const MenuItemClick = async (to) => {
-    if (to === "/nurse_queue") {
-      await deleteOldHNFromQueue(); // ลบข้อมูลก่อนเปลี่ยนหน้า
-    }
     navigate(to);
     CloseNavMenu();
   };
+
+ 
   
   const Logout = () => {
     localStorage.removeItem("accessToken");
     window.location.href = "/";
   };
 
-  const deleteOldHNFromQueue = async () => {
-    try {
-      await axios.delete("http://localhost:5000/api/remove_old_queue");
-      console.log("ลบคิวที่ไม่ใช่ผู้ป่วยใหม่สำเร็จ");
-    } catch (error) {
-      console.error("เกิดข้อผิดพลาดในการลบคิว:", error);
-    }
-  };
   
-
   return (
     <AppBar position="sticky" sx={{ backgroundColor: "#1A5319" }}>
       <Container maxWidth="xl">

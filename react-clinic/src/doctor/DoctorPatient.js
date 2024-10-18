@@ -158,8 +158,7 @@ const DoctorPatient = () => {
 
   const SearchSubmit = async (event) => {
     event.preventDefault();
-    setShowTable(true);
-    FetchData();
+    FetchData(); // ดึงข้อมูลที่ถูกค้นหามาแสดง
   };
 
   const ResetForm = () => {
@@ -188,10 +187,8 @@ const DoctorPatient = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    // ตรวจสอบค่าที่เป็นตัวเลข (เช่น ID) ต้องไม่ใช่ค่าว่างและเป็นตัวเลข
-    if (!newID) {
-      newErrors.ID = "กรุณากรอกเลขบัตรประชาชน";
-    } else if (isNaN(newID)) {
+    // ตรวจสอบว่าถ้ามีการกรอก ID ต้องเป็นตัวเลขเท่านั้น
+    if (newID && isNaN(newID)) {
       newErrors.ID = "เลขบัตรประชาชนต้องเป็นตัวเลข";
     }
 
@@ -422,21 +419,19 @@ const DoctorPatient = () => {
   useEffect(() => {
     const fetchQueueData = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/walkinqueue"
-        );
+        const response = await axios.get("http://localhost:5000/api/walkinqueue");
         setQueueData(response.data.data);
       } catch (error) {
         console.error("Error fetching queue data:", error);
       }
     };
-
-    if (showTable) {
-      FetchData();
-      fetchQueueData();
-    }
-  }, [showTable]);
-
+  
+    // ให้แสดงตารางทันทีเมื่อ component ถูกสร้าง
+    setShowTable(true);
+    FetchData();
+    fetchQueueData();
+  }, []);
+  
   return (
     <Box sx={{ flexGrow: 1 }}>
       <ContainerStyled maxWidth="lg">

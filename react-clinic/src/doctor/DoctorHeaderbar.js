@@ -34,9 +34,6 @@ function DoctorHeader() {
   };
 
   const handleMenuItemClick = async (to) => {
-    if (to === "/doctor__queue") {
-      await deleteOldHNFromQueue(); // ลบข้อมูลก่อนเปลี่ยนหน้า
-    }
     navigate(to);
     handleCloseNavMenu();
   };
@@ -44,15 +41,6 @@ function DoctorHeader() {
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     window.location.href = "/";
-  };
-
-  const deleteOldHNFromQueue = async () => {
-    try {
-      await axios.delete("http://localhost:5000/api/remove_old_queue");
-      console.log("ลบคิวที่ไม่ใช่ผู้ป่วยใหม่สำเร็จ");
-    } catch (error) {
-      console.error("เกิดข้อผิดพลาดในการลบคิว:", error);
-    }
   };
 
   return (
