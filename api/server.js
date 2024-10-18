@@ -513,16 +513,22 @@ app.get("/api/walkinqueue", function (req, res) {
   });
 });
 
-// API สำหรับดึงข้อมูลจาก appointmentqueue ตาม HN
+// API สำหรับดึงข้อมูลจาก appointmentqueue รวมชื่อผู้ป่วย
 app.get("/api/appointmentqueue", async (req, res) => {
   const HN = req.query.HN;
   try {
-    let query = "SELECT * FROM appointmentqueue";
+    let query = `
+      SELECT appointmentqueue.*, patient.First_Name, patient.Last_Name 
+      FROM appointmentqueue
+      JOIN patient ON appointmentqueue.HN = patient.HN
+    `;
     const params = [];
+
     if (HN) {
-      query += " WHERE HN = ?";
+      query += " WHERE appointmentqueue.HN = ?";
       params.push(HN);
     }
+
     const [rows] = await db.query(query, params);
     res.json({ data: rows });
   } catch (error) {
@@ -1268,6 +1274,30 @@ app.put("/api/medicine_stock/:Medicine_ID", async (req, res) => {
   }
 });
 
+// API สำหรับดึงผู้ป่วยที่นัดหมายวันนี้
+app.get("/api/appointmentqueue/today", async (req, res) => {
+  const { Queue_Date } = req.query;
+  try {
+    const [rows] = await db.query(
+      `SELECT appointmentqueue.Queue_Date, appointmentqueue.Queue_Time, patient.First_Name, patient.Last_Name 
+      FROM appointmentqueue 
+      JOIN patient ON appointmentqueue.HN = patient.HN 
+      WHERE appointmentqueue.Queue_Date = ? 
+      ORDER BY appointmentqueue.Queue_Time ASC
+      LIMIT 1`,
+      [Queue_Date]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "ไม่พบผู้ป่วยนัดวันนี้" });
+    }
+
+    res.status(200).json(rows); // ส่งผลลัพธ์กลับไปที่ frontend
+  } catch (error) {
+    console.error("Error fetching today's appointment:", error);
+    res.status(500).json({ error: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+  }
+});
 
 app.listen(5000, function () {
   console.log("port  5000");
