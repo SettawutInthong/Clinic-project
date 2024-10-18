@@ -356,14 +356,23 @@ app.post("/api/orders/:orderID/items", async (req, res) => {
 
 app.get("/api/medicine_stock", async (req, res) => {
   const name = req.query.name || ""; // รับคีย์เวิร์ดค้นหาจาก query parameters
+  const type = req.query.type || ""; // รับประเภทยา
 
   try {
-    const sql = `
-      SELECT Medicine_ID, Medicine_Name, Description, Med_Cost, Quantity_type, Quantity,medicine_type
+    let sql = `
+      SELECT Medicine_ID, Medicine_Name, Description, Med_Cost, Quantity_type, Quantity, medicine_type
       FROM medicine 
       WHERE Medicine_Name LIKE ?
     `;
-    const [results] = await db.query(sql, [`%${name}%`]); // ค้นหาชื่อยาที่ตรงกับคีย์เวิร์ด
+    const params = [`%${name}%`];
+
+    // กรองตามประเภทของยาถ้ามีการส่งค่า type มา
+    if (type) {
+      sql += " AND medicine_type = ?";
+      params.push(type);
+    }
+
+    const [results] = await db.query(sql, params);
 
     res.json({ data: results });
   } catch (error) {
@@ -371,6 +380,7 @@ app.get("/api/medicine_stock", async (req, res) => {
     res.status(500).json({ error: "Error fetching medicine stock data" });
   }
 });
+
 
 app.post("/api/stocks", async (req, res) => {
   const { items } = req.body;
@@ -1258,6 +1268,37 @@ app.delete("/api/remove_old_queue", (req, res) => {
     res.json({ message: "ลบคิวผู้ป่วยที่ไม่ใช่ผู้ป่วยใหม่สำเร็จ" });
   });
 });
+
+app.put("/api/medicine_stock/:Medicine_ID", async (req, res) => {
+  const { Medicine_ID } = req.params;
+  const { Medicine_Name, Description, medicine_type, Quantity, Quantity_type, Med_Cost } = req.body;
+
+  if (!Medicine_Name || !Description || !medicine_type || !Quantity || !Quantity_type || !Med_Cost) {
+    return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
+  }
+
+  try {
+    const sql = `
+      UPDATE medicine 
+      SET Medicine_Name = ?, 
+          Description = ?, 
+          medicine_type = ?, 
+          Quantity = ?, 
+          Quantity_type = ?, 
+          Med_Cost = ?
+      WHERE Medicine_ID = ?
+    `;
+    const values = [Medicine_Name, Description, medicine_type, Quantity, Quantity_type, Med_Cost, Medicine_ID];
+
+    await db.execute(sql, values);
+
+    return res.status(200).json({ message: "อัพเดตข้อมูลยาสำเร็จ" });
+  } catch (error) {
+    console.error("Error updating medicine:", error);
+    return res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัพเดตข้อมูลยา" });
+  }
+});
+
 
 app.listen(5000, function () {
   console.log("port  5000");

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import * as React from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import {
   Box,
@@ -14,6 +15,12 @@ import {
   TableRow,
   Snackbar,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  MenuItem,
+  Select,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
@@ -22,19 +29,22 @@ const MedDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedType, setSelectedType] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1); // Track the current page
-  const itemsPerPage = 10; // Display 10 items per page
+  const [currentPage, setCurrentPage] = useState(1);
+  const [editPopup, setEditPopup] = useState(false);
+  const [editMedicine, setEditMedicine] = useState({});
+  const itemsPerPage = 10;
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchMedicineStock();
   }, []);
 
-  const fetchMedicineStock = async (search = "") => {
+  const fetchMedicineStock = async (search = "", type = "") => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/medicine_stock?name=${search}`
+        `http://localhost:5000/api/medicine_stock?name=${search}&type=${type}`
       );
       setMedicines(response.data.data);
       setLoading(false);
@@ -46,14 +56,40 @@ const MedDetail = () => {
   };
 
   const handleSearch = () => {
-    fetchMedicineStock(searchTerm);
+    fetchMedicineStock(searchTerm, selectedType);
   };
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
 
-  // Pagination logic
+  const handleEditClick = (medicine) => {
+    setEditMedicine(medicine);
+    setEditPopup(true);
+  };
+
+  const handleEditChange = (e) => {
+    setEditMedicine({
+      ...editMedicine,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleEditSubmit = async () => {
+    try {
+      await axios.put(
+        `http://localhost:5000/api/medicine_stock/${editMedicine.Medicine_ID}`,
+        editMedicine
+      );
+      setEditPopup(false);
+      fetchMedicineStock();
+    } catch (err) {
+      console.error("Error updating medicine:", err);
+      setError(err.message);
+      setSnackbarOpen(true);
+    }
+  };
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentMedicines = medicines.slice(indexOfFirstItem, indexOfLastItem);
@@ -76,28 +112,58 @@ const MedDetail = () => {
         <Typography variant="h6" gutterBottom>
           ค้นหายา
         </Typography>
-        <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+        {/* จัดการ layout ด้วย flexbox */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center", // จัดให้อยู่ในแนวกลางตามแนวตั้ง
+            gap: 2,
+            mb: 2,
+            flexWrap: "wrap", // เพิ่มการตัดบรรทัดถ้าหน้าจอเล็ก
+          }}
+        >
           <TextField
             label="ค้นหาชื่อยา"
             variant="outlined"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             fullWidth
+            sx={{ flex: 1 }} // ให้กล่องขยายเต็มพื้นที่
           />
-          <Button variant="contained" color="primary" onClick={handleSearch}>
+          <Select
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
+            displayEmpty
+            fullWidth
+            sx={{ flex: 1 }} // ให้กล่องขยายเต็มพื้นที่
+          >
+            <MenuItem value="">
+              <em>เลือกประเภทยา</em>
+            </MenuItem>
+            <MenuItem value="ยาแก้ปวด">ยาแก้ปวด</MenuItem>
+            <MenuItem value="ยาฆ่าเชื้อ">ยาฆ่าเชื้อ</MenuItem>
+            <MenuItem value="ยาบำรุง">ยาบำรุง</MenuItem>
+            <MenuItem value="ยาทา">ยาทา</MenuItem>
+          </Select>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSearch}
+            sx={{ height: "100%" }} // ปรับปุ่มให้มีความสูงเท่ากับกล่อง
+          >
             ค้นหา
           </Button>
           <Button
             variant="contained"
             color="secondary"
             onClick={() => navigate(`/doctor_addstock`)}
+            sx={{ height: "100%" }} // ปรับปุ่มให้มีความสูงเท่ากับกล่อง
           >
             เพิ่มสต็อก
           </Button>
         </Box>
       </Paper>
 
-      {/* Displaying the medicine data */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -109,6 +175,7 @@ const MedDetail = () => {
               <TableCell>คงเหลือในคลัง</TableCell>
               <TableCell>ประเภทหน่วยนับ</TableCell>
               <TableCell>ราคา(บาท)</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -121,12 +188,20 @@ const MedDetail = () => {
                 <TableCell>{medicine.Quantity}</TableCell>
                 <TableCell>{medicine.Quantity_type}</TableCell>
                 <TableCell>{medicine.Med_Cost}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={() => handleEditClick(medicine)}
+                  >
+                    แก้ไข
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
 
-        {/* Pagination */}
         <Box display="flex" justifyContent="center" mt={2}>
           <Button onClick={prevPage} disabled={currentPage === 1}>
             ก่อนหน้า
@@ -142,6 +217,69 @@ const MedDetail = () => {
           </Button>
         </Box>
       </TableContainer>
+
+      {/* Edit Medicine Dialog */}
+      <Dialog open={editPopup} onClose={() => setEditPopup(false)}>
+        <DialogTitle>แก้ไขข้อมูลยา</DialogTitle>
+        <DialogContent>
+          <TextField
+            margin="dense"
+            label="ชื่อยา"
+            name="Medicine_Name"
+            value={editMedicine.Medicine_Name}
+            onChange={handleEditChange}
+            fullWidth
+          />
+          <TextField
+            margin="dense"
+            label="คำอธิบาย"
+            name="Description"
+            value={editMedicine.Description}
+            onChange={handleEditChange}
+            fullWidth
+          />
+          <TextField
+            margin="dense"
+            label="ประเภทยา"
+            name="medicine_type"
+            value={editMedicine.medicine_type}
+            onChange={handleEditChange}
+            fullWidth
+          />
+          <TextField
+            margin="dense"
+            label="คงเหลือในคลัง"
+            name="Quantity"
+            value={editMedicine.Quantity}
+            onChange={handleEditChange}
+            fullWidth
+          />
+          <TextField
+            margin="dense"
+            label="หน่วยนับ"
+            name="Quantity_type"
+            value={editMedicine.Quantity_type}
+            onChange={handleEditChange}
+            fullWidth
+          />
+          <TextField
+            margin="dense"
+            label="ราคา(บาท)"
+            name="Med_Cost"
+            value={editMedicine.Med_Cost}
+            onChange={handleEditChange}
+            fullWidth
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditPopup(false)} color="primary">
+            ยกเลิก
+          </Button>
+          <Button onClick={handleEditSubmit} color="primary">
+            บันทึก
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbarOpen}
