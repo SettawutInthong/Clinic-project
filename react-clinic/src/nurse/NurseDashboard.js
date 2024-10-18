@@ -16,7 +16,7 @@ const PaperStyled = styled(Paper)(({ theme }) => ({
 const PaperStyled2 = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
   borderRadius: "12px",
-  backgroundColor: "#4caf50",
+  backgroundColor: "#508D4E",
   color: "#fff",
   display: "flex",
   justifyContent: "space-between",
