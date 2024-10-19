@@ -353,7 +353,6 @@ app.get("/api/medicine_stock", async (req, res) => {
   }
 });
 
-
 app.post("/api/stocks", async (req, res) => {
   const { items } = req.body;
   const inovicDate = new Date().toISOString().split("T")[0];
@@ -513,12 +512,12 @@ app.get("/api/walkinqueue", function (req, res) {
   });
 });
 
-// API สำหรับดึงข้อมูลจาก appointmentqueue รวมชื่อผู้ป่วย
+// API สำหรับดึงข้อมูลจาก appointmentqueue รวม HN, ชื่อผู้ป่วย และเรียงตามวันและเวลา
 app.get("/api/appointmentqueue", async (req, res) => {
   const HN = req.query.HN;
   try {
     let query = `
-      SELECT appointmentqueue.*, patient.First_Name, patient.Last_Name 
+      SELECT appointmentqueue.HN, appointmentqueue.Queue_Date, appointmentqueue.Queue_Time, patient.First_Name, patient.Last_Name 
       FROM appointmentqueue
       JOIN patient ON appointmentqueue.HN = patient.HN
     `;
@@ -528,6 +527,10 @@ app.get("/api/appointmentqueue", async (req, res) => {
       query += " WHERE appointmentqueue.HN = ?";
       params.push(HN);
     }
+
+    // เพิ่มการเรียงลำดับตาม Queue_Date และ Queue_Time
+    query +=
+      " ORDER BY appointmentqueue.Queue_Date ASC, appointmentqueue.Queue_Time ASC";
 
     const [rows] = await db.query(query, params);
     res.json({ data: rows });
@@ -1246,9 +1249,23 @@ app.delete("/api/remove_old_queue", (req, res) => {
 
 app.put("/api/medicine_stock/:Medicine_ID", async (req, res) => {
   const { Medicine_ID } = req.params;
-  const { Medicine_Name, Description, medicine_type, Quantity, Quantity_type, Med_Cost } = req.body;
+  const {
+    Medicine_Name,
+    Description,
+    medicine_type,
+    Quantity,
+    Quantity_type,
+    Med_Cost,
+  } = req.body;
 
-  if (!Medicine_Name || !Description || !medicine_type || !Quantity || !Quantity_type || !Med_Cost) {
+  if (
+    !Medicine_Name ||
+    !Description ||
+    !medicine_type ||
+    !Quantity ||
+    !Quantity_type ||
+    !Med_Cost
+  ) {
     return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
   }
 
@@ -1263,14 +1280,24 @@ app.put("/api/medicine_stock/:Medicine_ID", async (req, res) => {
           Med_Cost = ?
       WHERE Medicine_ID = ?
     `;
-    const values = [Medicine_Name, Description, medicine_type, Quantity, Quantity_type, Med_Cost, Medicine_ID];
+    const values = [
+      Medicine_Name,
+      Description,
+      medicine_type,
+      Quantity,
+      Quantity_type,
+      Med_Cost,
+      Medicine_ID,
+    ];
 
     await db.execute(sql, values);
 
     return res.status(200).json({ message: "อัพเดตข้อมูลยาสำเร็จ" });
   } catch (error) {
     console.error("Error updating medicine:", error);
-    return res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัพเดตข้อมูลยา" });
+    return res
+      .status(500)
+      .json({ message: "เกิดข้อผิดพลาดในการอัพเดตข้อมูลยา" });
   }
 });
 
@@ -1279,7 +1306,7 @@ app.get("/api/appointmentqueue/today", async (req, res) => {
   const { Queue_Date } = req.query;
   try {
     const [rows] = await db.query(
-      `SELECT appointmentqueue.Queue_Date, appointmentqueue.Queue_Time, patient.First_Name, patient.Last_Name 
+      `SELECT appointmentqueue.HN, appointmentqueue.Queue_Date, appointmentqueue.Queue_Time, patient.First_Name, patient.Last_Name 
       FROM appointmentqueue 
       JOIN patient ON appointmentqueue.HN = patient.HN 
       WHERE appointmentqueue.Queue_Date = ? 
@@ -1296,6 +1323,16 @@ app.get("/api/appointmentqueue/today", async (req, res) => {
   } catch (error) {
     console.error("Error fetching today's appointment:", error);
     res.status(500).json({ error: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+  }
+});
+
+app.get("/api/patients/total", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT COUNT(*) as total FROM patient");
+    res.status(200).json({ total: rows[0].total });
+  } catch (error) {
+    console.error("Error fetching total patients:", error);
+    res.status(500).json({ error: "Error fetching total patients" });
   }
 });
 
