@@ -14,14 +14,17 @@ import {
 import { styled } from "@mui/material/styles";
 import Container from "@mui/material/Container";
 import { format } from "date-fns";
-import Calendar from "./Calendar"; // นำเข้า Calendar
+import Calendar from "./Calendar"; 
+import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css"; 
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
-  marginTop: theme.spacing(10),
+  marginTop: theme.spacing(5),
 }));
 
 const PaperStyled = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(2),
+  padding: theme.spacing(3),
+  borderRadius: theme.spacing(2),
 }));
 
 const PaperStyled2 = styled(Paper)(({ theme }) => ({
@@ -61,12 +64,14 @@ const Dashboard = () => {
   const [newPatients, setNewPatients] = useState(0);
   const [oldPatients, setOldPatients] = useState(0);
   const [todayAppointment, setTodayAppointment] = useState(null);
+  const [allAppointments, setAllAppointments] = useState([]);
   const [viewAllPopup, setViewAllPopup] = useState(false);
-  const [appointmentData, setAppointmentData] = useState([]); // เก็บข้อมูลผู้ป่วยนัดหมายทั้งหมด
+  const [totalPatients, setTotalPatients] = useState(0);
 
   useEffect(() => {
     fetchPatientCounts();
     fetchTodayAppointment();
+    fetchTotalPatients();
   }, []);
 
   const fetchPatientCounts = async () => {
@@ -77,7 +82,6 @@ const Dashboard = () => {
       const oldResponse = await axios.get(
         "http://localhost:5000/api/repeat_patients"
       );
-
       setNewPatients(newResponse.data.newPatients);
       setOldPatients(oldResponse.data.repeatPatients);
     } catch (error) {
@@ -102,31 +106,44 @@ const Dashboard = () => {
     }
   };
 
-  // ฟังก์ชันสำหรับดึงข้อมูลผู้ป่วยนัดหมายทั้งหมด
   const fetchAllAppointments = async () => {
     try {
       const response = await axios.get(
         "http://localhost:5000/api/appointmentqueue"
       );
-      setAppointmentData(response.data.data); // เก็บข้อมูลที่ดึงมาใน state
+      setAllAppointments(response.data.data);
     } catch (error) {
       console.error("Error fetching all appointments:", error);
     }
   };
 
-  useEffect(() => {
-    if (viewAllPopup) {
-      fetchAllAppointments();
+  const handleViewAllClick = () => {
+    fetchAllAppointments();
+    setViewAllPopup(true);
+  };
+
+  const handleCloseDialog = () => {
+    setViewAllPopup(false);
+  };
+
+  const fetchTotalPatients = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/patients/total"
+      );
+      setTotalPatients(response.data.total);
+    } catch (error) {
+      console.error("Error fetching total patients:", error);
     }
-  }, [viewAllPopup]);
+  };
 
   return (
     <Box sx={{ flexGrow: 1 }}>
       <ContainerStyled maxWidth="lg">
         <PaperStyled>
-          <Grid container spacing={2}>
+          <Grid container spacing={3}>
             {/* กล่องผู้ป่วยใหม่และผู้ป่วยเก่า */}
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} sm={6}>
               <PaperStyled2>
                 <Box
                   display="flex"
@@ -140,9 +157,7 @@ const Dashboard = () => {
                     </Typography>
                     <NumberBox>{newPatients}</NumberBox>
                   </Box>
-
                   <DividerBox />
-
                   <Box display="flex" alignItems="center">
                     <Typography variant="h6" style={{ marginRight: "10px" }}>
                       ผู้ป่วยเก่า
@@ -153,45 +168,84 @@ const Dashboard = () => {
               </PaperStyled2>
             </Grid>
 
+            {/* Progress Bar ผู้ป่วยทั้งหมด */}
+            <Grid item xs={12} sm={6}>
+              <Box display="flex" flexDirection="column" alignItems="center">
+                <Typography variant="h6">ยอดผู้ป่วยทั้งหมด</Typography>
+                <Box width={180} height={180} my={3}>
+                  <CircularProgressbar
+                    value={newPatients + oldPatients}
+                    maxValue={totalPatients}
+                    text={`${newPatients + oldPatients}`}
+                    styles={buildStyles({
+                      textColor: "#000",
+                      pathColor: "#4CAF50", 
+                      trailColor: "#d6d6d6", 
+                    })}
+                  />
+                </Box>
+                <Typography variant="subtitle1">Queuing this day</Typography>
+                <Box mt={2} display="flex" alignItems="center">
+                  <Box
+                    width={30}
+                    height={30}
+                    bgcolor="#4CAF50"
+                    borderRadius="50%"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    color="#fff"
+                    mr={1}
+                  >
+                    😊
+                  </Box>
+                  <Typography>
+                    Today: {newPatients + oldPatients} / Total: {totalPatients}
+                  </Typography>
+                </Box>
+              </Box>
+            </Grid>
+
             {/* ปฏิทิน */}
             <Grid item xs={12} md={6}>
               <Box mt={4}>
                 <Calendar />
               </Box>
             </Grid>
+
+            {/* กล่องผู้ป่วยนัดวันนี้ */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="h6">ผู้ป่วยนัดวันนี้</Typography>
+              {todayAppointment ? (
+                <AppointmentBox>
+                  <Typography variant="body1">
+                    {`${todayAppointment.HN} - ${todayAppointment.First_Name} ${todayAppointment.Last_Name}`}
+                  </Typography>
+                  <Typography variant="body2">
+                    {format(
+                      new Date(todayAppointment.Queue_Date),
+                      "dd MMM, yyyy"
+                    )}{" "}
+                    |{" "}
+                    {format(
+                      new Date(`1970-01-01T${todayAppointment.Queue_Time}`),
+                      "hh:mm a"
+                    )}
+                  </Typography>
+                </AppointmentBox>
+              ) : (
+                <Typography>ไม่มีผู้ป่วยนัดวันนี้</Typography>
+              )}
+              <Button color="primary" onClick={handleViewAllClick}>
+                View All
+              </Button>
+            </Grid>
           </Grid>
 
-          {/* กล่องผู้ป่วยนัดวันนี้ */}
-          <Grid item xs={12} md={4}>
-            <Typography variant="h6">ผู้ป่วยนัดวันนี้</Typography>
-            {todayAppointment ? (
-              <AppointmentBox>
-                <Typography variant="body1">
-                  {`${todayAppointment.First_Name} ${todayAppointment.Last_Name}`}
-                </Typography>
-                <Typography variant="body2">
-                  {format(
-                    new Date(todayAppointment.Queue_Date),
-                    "dd MMM, yyyy"
-                  )}{" "}
-                  |{" "}
-                  {format(
-                    new Date(`1970-01-01T${todayAppointment.Queue_Time}`),
-                    "hh:mm a"
-                  )}
-                </Typography>
-              </AppointmentBox>
-            ) : (
-              <Typography>ไม่มีผู้ป่วยนัดวันนี้</Typography>
-            )}
-            <Button color="primary" onClick={() => setViewAllPopup(true)}>
-              View All
-            </Button>
-          </Grid>
-
+          {/* Dialog ป๊อปอัพ */}
           <Dialog
             open={viewAllPopup}
-            onClose={() => setViewAllPopup(false)}
+            onClose={handleCloseDialog}
             aria-labelledby="view-all-appointments-title"
             maxWidth="lg"
             fullWidth
@@ -200,8 +254,8 @@ const Dashboard = () => {
               ผู้ป่วยนัดหมายทั้งหมด
             </DialogTitle>
             <DialogContent dividers>
-              {appointmentData.length > 0 ? (
-                appointmentData.map((appointment, index) => (
+              {allAppointments.length > 0 ? (
+                allAppointments.map((appointment, index) => (
                   <Box
                     key={index}
                     sx={{
@@ -212,7 +266,7 @@ const Dashboard = () => {
                     }}
                   >
                     <Typography variant="body1">
-                      {`${appointment.First_Name} ${appointment.Last_Name}`}
+                      {`${appointment.HN} - ${appointment.First_Name} ${appointment.Last_Name}`}
                     </Typography>
                     <Typography variant="body2">
                       {new Date(appointment.Queue_Date).toLocaleDateString()} |{" "}
@@ -231,7 +285,7 @@ const Dashboard = () => {
               )}
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setViewAllPopup(false)} color="primary">
+              <Button onClick={handleCloseDialog} color="primary">
                 ปิด
               </Button>
             </DialogActions>
