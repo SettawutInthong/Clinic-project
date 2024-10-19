@@ -1336,6 +1336,18 @@ app.get("/api/patients/total", async (req, res) => {
   }
 });
 
+// API สำหรับดึงรายการยาที่มี Quantity ต่ำกว่า 100
+app.get("/api/medicines/low_stock", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM medicine WHERE Quantity < 100");
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching low stock medicines:", error);
+    res.status(500).json({ error: "เกิดข้อผิดพลาดในการดึงข้อมูลยา" });
+  }
+});
+
+
 app.listen(5000, function () {
   console.log("port  5000");
 });
