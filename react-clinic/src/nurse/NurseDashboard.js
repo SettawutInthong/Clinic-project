@@ -202,7 +202,7 @@ const Dashboard = () => {
                      
                       flexDirection="column"
                       alignItems="center"
-                      mt={1}
+                      mt={0}
                     >
                       <Typography color="#000" variant="h6">
                         ปฏิทิน
@@ -217,12 +217,12 @@ const Dashboard = () => {
                       display="flex"
                       flexDirection="column"
                       alignItems="center"
-                      mt={1}
+                      mt={0}
                     >
                       <Typography variant="h6" color="#000">
                         ยอดผู้ป่วยทั้งหมด
                       </Typography>
-                      <Box width={180} height={180} my={3}>
+                      <Box width={180} height={160} my={3}>
                         <CircularProgressbar
                           value={newPatients + oldPatients}
                           maxValue={totalPatients}
