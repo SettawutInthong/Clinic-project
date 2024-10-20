@@ -472,20 +472,24 @@ app.get("/api/medicine_details", async (req, res) => {
 });
 
 // ดึงข้อมูล Treatment_cost จากตาราง treatment ตาม Order_ID
-app.get("/api/treatment_cost", function (req, res) {
-  const Order_ID = req.query.Order_ID;
+app.get("/api/treatment_cost", async (req, res) => {
+  const { Order_ID } = req.query;
 
-  const sql = "SELECT Treatment_cost FROM treatment WHERE Order_ID = ?";
-  connection.execute(sql, [Order_ID], function (err, results) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+  try {
+    const query = `
+      SELECT Treatment_cost FROM orders WHERE Order_ID = ?
+    `;
+    const [results] = await db.query(query, [Order_ID]);
+
     if (results.length > 0) {
       res.json({ Treatment_cost: results[0].Treatment_cost });
     } else {
-      res.status(404).json({ error: "ไม่พบข้อมูลค่ารักษา" });
+      res.status(404).json({ message: "Order not found" });
     }
-  });
+  } catch (error) {
+    console.error("Error fetching treatment cost:", error);
+    res.status(500).json({ message: "Error fetching treatment cost" });
+  }
 });
 
 // ดึงข้อมูลคิวผู้ป่วย (Walk-In Queue)
@@ -1339,7 +1343,9 @@ app.get("/api/patients/total", async (req, res) => {
 // API สำหรับดึงรายการยาที่มี Quantity ต่ำกว่า 100
 app.get("/api/medicines/low_stock", async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM medicine WHERE Quantity < 100");
+    const [rows] = await db.query(
+      "SELECT * FROM medicine WHERE Quantity < 100"
+    );
     res.json(rows);
   } catch (error) {
     console.error("Error fetching low stock medicines:", error);
@@ -1347,6 +1353,73 @@ app.get("/api/medicines/low_stock", async (req, res) => {
   }
 });
 
+// API สำหรับดึงข้อมูล orders และกรองตามช่วงเวลา
+app.get("/api/orders", async (req, res) => {
+  try {
+    const { filter } = req.query; // รับ filter จาก query params
+    let dateCondition = "";
+
+    // กำหนดเงื่อนไขตาม filter ที่ส่งเข้ามา
+    switch (filter) {
+      case "last_6_months":
+        // คำนวณเงื่อนไขวันที่ให้ดึงข้อมูล 6 เดือนย้อนหลังจากเดือนปัจจุบัน (ไม่รวมเดือนปัจจุบัน)
+        dateCondition = `WHERE Order_Date BETWEEN DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 6 MONTH), '%Y-%m-01') 
+                        AND LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))`;
+        break;
+
+      case "last_7_days":
+        // ดึงข้อมูลสำหรับช่วง 7 วันที่ผ่านมา ไม่รวมวันที่ปัจจุบัน
+        dateCondition = `WHERE Order_Date BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND DATE_SUB(CURDATE(), INTERVAL 1 DAY)`;
+        break;
+
+      default:
+        dateCondition = ""; // ถ้าไม่มี filter ใช้ค่า default (ดึงทั้งหมด)
+    }
+
+    // Query สำหรับดึงข้อมูลคำสั่งซื้อที่รวมรายรับ (Total_cost) ตามช่วงเวลาที่กำหนด
+    const query = `
+      SELECT Order_Date, SUM(Total_cost) AS Total_cost
+      FROM orders
+      ${dateCondition}
+      GROUP BY Order_Date
+      ORDER BY Order_Date;
+    `;
+
+    const [results] = await db.query(query); // ใช้ await กับ promise
+    res.json(results); // ส่งข้อมูลกลับไปที่ frontend
+  } catch (err) {
+    console.error("Error fetching orders data:", err);
+    res.status(500).send("Error fetching orders data");
+  }
+});
+
+app.put("/api/update_medicine_quantity", async (req, res) => {
+  const { orderID } = req.body;
+
+  try {
+    // ดึงข้อมูลยาในใบสั่งซื้อมาก่อน
+    const queryGetOrder = `SELECT Medicine_ID, Quantity_Order FROM order_medicine WHERE Order_ID = ?`;
+    const [medicines] = await db.query(queryGetOrder, [orderID]);
+
+    // อัปเดตจำนวนยาตามรายการ
+    for (const medicine of medicines) {
+      const updateMedicineQuery = `
+        UPDATE medicine 
+        SET Quantity = Quantity - ? 
+        WHERE Medicine_ID = ?;
+      `;
+      await db.query(updateMedicineQuery, [
+        medicine.Quantity_Order,
+        medicine.Medicine_ID,
+      ]);
+    }
+
+    res.status(200).json({ message: "Medicine quantity updated successfully" });
+  } catch (error) {
+    console.error("Error updating medicine quantity:", error);
+    res.status(500).json({ message: "Error updating medicine quantity" });
+  }
+});
 
 app.listen(5000, function () {
   console.log("port  5000");

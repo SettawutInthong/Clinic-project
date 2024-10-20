@@ -15,6 +15,7 @@ import { styled } from "@mui/material/styles";
 import Container from "@mui/material/Container";
 import { format } from "date-fns";
 import Calendar from "./Calendar";
+import LineChart from "./LineChart";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
@@ -51,6 +52,11 @@ const DividerBox = styled(Box)(({ theme }) => ({
   width: "2px",
   backgroundColor: "#fff",
 }));
+const DividerBox2 = styled(Box)(({ theme }) => ({
+  height: "50px",
+  width: "2px",
+  backgroundColor: "#B7B7B7",
+}));
 
 const AppointmentBox = styled(Box)(({ theme }) => ({
   backgroundColor: "#508D4E",
@@ -61,7 +67,7 @@ const AppointmentBox = styled(Box)(({ theme }) => ({
 }));
 
 const MedicineBox = styled(Paper)(({ theme }) => ({
-  backgroundColor: "#508D4E",
+  backgroundColor: "#fff",
   color: "#fff",
   borderRadius: "12px",
   padding: "10px",
@@ -70,6 +76,14 @@ const MedicineBox = styled(Paper)(({ theme }) => ({
 
 const FramBox = styled(Paper)(({ theme }) => ({
   backgroundColor: "#E4E0E1",
+  color: "#fff",
+  borderRadius: "12px",
+  padding: "10px",
+  marginBottom: "10px",
+}));
+
+const FramBox2 = styled(Paper)(({ theme }) => ({
+  backgroundColor: "#508D4E",
   color: "#fff",
   borderRadius: "12px",
   padding: "10px",
@@ -198,13 +212,8 @@ const Dashboard = () => {
                 <Grid item xs={12} md={12}></Grid>
                 <Grid item xs={12} sm={6}>
                   <FramBox>
-                    <Box
-                     
-                      flexDirection="column"
-                      alignItems="center"
-                      mt={0}
-                    >
-                      <Typography color="#000" variant="h6">
+                    <Box flexDirection="column" alignItems="center" mt={0}>
+                      <Typography color="#000" variant="h6" >
                         ปฏิทิน
                       </Typography>
                       <Calendar />
@@ -220,23 +229,23 @@ const Dashboard = () => {
                       mt={0}
                     >
                       <Typography variant="h6" color="#000">
-                        ยอดผู้ป่วยทั้งหมด
+                        ยอดผู้ป่วยวันนี้
                       </Typography>
-                      <Box width={180} height={160} my={3}>
+                      <Box width={180} height={190} my={3}>
                         <CircularProgressbar
                           value={newPatients + oldPatients}
                           maxValue={totalPatients}
                           text={`${newPatients + oldPatients}`}
                           styles={buildStyles({
                             textColor: "#000",
-                            pathColor: "#4CAF50",
-                            trailColor: "#d6d6d6",
+                            pathColor: "#508D4E",
+                            trailColor: "#B7B7B7",
                           })}
                         />
                       </Box>
-                      <Typography variant="subtitle1" color="#000">
+                      {/* <Typography variant="subtitle1" color="#000">
                         ผู้ป่วยที่มาวันนี้
-                      </Typography>
+                      </Typography> */}
                       <Box mt={2} display="flex" alignItems="center">
                         <Box
                           width={30}
@@ -252,7 +261,7 @@ const Dashboard = () => {
                           😊
                         </Box>
                         <Typography color="#000">
-                          Today: {newPatients + oldPatients} / Total:{" "}
+                          วันนี้: {newPatients + oldPatients} / ทั้งหมด:{" "}
                           {totalPatients}
                         </Typography>
                       </Box>
@@ -296,26 +305,61 @@ const Dashboard = () => {
                         </Typography>
                       </AppointmentBox>
                     ) : (
-                      <Typography>ไม่มีผู้ป่วยนัดวันนี้</Typography>
+                      <Typography color="#000">-</Typography>
                     )}
                   </FramBox>
                 </Grid>
               </Grid>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <FramBox>
-                <Typography variant="h6" color="#000">รายการยาที่ต้องเติม</Typography>
-                {lowStockMedicines.map((medicine, index) => (
-                  <MedicineBox key={index}>
-                    <Typography variant="body1">
-                      {medicine.Medicine_Name} - สต็อก: {medicine.Quantity}
-                    </Typography>
-                    <Typography variant="body2">
-                      ราคา: {parseFloat(medicine.Med_Cost).toFixed(2)} บาท
-                    </Typography>
-                  </MedicineBox>
-                ))}
-              </FramBox>
+              <Grid item xs={12} md={12}>
+                <FramBox>
+                  <Box flexDirection="column" alignItems="center" mt={0}>
+                    <LineChart />
+                  </Box>
+                </FramBox>
+              </Grid>
+              <Grid item xs={12} md={12}>
+                <FramBox2 style={{ height: "255px" }}>
+                  {/* หัวข้อที่ไม่เลื่อน */}
+                  <Typography variant="h6">รายการยาที่ต้องเติม</Typography>
+
+                  {/* กล่องสำหรับรายการยาที่เลื่อนได้ */}
+                  <Box style={{ height: "200px", overflowY: "auto" }}>
+                    {lowStockMedicines.map((medicine, index) => (
+                      <MedicineBox key={index}>
+                        <Box
+                          display="flex"
+                          flexDirection="row"
+                          alignItems="center"
+                          justifyContent="flex-start" // ชิดซ้าย
+                          width="100%"
+                        >
+                          <Typography variant="body1" color="#000">
+                            {medicine.Medicine_Name}
+                          </Typography>
+
+                          {/* DividerBox และ "คงเหลือ" จะชิดซ้ายตามไปด้วย */}
+                          <Box
+                            display="flex"
+                            alignItems="center"
+                            marginLeft={2}
+                          >
+                            <DividerBox2 />
+                            <Typography
+                              variant="body1"
+                              color="#000"
+                              marginLeft={1}
+                            >
+                              คงเหลือ: {medicine.Quantity}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </MedicineBox>
+                    ))}
+                  </Box>
+                </FramBox2>
+              </Grid>
             </Grid>
           </Grid>
 
