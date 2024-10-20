@@ -15,15 +15,19 @@ import {
   ListItem,
   ListItemText,
   Typography,
+  Paper,
+  Box,
+  Grid,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom"; // import useNavigate
 
 const TreatmentHistory = ({ HN }) => {
-  // รับค่า HN จาก props
-  const [treatments, setTreatments] = useState([]);
+  const [treatments, setTreatments] = useState([]); // เก็บข้อมูลประวัติการรักษา
   const [dialogState, setDialogState] = useState({
     open: false,
     selectedOrder: [],
   });
+  const navigate = useNavigate(); // initialize navigate hook
 
   useEffect(() => {
     const fetchTreatments = async () => {
@@ -31,7 +35,7 @@ const TreatmentHistory = ({ HN }) => {
         const response = await axios.get(
           `http://localhost:5000/api/treatments/${HN}`
         );
-        setTreatments(response.data.data || []);
+        setTreatments(response.data.data || []); // เก็บข้อมูลการรักษา
       } catch (error) {
         console.error("Error fetching treatment data:", error);
       }
@@ -56,8 +60,11 @@ const TreatmentHistory = ({ HN }) => {
   };
 
   return (
-    <>
-      <TableContainer>
+    <Paper sx={{ padding: 3, margin: 2 }}>
+      <Typography variant="h6" gutterBottom>
+        ประวัติการรักษา
+      </Typography>
+      <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
@@ -65,7 +72,7 @@ const TreatmentHistory = ({ HN }) => {
               <TableCell>รายละเอียดการรักษา</TableCell>
               <TableCell>ค่าใช้จ่าย</TableCell>
               <TableCell>ราคารวม</TableCell>
-              <TableCell>ดูออเดอร์</TableCell>
+              <TableCell align="center">ดูออเดอร์</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -84,9 +91,10 @@ const TreatmentHistory = ({ HN }) => {
                       ? parseFloat(treatment.Total_Cost).toFixed(2)
                       : "-"}
                   </TableCell>
-                  <TableCell>
+                  <TableCell align="center">
                     <Button
                       variant="outlined"
+                      color="primary"
                       onClick={() => handleOpen(treatment.Order_ID)}
                     >
                       ดูออเดอร์
@@ -104,9 +112,11 @@ const TreatmentHistory = ({ HN }) => {
           </TableBody>
         </Table>
       </TableContainer>
-      <Dialog open={dialogState.open} onClose={handleClose}>
+
+      {/* Popup แสดงรายละเอียดออเดอร์ */}
+      <Dialog open={dialogState.open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle>รายการยาในออเดอร์</DialogTitle>
-        <DialogContent>
+        <DialogContent dividers>
           {dialogState.selectedOrder.length > 0 ? (
             <List>
               {dialogState.selectedOrder.map((item) => (
@@ -123,7 +133,32 @@ const TreatmentHistory = ({ HN }) => {
           )}
         </DialogContent>
       </Dialog>
-    </>
+
+      {/* เพิ่มปุ่มกลับและปุ่มต่อไป */}
+      <Grid item xs={12}>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+          <Button
+            variant="outlined"
+            style={{
+              color: "#1976d2",
+              borderColor: "#1976d2",
+              textTransform: "none",
+              marginRight: "10px",
+            }}
+            onClick={() => navigate(`/doctor_patientdetail/${HN}`)}
+          >
+            กลับ
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={() => navigate(`/doctor_addtreatment/${HN}`)}
+          >
+            ต่อไป
+          </Button>
+        </Box>
+      </Grid>
+    </Paper>
   );
 };
 
