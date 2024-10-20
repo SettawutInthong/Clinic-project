@@ -1335,6 +1335,88 @@ app.get("/api/patients/total", async (req, res) => {
     res.status(500).json({ error: "Error fetching total patients" });
   }
 });
+app.post('/api/general_treatment', async (req, res) => {
+  const { HN, Treatment_Detail, General_Details, Treatment_Others } = req.body;
+
+  if (!HN || !Treatment_Detail || !General_Details || !Treatment_Others) {
+    return res.status(400).json({ error: "กรุณากรอกข้อมูลให้ครบถ้วน" });
+  }
+
+  try {
+    await db.query(`
+      INSERT INTO general_treatment (HN, Treatment_Detail, General_Details, Treatment_Others)
+      VALUES (?, ?, ?, ?)
+    `, [HN, Treatment_Detail, General_Details, Treatment_Others]);
+
+    res.status(200).json({ message: 'Data inserted successfully' });
+  } catch (error) {
+    console.error('Error inserting into general_treatment:', error);
+    res.status(500).json({ error: 'Failed to insert data' });
+  }
+});
+
+app.post('/api/pregnancy_treatment', async (req, res) => {
+  const {
+    HN,
+    Pregnancy_Control_Type,
+    Last_Control_Date,
+    Freq_Pregnancies,
+    Total_Pregnancies,
+    Total_Children,
+    Last_Pregnancy_Date,
+    Abortion_History,
+    Pregmed_Detail,
+    Preg_Others
+  } = req.body;
+
+  try {
+    // ดึง Treatment_ID ล่าสุดจากตาราง treatment โดยอิงจาก HN
+    const [treatmentRows] = await db.query(
+      `
+      SELECT Treatment_ID FROM treatment 
+      WHERE HN = ? 
+      ORDER BY Treatment_ID DESC 
+      LIMIT 1
+      `,
+      [HN]
+    );
+
+    // ตรวจสอบว่าพบ Treatment_ID หรือไม่
+    if (treatmentRows.length === 0) {
+      return res.status(404).json({ error: 'Treatment not found for this HN' });
+    }
+
+    const latestTreatmentId = treatmentRows[0].Treatment_ID;
+
+    // Query เพื่อดึง Pregnan_ID ล่าสุด
+    const [pregnancyRows] = await db.query(`
+      SELECT Pregnan_ID FROM pregnancy_treatment ORDER BY Pregnan_ID DESC LIMIT 1
+    `);
+
+    // ใช้ฟังก์ชัน generateID เพื่อสร้าง Pregnan_ID ใหม่
+    const newPregnanId = generateID(pregnancyRows[0]?.Pregnan_ID, 'PT');
+
+    // Query สำหรับเพิ่มข้อมูลใน pregnancy_treatment
+    await db.query(
+      `
+      INSERT INTO pregnancy_treatment 
+      (Pregnan_ID, Treatment_ID, Pregnancy_Control_Type, Last_Control_Date, Freq_Pregnancies, Total_Pregnancies, Total_Children, Last_Pregnancy_Date, Abortion_History, Pregmed_Detail, Preg_Others)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        newPregnanId, latestTreatmentId, Pregnancy_Control_Type, Last_Control_Date,
+        Freq_Pregnancies, Total_Pregnancies, Total_Children,
+        Last_Pregnancy_Date, Abortion_History, Pregmed_Detail, Preg_Others
+      ]
+    );
+
+    res.status(200).json({ message: 'Data inserted successfully' });
+  } catch (err) {
+    console.error('Error inserting into pregnancy_treatment:', err);
+    res.status(500).json({ error: 'Failed to insert data' });
+  }
+});
+
 
 app.listen(5000, function () {
   console.log("port  5000");
