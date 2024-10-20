@@ -280,7 +280,7 @@ app.get("/api/treatment/:HN/latest", async (req, res) => {
   }
 });
 
-// API to search medicines by name
+// ตัวอย่างของ backend API สำหรับดึงข้อมูลยา
 app.get("/api/medicines", (req, res) => {
   const { medicineName } = req.query;
 
@@ -289,42 +289,51 @@ app.get("/api/medicines", (req, res) => {
 
   connection.query(sql, params, (error, results) => {
     if (error) return res.status(500).json({ error: error.message });
+    console.log("Results:", results); // แสดงข้อมูลที่ดึงได้จากฐานข้อมูล
     res.json({ data: results });
   });
 });
 
-//เพิ่มรายการยาลงใน order
+
 app.post("/api/orders/:orderID/items", async (req, res) => {
   const { orderID } = req.params;
-  const { items } = req.body;
+  const { items, treatmentCost } = req.body; // รับค่ารักษา
 
   try {
+    // ดึงค่า Item_ID สูงสุดปัจจุบันเพื่อใช้ในการสร้าง ID ใหม่
     const [result] = await db.query(`
-      SELECT MAX(Item_ID) as maxItemID FROM order_medicine
+      SELECT MAX(CAST(Item_ID AS UNSIGNED)) as maxItemID FROM order_medicine
     `);
 
-    let maxItemID = result[0].maxItemID;
+    let maxItemID = result[0].maxItemID ? parseInt(result[0].maxItemID, 10) : 0;
+
+    // ทำการ Insert ยาแต่ละรายการลงใน order_medicine
     const itemPromises = items.map((item) => {
-      const newItemID = generateID(maxItemID, "I");
-
-      maxItemID = newItemID;
-
-      return db.query(
-        `
-          INSERT INTO order_medicine (Item_ID, Order_ID, Medicine_ID, Quantity_Order)
-          VALUES (?, ?, ?, ?)
-        `,
-        [newItemID, orderID, item.Medicine_ID, item.Quantity]
-      );
+      maxItemID++;
+      return db.query(`
+        INSERT INTO order_medicine (Item_ID, Order_ID, Medicine_ID, Quantity_Order)
+        VALUES (?, ?, ?, ?)
+      `, [maxItemID, orderID, item.Medicine_ID, item.Quantity]);
     });
 
     await Promise.all(itemPromises);
-    res.json({ message: "เพิ่มรายการยาสำเร็จ" });
+
+    // บันทึกค่ารักษาลงใน order table
+    await db.query(`
+      UPDATE orders
+      SET Treatment_cost = ?
+      WHERE Order_ID = ?
+    `, [treatmentCost, orderID]);
+
+    res.status(200).json({ message: "เพิ่มรายการยาและบันทึกค่ารักษาสำเร็จ" });
   } catch (error) {
-    console.error(error);
+    console.error("เกิดข้อผิดพลาดในการเพิ่มรายการยา:", error);
     res.status(500).json({ error: "เกิดข้อผิดพลาดในการเพิ่มรายการยา" });
   }
 });
+
+
+
 
 app.get("/api/medicine_stock", async (req, res) => {
   const name = req.query.name || ""; // รับคีย์เวิร์ดค้นหาจาก query parameters
@@ -1343,13 +1352,104 @@ app.get("/api/patients/total", async (req, res) => {
 // API สำหรับดึงรายการยาที่มี Quantity ต่ำกว่า 100
 app.get("/api/medicines/low_stock", async (req, res) => {
   try {
-    const [rows] = await db.query(
-      "SELECT * FROM medicine WHERE Quantity < 100"
-    );
+    const [rows] = await db.query("SELECT * FROM medicine WHERE Quantity < 100");
     res.json(rows);
   } catch (error) {
-    console.error("Error fetching low stock medicines:", error);
-    res.status(500).json({ error: "เกิดข้อผิดพลาดในการดึงข้อมูลยา" });
+    // จัดการ error ที่เกิดขึ้นและแสดงรายละเอียด
+    console.error('Error inserting or updating general_treatment:', error);
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการบันทึกหรือแก้ไขข้อมูล' });
+  }
+});
+
+app.post('/api/pregnancy_treatment', async (req, res) => {
+  const {
+    HN,
+    Pregnancy_Control_Type,
+    Last_Control_Date,
+    Freq_Pregnancies,
+    Total_Pregnancies,
+    Total_Children,
+    Last_Pregnancy_Date,
+    Abortion_History,
+    Pregmed_Detail,
+    Preg_Others
+  } = req.body;
+
+  try {
+    // ดึง Treatment_ID ล่าสุดจากตาราง treatment โดยอิงจาก HN
+    const [treatmentRows] = await db.query(
+      `
+      SELECT Treatment_ID FROM treatment 
+      WHERE HN = ? 
+      ORDER BY Treatment_ID DESC 
+      LIMIT 1
+      `,
+      [HN]
+    );
+
+    // ตรวจสอบว่าพบ Treatment_ID หรือไม่
+    if (treatmentRows.length === 0) {
+      return res.status(404).json({ error: 'Treatment not found for this HN' });
+    }
+
+    const latestTreatmentId = treatmentRows[0].Treatment_ID;
+
+    // ตรวจสอบว่า Treatment_ID นี้มีใน pregnancy_treatment หรือไม่
+    const [existingPregnancyRows] = await db.query(
+      `
+      SELECT Pregnan_ID FROM pregnancy_treatment 
+      WHERE Treatment_ID = ?
+      `,
+      [latestTreatmentId]
+    );
+
+    if (existingPregnancyRows.length > 0) {
+      // มีข้อมูลแล้ว ให้ทำการแก้ไข
+      const pregnanIdToUpdate = existingPregnancyRows[0].Pregnan_ID;
+
+      await db.query(
+        `
+        UPDATE pregnancy_treatment 
+        SET Pregnancy_Control_Type = ?, Last_Control_Date = ?, Freq_Pregnancies = ?, Total_Pregnancies = ?, 
+            Total_Children = ?, Last_Pregnancy_Date = ?, Abortion_History = ?, Pregmed_Detail = ?, Preg_Others = ?
+        WHERE Pregnan_ID = ?
+        `,
+        [
+          Pregnancy_Control_Type, Last_Control_Date, Freq_Pregnancies, Total_Pregnancies,
+          Total_Children, Last_Pregnancy_Date, Abortion_History, Pregmed_Detail, Preg_Others,
+          pregnanIdToUpdate
+        ]
+      );
+
+      res.status(200).json({ message: 'Data updated successfully' });
+    } else {
+      // ไม่พบข้อมูล ให้ทำการเพิ่มข้อมูลใหม่
+      const [pregnancyRows] = await db.query(`
+        SELECT Pregnan_ID FROM pregnancy_treatment ORDER BY Pregnan_ID DESC LIMIT 1
+      `);
+
+      // ใช้ฟังก์ชัน generateID เพื่อสร้าง Pregnan_ID ใหม่
+      const newPregnanId = generateID(pregnancyRows[0]?.Pregnan_ID, 'PT');
+
+      // เพิ่มข้อมูลใหม่ลงใน pregnancy_treatment
+      await db.query(
+        `
+        INSERT INTO pregnancy_treatment 
+        (Pregnan_ID, Treatment_ID, Pregnancy_Control_Type, Last_Control_Date, Freq_Pregnancies, Total_Pregnancies, Total_Children, Last_Pregnancy_Date, Abortion_History, Pregmed_Detail, Preg_Others)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+        [
+          newPregnanId, latestTreatmentId, Pregnancy_Control_Type, Last_Control_Date,
+          Freq_Pregnancies, Total_Pregnancies, Total_Children,
+          Last_Pregnancy_Date, Abortion_History, Pregmed_Detail, Preg_Others
+        ]
+      );
+
+      res.status(200).json({ message: 'Data inserted successfully' });
+    }
+  } catch (err) {
+    console.error('Error inserting or updating pregnancy_treatment:', err);
+    res.status(500).json({ error: 'Failed to process data' });
   }
 });
 
