@@ -228,7 +228,7 @@ const DoctorPatientDetail = () => {
                 <Button
                   variant="contained"
                   color="secondary"
-                  onClick={() => navigate(`/doctor_addtreatment/${patientData.HN}`)}
+                  onClick={() => navigate(`/doctor_treatmenthistory/${HN}`)}
                 >
                   ต่อไป
                 </Button>
