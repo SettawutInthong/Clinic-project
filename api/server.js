@@ -232,24 +232,24 @@ app.get("/api/patients", function (req, res) {
   });
 });
 
-//ดึงข้อมูลการรักษา (Treatments) ตาม HN
-app.get("/api/treatments/:HN", function (req, res) {
-  const HN = req.params.HN;
+// //ดึงข้อมูลการรักษา (Treatments) ตาม HN
+// app.get("/api/treatments/:HN", function (req, res) {
+//   const HN = req.params.HN;
 
-  const sql = `
-    SELECT * 
-    FROM treatment 
-    WHERE HN = ?
-    ORDER BY Treatment_Date DESC
-  `;
-  connection.query(sql, [HN], function (err, results) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+//   const sql = `
+//     SELECT * 
+//     FROM treatment 
+//     WHERE HN = ?
+//     ORDER BY Treatment_Date DESC
+//   `;
+//   connection.query(sql, [HN], function (err, results) {
+//     if (err) {
+//       return res.status(500).json({ error: err.message });
+//     }
 
-    res.json({ data: results });
-  });
-});
+//     res.json({ data: results });
+//   });
+// });
 
 function generateID(currentMaxID, prefix) {
   if (!currentMaxID || isNaN(parseInt(currentMaxID.substring(3), 10))) {
@@ -464,21 +464,84 @@ app.get("/api/patient/:HN", function (req, res) {
 });
 
 // ดึงรายละเอียดของยาใน order_medicine โดยอิงจาก Order_ID
-app.get("/api/medicine_details", async (req, res) => {
-  const Order_ID = req.query.Order_ID;
+app.get('/api/medicine_details', async (req, res) => {
+  const { Order_ID } = req.query;
   try {
-    const sql = `
-      SELECT om.Item_ID, om.Quantity_Order, m.Medicine_Name, m.Med_Cost
-      FROM order_medicine om 
-      JOIN medicine m ON om.Medicine_ID = m.Medicine_ID 
-      WHERE om.Order_ID = ?
-    `;
-    const [rows] = await db.query(sql, [Order_ID]);
-    res.json({ data: rows });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+      const [result] = await db.query(`
+          SELECT om.Item_ID, m.Medicine_Name, om.Quantity_Order, m.Med_Cost
+          FROM order_medicine om
+          JOIN medicine m ON om.Medicine_ID = m.Medicine_ID
+          WHERE om.Order_ID = ?
+      `, [Order_ID]);
+
+      if (result.length === 0) {
+          return res.status(404).json({ message: 'ไม่พบข้อมูลรายการยา' });
+      }
+
+      res.status(200).json({ data: result });
+  } catch (error) {
+      console.error('เกิดข้อผิดพลาดในการดึงข้อมูลรายการยา:', error);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลรายการยา' });
   }
 });
+
+
+app.get('/api/general_treatment/:generalTreatmentID', async (req, res) => {
+  const { generalTreatmentID } = req.params;
+  try {
+      const [result] = await db.query(`
+          SELECT * FROM general_treatment WHERE General_ID = ?
+      `, [generalTreatmentID]);
+
+      if (result.length === 0) {
+          return res.status(404).json({ message: 'ไม่พบข้อมูลการรักษาทั่วไป' });
+      }
+
+      res.status(200).json({ data: result[0] });
+  } catch (error) {
+      console.error('เกิดข้อผิดพลาดในการดึงข้อมูลการรักษาทั่วไป:', error);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลการรักษาทั่วไป' });
+  }
+});
+
+app.get('/api/pregnancy_treatment/:pregnancyTreatmentID', async (req, res) => {
+  const { pregnancyTreatmentID } = req.params;
+  try {
+      const [result] = await db.query(`
+          SELECT * FROM pregnancy_treatment WHERE Pregnan_ID = ?
+      `, [pregnancyTreatmentID]);
+
+      if (result.length === 0) {
+          return res.status(404).json({ message: 'ไม่พบข้อมูลการรักษาการตั้งครรภ์' });
+      }
+
+      res.status(200).json({ data: result[0] });
+  } catch (error) {
+      console.error('เกิดข้อผิดพลาดในการดึงข้อมูลการรักษาการตั้งครรภ์:', error);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลการรักษาการตั้งครรภ์' });
+  }
+});
+
+
+app.get("/api/treatmentDetails/:HN", async (req, res) => {
+  const { HN } = req.params;
+
+  try {
+      // ตัวอย่างการดึงข้อมูลการรักษาจากฐานข้อมูล
+      const treatments = await db.query("SELECT * FROM treatments WHERE HN = ?", [HN]);
+
+      if (treatments.length > 0) {
+          res.status(200).json({ data: treatments });
+      } else {
+          res.status(404).json({ message: "ไม่พบข้อมูลการรักษา" });
+      }
+  } catch (error) {
+      console.error("Error fetching treatment details: ", error);
+      res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+  }
+});
+
+
 
 // ดึงข้อมูล Treatment_cost จากตาราง treatment ตาม Order_ID
 app.get("/api/treatment_cost", function (req, res) {
@@ -1149,40 +1212,66 @@ app.put("/api/patient/:HN", function (req, res) {
   );
 });
 
-//เพิ่มรายละเอียดรักษากับค่ารักษา
-app.post("/api/treatments", async (req, res) => {
-  const { HN, treatmentDetails, treatmentCost } = req.body;
+// //เพิ่มรายละเอียดรักษากับค่ารักษา
+// app.post("/api/treatments", async (req, res) => {
+//   const { HN, treatmentDetails, treatmentCost } = req.body;
 
-  // ตรวจสอบข้อมูลที่รับเข้ามา
-  if (!HN || !treatmentDetails || !treatmentCost) {
-    return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
-  }
+//   // ตรวจสอบข้อมูลที่รับเข้ามา
+//   if (!HN || !treatmentDetails || !treatmentCost) {
+//     return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
+//   }
 
+//   try {
+//     // คำสั่ง SQL สำหรับเพิ่มข้อมูลการรักษา
+//     const query = `
+//       INSERT INTO treatment 
+//       (HN, Treatment_Details, Treatment_cost, Treatment_Date)
+//       VALUES (?, ?, ?, NOW())
+//     `;
+//     const values = [HN, treatmentDetails, treatmentCost];
+
+//     // ดำเนินการคำสั่ง SQL
+//     const [result] = await db.execute(query, values);
+
+//     // ส่งกลับผลลัพธ์เมื่อเพิ่มข้อมูลสำเร็จ
+//     return res.status(201).json({
+//       message: "เพิ่มข้อมูลการรักษาสำเร็จ",
+//       Treatment_ID: result.insertId,
+//     });
+//   } catch (error) {
+//     // ส่งกลับ error หากมีปัญหา
+//     console.error("Error adding treatment:", error);
+//     return res
+//       .status(500)
+//       .json({ message: "เกิดข้อผิดพลาดในการเพิ่มข้อมูลการรักษา" });
+//   }
+// });
+app.get('/api/treatments/:HN', async (req, res) => {
+  const { HN } = req.params;
   try {
-    // คำสั่ง SQL สำหรับเพิ่มข้อมูลการรักษา
-    const query = `
-      INSERT INTO treatment 
-      (HN, Treatment_Details, Treatment_cost, Treatment_Date)
-      VALUES (?, ?, ?, NOW())
-    `;
-    const values = [HN, treatmentDetails, treatmentCost];
+      const [result] = await db.query(`
+          SELECT t.Treatment_ID, t.Treatment_Date, t.Order_ID,
+                 gt.General_ID AS GeneralTreatmentID, 
+                 pt.Pregnan_ID AS PregnancyTreatmentID
+          FROM treatment t
+          LEFT JOIN general_treatment gt ON t.Treatment_ID = gt.Treatment_ID
+          LEFT JOIN pregnancy_treatment pt ON t.Treatment_ID = pt.Treatment_ID
+          WHERE t.HN = ?
+          ORDER BY t.Treatment_Date DESC
+      `, [HN]);
 
-    // ดำเนินการคำสั่ง SQL
-    const [result] = await db.execute(query, values);
+      if (result.length === 0) {
+          return res.status(404).json({ message: 'ไม่พบข้อมูลการรักษา' });
+      }
 
-    // ส่งกลับผลลัพธ์เมื่อเพิ่มข้อมูลสำเร็จ
-    return res.status(201).json({
-      message: "เพิ่มข้อมูลการรักษาสำเร็จ",
-      Treatment_ID: result.insertId,
-    });
+      res.status(200).json({ data: result });
   } catch (error) {
-    // ส่งกลับ error หากมีปัญหา
-    console.error("Error adding treatment:", error);
-    return res
-      .status(500)
-      .json({ message: "เกิดข้อผิดพลาดในการเพิ่มข้อมูลการรักษา" });
+      console.error('เกิดข้อผิดพลาดในการดึงข้อมูลการรักษา:', error);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลการรักษา' });
   }
 });
+
+
 
 // ฟังก์ชันดึงข้อมูลผู้ป่วยใหม่ในวันนี้
 app.get("/api/new_patients", (req, res) => {

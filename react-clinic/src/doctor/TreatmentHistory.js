@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import axios from "axios";
 import {
   Button,
@@ -18,44 +19,73 @@ import {
   Paper,
   Box,
   Grid,
-} from "@mui/material";
-import { useNavigate } from "react-router-dom"; // import useNavigate
+} from "@mui/material"; // นำเข้าทุก component ที่จำเป็น
+import { useNavigate } from "react-router-dom";
 
-const TreatmentHistory = ({ HN }) => {
+const TreatmentHistory = () => {
+  const { HN } = useParams(); // ดึง HN จาก URL
   const [treatments, setTreatments] = useState([]); // เก็บข้อมูลประวัติการรักษา
+  const [selectedGeneralTreatment, setSelectedGeneralTreatment] = useState(null); // สำหรับแสดงรายละเอียดการรักษาทั่วไป
+  const [selectedPregnancyTreatment, setSelectedPregnancyTreatment] = useState(null); // สำหรับแสดงรายละเอียดการรักษาการตั้งครรภ์
   const [dialogState, setDialogState] = useState({
     open: false,
     selectedOrder: [],
   });
-  const navigate = useNavigate(); // initialize navigate hook
+  const navigate = useNavigate();
 
+  // ดึงข้อมูลการรักษาจาก backend
   useEffect(() => {
     const fetchTreatments = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:5000/api/treatments/${HN}`
-        );
-        setTreatments(response.data.data || []); // เก็บข้อมูลการรักษา
+        const response = await axios.get(`http://localhost:5000/api/treatments/${HN}`);
+        console.log(response.data.data); // ตรวจสอบข้อมูลที่ได้
+        setTreatments(response.data.data || []);
       } catch (error) {
-        console.error("Error fetching treatment data:", error);
+        console.error("เกิดข้อผิดพลาดในการดึงข้อมูลการรักษา:", error);
       }
     };
     fetchTreatments();
   }, [HN]);
 
-  const handleOpen = async (orderID) => {
+  // ดึงข้อมูลการรักษาทั่วไปจาก GeneralTreatmentID
+  const handleOpenGeneralTreatment = async (generalTreatmentID) => {
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/medicine_details?Order_ID=${orderID}`
-      );
+      const response = await axios.get(`http://localhost:5000/api/general_treatment/${generalTreatmentID}`);
+      setSelectedGeneralTreatment(response.data.data); // เก็บข้อมูลการรักษาทั่วไป
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดในการดึงข้อมูลการรักษาทั่วไป:", error);
+    }
+  };
+
+  const handleCloseGeneralTreatment = () => {
+    setSelectedGeneralTreatment(null);
+  };
+
+  // ดึงข้อมูลการรักษาการตั้งครรภ์จาก PregnancyTreatmentID
+  const handleOpenPregnancyTreatment = async (pregnancyTreatmentID) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/pregnancy_treatment/${pregnancyTreatmentID}`);
+      setSelectedPregnancyTreatment(response.data.data); // เก็บข้อมูลการรักษาการตั้งครรภ์
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดในการดึงข้อมูลการรักษาการตั้งครรภ์:", error);
+    }
+  };
+
+  const handleClosePregnancyTreatment = () => {
+    setSelectedPregnancyTreatment(null);
+  };
+
+  const handleOpenOrderDetails = async (orderID) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/medicine_details?Order_ID=${orderID}`);
       setDialogState({ open: true, selectedOrder: response.data.data || [] });
     } catch (error) {
-      console.error("Error fetching order details:", error);
+      console.error("เกิดข้อผิดพลาดในการดึงข้อมูลออเดอร์:", error);
       setDialogState({ open: true, selectedOrder: [] });
     }
   };
 
-  const handleClose = () => {
+  const handleCloseOrderDetails = () => {
     setDialogState({ open: false, selectedOrder: [] });
   };
 
@@ -69,10 +99,9 @@ const TreatmentHistory = ({ HN }) => {
           <TableHead>
             <TableRow>
               <TableCell>วันที่รักษา</TableCell>
-              <TableCell>รายละเอียดการรักษา</TableCell>
-              <TableCell>ค่าใช้จ่าย</TableCell>
-              <TableCell>ราคารวม</TableCell>
-              <TableCell align="center">ดูออเดอร์</TableCell>
+              <TableCell align="center">รายการจ่ายยา</TableCell>
+              <TableCell align="center">การรักษาทั่วไป</TableCell>
+              <TableCell align="center">การรักษาการตั้งครรภ์</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -80,31 +109,42 @@ const TreatmentHistory = ({ HN }) => {
               treatments.map((treatment) => (
                 <TableRow key={treatment.Treatment_ID}>
                   <TableCell>
-                    {new Date(treatment.Treatment_Date).toLocaleDateString(
-                      "th-TH"
-                    )}
-                  </TableCell>
-                  <TableCell>{treatment.Treatment_Details}</TableCell>
-                  <TableCell>{treatment.Treatment_cost}</TableCell>
-                  <TableCell>
-                    {treatment.Total_Cost != null
-                      ? parseFloat(treatment.Total_Cost).toFixed(2)
-                      : "-"}
+                    {new Date(treatment.Treatment_Date).toLocaleDateString("th-TH")}
                   </TableCell>
                   <TableCell align="center">
                     <Button
                       variant="outlined"
                       color="primary"
-                      onClick={() => handleOpen(treatment.Order_ID)}
+                      onClick={() => handleOpenOrderDetails(treatment.Order_ID)}
                     >
-                      ดูออเดอร์
+                      ดูรายการจ่ายยา
+                    </Button>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      disabled={!treatment.GeneralTreatmentID} // ถ้าไม่มี GeneralTreatmentID ปิดปุ่ม
+                      onClick={() => handleOpenGeneralTreatment(treatment.GeneralTreatmentID)}
+                    >
+                      {treatment.GeneralTreatmentID ? "ดูการรักษาทั่วไป" : "ไม่มีการรักษาทั่วไป"}
+                    </Button>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      disabled={!treatment.PregnancyTreatmentID} // ถ้าไม่มี PregnancyTreatmentID ปิดปุ่ม
+                      onClick={() => handleOpenPregnancyTreatment(treatment.PregnancyTreatmentID)}
+                    >
+                      {treatment.PregnancyTreatmentID ? "ดูการรักษาการตั้งครรภ์" : "ไม่มีการรักษาการตั้งครรภ์"}
                     </Button>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} style={{ textAlign: "center" }}>
+                <TableCell colSpan={7} style={{ textAlign: "center" }}>
                   ไม่มีข้อมูลการรักษา
                 </TableCell>
               </TableRow>
@@ -114,7 +154,12 @@ const TreatmentHistory = ({ HN }) => {
       </TableContainer>
 
       {/* Popup แสดงรายละเอียดออเดอร์ */}
-      <Dialog open={dialogState.open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <Dialog
+        open={dialogState.open}
+        onClose={handleCloseOrderDetails}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>รายการยาในออเดอร์</DialogTitle>
         <DialogContent dividers>
           {dialogState.selectedOrder.length > 0 ? (
@@ -134,7 +179,54 @@ const TreatmentHistory = ({ HN }) => {
         </DialogContent>
       </Dialog>
 
-      {/* เพิ่มปุ่มกลับและปุ่มต่อไป */}
+      {/* Popup แสดงรายละเอียดการรักษาทั่วไป */}
+      <Dialog
+        open={!!selectedGeneralTreatment}
+        onClose={handleCloseGeneralTreatment}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>รายละเอียดการรักษาทั่วไป</DialogTitle>
+        <DialogContent>
+          {selectedGeneralTreatment ? (
+            <Box>
+              <Typography>รายละเอียดการรักษา: {selectedGeneralTreatment.General_Details}</Typography>
+              <Typography>รายละเอียดการรักษาเพิ่มเติม: {selectedGeneralTreatment.Treatment_Detail}</Typography>
+              <Typography>การรักษาอื่น ๆ: {selectedGeneralTreatment.Treatment_Others}</Typography>
+            </Box>
+          ) : (
+            <Typography>ไม่มีข้อมูลการรักษาทั่วไป</Typography>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Popup แสดงรายละเอียดการรักษาการตั้งครรภ์ */}
+      <Dialog
+        open={!!selectedPregnancyTreatment}
+        onClose={handleClosePregnancyTreatment}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>รายละเอียดการรักษาการตั้งครรภ์</DialogTitle>
+        <DialogContent>
+          {selectedPregnancyTreatment ? (
+            <Box>
+              <Typography>ประเภทการควบคุมการตั้งครรภ์: {selectedPregnancyTreatment.Pregnancy_Control_Type}</Typography>
+              <Typography>ปัญหาการตั้งครรภ์: {selectedPregnancyTreatment.Pregnancy_Problems}</Typography>
+              <Typography>จำนวนการตั้งครรภ์: {selectedPregnancyTreatment.Total_Pregnancies}</Typography>
+              <Typography>จำนวนบุตรทั้งหมด: {selectedPregnancyTreatment.Total_Children}</Typography>
+              <Typography>วันที่การตั้งครรภ์ล่าสุด: {selectedPregnancyTreatment.Last_Pregnancy_Date}</Typography>
+              <Typography>ประวัติการแท้ง: {selectedPregnancyTreatment.Abortion_History}</Typography>
+              <Typography>รายละเอียดการรักษาอื่น ๆ: {selectedPregnancyTreatment.Pregmed_Detail}</Typography>
+              <Typography>การรักษาอื่น ๆ: {selectedPregnancyTreatment.Preg_Others}</Typography>
+            </Box>
+          ) : (
+            <Typography>ไม่มีข้อมูลการรักษาการตั้งครรภ์</Typography>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ปุ่มกลับและปุ่มต่อไป */}
       <Grid item xs={12}>
         <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
           <Button
