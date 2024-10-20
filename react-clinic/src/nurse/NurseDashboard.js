@@ -14,9 +14,9 @@ import {
 import { styled } from "@mui/material/styles";
 import Container from "@mui/material/Container";
 import { format } from "date-fns";
-import Calendar from "./Calendar"; 
+import Calendar from "./Calendar";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
-import "react-circular-progressbar/dist/styles.css"; 
+import "react-circular-progressbar/dist/styles.css";
 
 const ContainerStyled = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(5),
@@ -38,7 +38,7 @@ const PaperStyled2 = styled(Paper)(({ theme }) => ({
 }));
 
 const NumberBox = styled(Box)(({ theme }) => ({
-  backgroundColor: "#fff",
+  backgroundColor: "#E4E0E1",
   color: "#508D4E",
   borderRadius: "8px",
   padding: "5px 10px",
@@ -60,6 +60,22 @@ const AppointmentBox = styled(Box)(({ theme }) => ({
   marginBottom: "10px",
 }));
 
+const MedicineBox = styled(Paper)(({ theme }) => ({
+  backgroundColor: "#508D4E",
+  color: "#fff",
+  borderRadius: "12px",
+  padding: "10px",
+  marginBottom: "10px",
+}));
+
+const FramBox = styled(Paper)(({ theme }) => ({
+  backgroundColor: "#E4E0E1",
+  color: "#fff",
+  borderRadius: "12px",
+  padding: "10px",
+  marginBottom: "10px",
+}));
+
 const Dashboard = () => {
   const [newPatients, setNewPatients] = useState(0);
   const [oldPatients, setOldPatients] = useState(0);
@@ -67,12 +83,25 @@ const Dashboard = () => {
   const [allAppointments, setAllAppointments] = useState([]);
   const [viewAllPopup, setViewAllPopup] = useState(false);
   const [totalPatients, setTotalPatients] = useState(0);
+  const [lowStockMedicines, setLowStockMedicines] = useState([]);
 
   useEffect(() => {
     fetchPatientCounts();
     fetchTodayAppointment();
     fetchTotalPatients();
+    fetchLowStockMedicines();
   }, []);
+
+  const fetchLowStockMedicines = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/medicines/low_stock"
+      );
+      setLowStockMedicines(response.data);
+    } catch (error) {
+      console.error("Error fetching low stock medicines:", error);
+    }
+  };
 
   const fetchPatientCounts = async () => {
     try {
@@ -141,8 +170,7 @@ const Dashboard = () => {
     <Box sx={{ flexGrow: 1 }}>
       <ContainerStyled maxWidth="lg">
         <PaperStyled>
-          <Grid container spacing={3}>
-            {/* กล่องผู้ป่วยใหม่และผู้ป่วยเก่า */}
+          <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <PaperStyled2>
                 <Box
@@ -166,83 +194,131 @@ const Dashboard = () => {
                   </Box>
                 </Box>
               </PaperStyled2>
-            </Grid>
-
-            {/* Progress Bar ผู้ป่วยทั้งหมด */}
-            <Grid item xs={12} sm={6}>
-              <Box display="flex" flexDirection="column" alignItems="center">
-                <Typography variant="h6">ยอดผู้ป่วยทั้งหมด</Typography>
-                <Box width={180} height={180} my={3}>
-                  <CircularProgressbar
-                    value={newPatients + oldPatients}
-                    maxValue={totalPatients}
-                    text={`${newPatients + oldPatients}`}
-                    styles={buildStyles({
-                      textColor: "#000",
-                      pathColor: "#4CAF50", 
-                      trailColor: "#d6d6d6", 
-                    })}
-                  />
-                </Box>
-                <Typography variant="subtitle1">Queuing this day</Typography>
-                <Box mt={2} display="flex" alignItems="center">
-                  <Box
-                    width={30}
-                    height={30}
-                    bgcolor="#4CAF50"
-                    borderRadius="50%"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    color="#fff"
-                    mr={1}
-                  >
-                    😊
-                  </Box>
-                  <Typography>
-                    Today: {newPatients + oldPatients} / Total: {totalPatients}
-                  </Typography>
-                </Box>
-              </Box>
-            </Grid>
-
-            {/* ปฏิทิน */}
-            <Grid item xs={12} md={6}>
-              <Box mt={4}>
-                <Calendar />
-              </Box>
-            </Grid>
-
-            {/* กล่องผู้ป่วยนัดวันนี้ */}
-            <Grid item xs={12} md={6}>
-              <Typography variant="h6">ผู้ป่วยนัดวันนี้</Typography>
-              {todayAppointment ? (
-                <AppointmentBox>
-                  <Typography variant="body1">
-                    {`${todayAppointment.HN} - ${todayAppointment.First_Name} ${todayAppointment.Last_Name}`}
-                  </Typography>
-                  <Typography variant="body2">
-                    {format(
-                      new Date(todayAppointment.Queue_Date),
-                      "dd MMM, yyyy"
-                    )}{" "}
-                    |{" "}
-                    {format(
-                      new Date(`1970-01-01T${todayAppointment.Queue_Time}`),
-                      "hh:mm a"
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={12}></Grid>
+                <Grid item xs={12} sm={6}>
+                  <FramBox>
+                    <Box
+                     
+                      flexDirection="column"
+                      alignItems="center"
+                      mt={0}
+                    >
+                      <Typography color="#000" variant="h6">
+                        ปฏิทิน
+                      </Typography>
+                      <Calendar />
+                    </Box>
+                  </FramBox>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FramBox>
+                    <Box
+                      display="flex"
+                      flexDirection="column"
+                      alignItems="center"
+                      mt={0}
+                    >
+                      <Typography variant="h6" color="#000">
+                        ยอดผู้ป่วยทั้งหมด
+                      </Typography>
+                      <Box width={180} height={160} my={3}>
+                        <CircularProgressbar
+                          value={newPatients + oldPatients}
+                          maxValue={totalPatients}
+                          text={`${newPatients + oldPatients}`}
+                          styles={buildStyles({
+                            textColor: "#000",
+                            pathColor: "#4CAF50",
+                            trailColor: "#d6d6d6",
+                          })}
+                        />
+                      </Box>
+                      <Typography variant="subtitle1" color="#000">
+                        ผู้ป่วยที่มาวันนี้
+                      </Typography>
+                      <Box mt={2} display="flex" alignItems="center">
+                        <Box
+                          width={30}
+                          height={30}
+                          bgcolor="#4CAF50"
+                          borderRadius="50%"
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          color="#fff"
+                          mr={1}
+                        >
+                          😊
+                        </Box>
+                        <Typography color="#000">
+                          Today: {newPatients + oldPatients} / Total:{" "}
+                          {totalPatients}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </FramBox>
+                </Grid>
+                <Grid item xs={12} md={12}>
+                  <FramBox>
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      width="100%"
+                    >
+                      <Box display="flex" alignItems="center" color="#000">
+                        <Typography variant="h6">ผู้ป่วยนัดวันนี้</Typography>
+                      </Box>
+                      <Box display="flex" alignItems="center">
+                        <Button color="primary" onClick={handleViewAllClick}>
+                          View All
+                        </Button>
+                      </Box>
+                    </Box>
+                    {todayAppointment ? (
+                      <AppointmentBox>
+                        <Typography variant="body1">
+                          {`${todayAppointment.HN} - ${todayAppointment.First_Name} ${todayAppointment.Last_Name}`}
+                        </Typography>
+                        <Typography variant="body2">
+                          {format(
+                            new Date(todayAppointment.Queue_Date),
+                            "dd MMM, yyyy"
+                          )}{" "}
+                          |{" "}
+                          {format(
+                            new Date(
+                              `1970-01-01T${todayAppointment.Queue_Time}`
+                            ),
+                            "hh:mm a"
+                          )}
+                        </Typography>
+                      </AppointmentBox>
+                    ) : (
+                      <Typography>ไม่มีผู้ป่วยนัดวันนี้</Typography>
                     )}
-                  </Typography>
-                </AppointmentBox>
-              ) : (
-                <Typography>ไม่มีผู้ป่วยนัดวันนี้</Typography>
-              )}
-              <Button color="primary" onClick={handleViewAllClick}>
-                View All
-              </Button>
+                  </FramBox>
+                </Grid>
+              </Grid>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FramBox>
+                <Typography variant="h6" color="#000">รายการยาที่ต้องเติม</Typography>
+                {lowStockMedicines.map((medicine, index) => (
+                  <MedicineBox key={index}>
+                    <Typography variant="body1">
+                      {medicine.Medicine_Name} - สต็อก: {medicine.Quantity}
+                    </Typography>
+                    <Typography variant="body2">
+                      ราคา: {parseFloat(medicine.Med_Cost).toFixed(2)} บาท
+                    </Typography>
+                  </MedicineBox>
+                ))}
+              </FramBox>
             </Grid>
           </Grid>
 
-          {/* Dialog ป๊อปอัพ */}
           <Dialog
             open={viewAllPopup}
             onClose={handleCloseDialog}
@@ -265,9 +341,7 @@ const Dashboard = () => {
                       borderRadius: "8px",
                     }}
                   >
-                    <Typography variant="body1">
-                      {`${appointment.HN} - ${appointment.First_Name} ${appointment.Last_Name}`}
-                    </Typography>
+                    <Typography variant="body1">{`${appointment.HN} - ${appointment.First_Name} ${appointment.Last_Name}`}</Typography>
                     <Typography variant="body2">
                       {new Date(appointment.Queue_Date).toLocaleDateString()} |{" "}
                       {new Date(
