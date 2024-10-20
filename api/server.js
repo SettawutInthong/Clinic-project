@@ -1450,6 +1450,79 @@ app.get("/api/medicines/low_stock", async (req, res) => {
   }
 });
 
+app.post('/api/general_treatment', async (req, res) => {
+  const { HN, Treatment_Detail, General_Details, Treatment_Others } = req.body;
+
+  try {
+    // ดึง Treatment_ID ล่าสุดจากตาราง treatment โดยอิงจาก HN
+    const [treatmentRows] = await db.query(
+      `
+      SELECT Treatment_ID FROM treatment 
+      WHERE HN = ? 
+      ORDER BY Treatment_ID DESC 
+      LIMIT 1
+      `,
+      [HN]
+    );
+
+    // ตรวจสอบว่าพบ Treatment_ID หรือไม่
+    if (treatmentRows.length === 0) {
+      return res.status(404).json({ error: 'Treatment not found for this HN' });
+    }
+
+    const latestTreatmentId = treatmentRows[0].Treatment_ID;
+
+    // ตรวจสอบว่า Treatment_ID นี้มีใน general_treatment หรือไม่
+    const [existingGeneralRows] = await db.query(
+      `
+      SELECT General_ID FROM general_treatment 
+      WHERE Treatment_ID = ?
+      `,
+      [latestTreatmentId]
+    );
+
+    if (existingGeneralRows.length > 0) {
+      // มีข้อมูลแล้ว ให้ทำการแก้ไข
+      const generalIdToUpdate = existingGeneralRows[0].General_ID;
+
+      await db.query(
+        `
+        UPDATE general_treatment 
+        SET Treatment_Detail = ?, General_Details = ?, Treatment_Others = ?
+        WHERE General_ID = ?
+        `,
+        [Treatment_Detail, General_Details, Treatment_Others, generalIdToUpdate]
+      );
+
+      res.status(200).json({ message: 'Data updated successfully' });
+    } else {
+      // ไม่พบข้อมูล ให้ทำการเพิ่มข้อมูลใหม่
+      const [generalRows] = await db.query(`
+        SELECT General_ID FROM general_treatment ORDER BY General_ID DESC LIMIT 1
+      `);
+
+      // ใช้ฟังก์ชัน generateID เพื่อสร้าง General_ID ใหม่
+      const newGeneralId = generateID(generalRows[0]?.General_ID, 'GT');
+
+      // เพิ่มข้อมูลใหม่ลงใน general_treatment
+      await db.query(
+        `
+        INSERT INTO general_treatment 
+        (General_ID, Treatment_ID, Treatment_Detail, General_Details, Treatment_Others)
+        VALUES (?, ?, ?, ?, ?)
+        `,
+        [newGeneralId, latestTreatmentId, Treatment_Detail, General_Details, Treatment_Others]
+      );
+
+      res.status(200).json({ message: 'Data inserted successfully' });
+    }
+  } catch (error) {
+    console.error('Error inserting or updating general_treatment:', error);
+    res.status(500).json({ error: 'Failed to process data' });
+  }
+});
+
+
 app.post('/api/pregnancy_treatment', async (req, res) => {
   const {
     HN,
