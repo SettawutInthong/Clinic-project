@@ -47,6 +47,19 @@ const TreatmentHistory = () => {
     fetchTreatments();
   }, [HN]);
 
+  const getTreatmentType = (treatment) => {
+    const hasGeneralTreatment = treatment.GeneralTreatmentID ? "รักษาทั่วไป" : "";
+    const hasPregnancyTreatment = treatment.PregnancyTreatmentID ? "รักษาการตั้งครรภ์" : "";
+    const hasMedicineOrder = treatment.Order_ID ? "จ่ายยา" : "";
+
+    // สร้าง array สำหรับเก็บข้อมูลการรักษาที่มี
+    const treatmentTypes = [hasGeneralTreatment, hasPregnancyTreatment, hasMedicineOrder]
+      .filter(Boolean) // กรองค่าว่างออก
+      .join(", "); // รวมข้อมูลการรักษาในรูปแบบของข้อความ
+
+    return treatmentTypes || "ไม่มีข้อมูลการรักษา";
+  };
+
   // ดึงข้อมูลการรักษาทั่วไปจาก GeneralTreatmentID
   const handleOpenGeneralTreatment = async (generalTreatmentID) => {
     try {
@@ -99,9 +112,10 @@ const TreatmentHistory = () => {
           <TableHead>
             <TableRow>
               <TableCell>วันที่รักษา</TableCell>
+              <TableCell align="center">ประเภทการรักษา</TableCell>
               <TableCell align="center">รายการจ่ายยา</TableCell>
               <TableCell align="center">การรักษาทั่วไป</TableCell>
-              <TableCell align="center">การรักษาการตั้งครรภ์</TableCell>
+              <TableCell align="center">การรักษาผดุงครรภ์</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -110,6 +124,9 @@ const TreatmentHistory = () => {
                 <TableRow key={treatment.Treatment_ID}>
                   <TableCell>
                     {new Date(treatment.Treatment_Date).toLocaleDateString("th-TH")}
+                  </TableCell>
+                  <TableCell align="center"> {/* เพิ่มคอลัมน์แสดงประเภทการรักษา */}
+                    {getTreatmentType(treatment)}
                   </TableCell>
                   <TableCell align="center">
                     <Button
@@ -137,7 +154,7 @@ const TreatmentHistory = () => {
                       disabled={!treatment.PregnancyTreatmentID} // ถ้าไม่มี PregnancyTreatmentID ปิดปุ่ม
                       onClick={() => handleOpenPregnancyTreatment(treatment.PregnancyTreatmentID)}
                     >
-                      {treatment.PregnancyTreatmentID ? "ดูการรักษาการตั้งครรภ์" : "ไม่มีการรักษาการตั้งครรภ์"}
+                      {treatment.PregnancyTreatmentID ? "ดูการรักษาการผดุงครรภ์" : "ไม่มีการรักษาการผดุงครรภ์"}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -190,9 +207,9 @@ const TreatmentHistory = () => {
         <DialogContent>
           {selectedGeneralTreatment ? (
             <Box>
-              <Typography>รายละเอียดการรักษา: {selectedGeneralTreatment.General_Details}</Typography>
-              <Typography>รายละเอียดการรักษาเพิ่มเติม: {selectedGeneralTreatment.Treatment_Detail}</Typography>
-              <Typography>การรักษาอื่น ๆ: {selectedGeneralTreatment.Treatment_Others}</Typography>
+              <Typography>การวินิจฉัยเบื้องต้น: {selectedGeneralTreatment.General_Details}</Typography>
+              <Typography>รายละเอียดการรักษา: {selectedGeneralTreatment.Treatment_Detail}</Typography>
+              <Typography>บันทึกเพิ่มเติม: {selectedGeneralTreatment.Treatment_Others}</Typography>
             </Box>
           ) : (
             <Typography>ไม่มีข้อมูลการรักษาทั่วไป</Typography>
