@@ -280,7 +280,7 @@ app.get("/api/treatment/:HN/latest", async (req, res) => {
   }
 });
 
-// API to search medicines by name
+// ตัวอย่างของ backend API สำหรับดึงข้อมูลยา
 app.get("/api/medicines", (req, res) => {
   const { medicineName } = req.query;
 
@@ -289,49 +289,51 @@ app.get("/api/medicines", (req, res) => {
 
   connection.query(sql, params, (error, results) => {
     if (error) return res.status(500).json({ error: error.message });
+    console.log("Results:", results); // แสดงข้อมูลที่ดึงได้จากฐานข้อมูล
     res.json({ data: results });
   });
 });
 
-//เพิ่มรายการยาลงใน order
+
 app.post("/api/orders/:orderID/items", async (req, res) => {
   const { orderID } = req.params;
-  const { items } = req.body;
+  const { items, treatmentCost } = req.body; // รับค่ารักษา
 
   try {
     // ดึงค่า Item_ID สูงสุดปัจจุบันเพื่อใช้ในการสร้าง ID ใหม่
     const [result] = await db.query(`
-      SELECT MAX(Item_ID) as maxItemID FROM order_medicine
+      SELECT MAX(CAST(Item_ID AS UNSIGNED)) as maxItemID FROM order_medicine
     `);
 
-    // เริ่มจาก Item_ID ปัจจุบัน หรือ 0 ถ้ายังไม่มีข้อมูล
-    let maxItemID = result[0]?.maxItemID || 0;
+    let maxItemID = result[0].maxItemID ? parseInt(result[0].maxItemID, 10) : 0;
 
     // ทำการ Insert ยาแต่ละรายการลงใน order_medicine
     const itemPromises = items.map((item) => {
-      // สร้าง Item_ID ใหม่
-      maxItemID++; // เพิ่มค่า maxItemID สำหรับรายการใหม่แต่ละรายการ
-
-      // Insert รายการยาแต่ละรายการลงในฐานข้อมูล
-      return db.query(
-        `
-          INSERT INTO order_medicine (Item_ID, Order_ID, Medicine_ID, Quantity_Order)
-          VALUES (?, ?, ?, ?)
-        `,
-        [maxItemID, orderID, item.Medicine_ID, item.Quantity]
-      );
+      maxItemID++;
+      return db.query(`
+        INSERT INTO order_medicine (Item_ID, Order_ID, Medicine_ID, Quantity_Order)
+        VALUES (?, ?, ?, ?)
+      `, [maxItemID, orderID, item.Medicine_ID, item.Quantity]);
     });
 
-    // รอให้คำสั่ง insert ทั้งหมดเสร็จสิ้น
     await Promise.all(itemPromises);
 
-    // ส่งผลลัพธ์กลับเป็นข้อความสำเร็จ
-    res.status(200).json({ message: "เพิ่มรายการยาในออเดอร์สำเร็จ" });
+    // บันทึกค่ารักษาลงใน order table
+    await db.query(`
+      UPDATE orders
+      SET Treatment_cost = ?
+      WHERE Order_ID = ?
+    `, [treatmentCost, orderID]);
+
+    res.status(200).json({ message: "เพิ่มรายการยาและบันทึกค่ารักษาสำเร็จ" });
   } catch (error) {
     console.error("เกิดข้อผิดพลาดในการเพิ่มรายการยา:", error);
     res.status(500).json({ error: "เกิดข้อผิดพลาดในการเพิ่มรายการยา" });
   }
 });
+
+
+
 
 app.get("/api/medicine_stock", async (req, res) => {
   const name = req.query.name || ""; // รับคีย์เวิร์ดค้นหาจาก query parameters

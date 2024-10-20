@@ -92,7 +92,7 @@ const AddTreatment = () => {
   
       const response = await axios.post("http://localhost:5000/api/general_treatment", data);
       alert("บันทึกข้อมูลสำเร็จ!");
-      navigate(`/doctor_addorder/${HN}/${response.data.orderID}`);
+      navigate(`/doctor_addorder/${HN}`);
     } catch (error) {
       console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
       alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + (error.response?.data?.error || "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้"));
@@ -119,7 +119,7 @@ const AddTreatment = () => {
 
       const response = await axios.post("http://localhost:5000/api/pregnancy_treatment", data);
       alert("บันทึกข้อมูลสำเร็จ!");
-      navigate(`/doctor_addorder/${HN}/${response.data.orderID}`);
+      navigate(`/doctor_addorder/${HN}`);
     } catch (error) {
       console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
       alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + (error.response?.data?.error || "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้"));

@@ -22,19 +22,40 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate, useParams } from "react-router-dom";
-import { Card, CardContent } from "@mui/material";
 
 const AddOrder = () => {
-  const { HN, orderID } = useParams();
-  const [medicines, setMedicines] = useState([]);
-  const [searchName, setSearchName] = useState("");
-  const [selectedMedicine, setSelectedMedicine] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [orderItems, setOrderItems] = useState([]);
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [openMedicineDialog, setOpenMedicineDialog] = useState(false);
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const { HN } = useParams();  // ดึงค่า HN จาก URL
+  const [orderID, setOrderID] = useState(null);  // เก็บค่า Order_ID
+  const [medicines, setMedicines] = useState([]);  // เก็บรายการยาที่ค้นหา
+  const [searchName, setSearchName] = useState("");  // เก็บคำที่ใช้ค้นหา
+  const [selectedMedicine, setSelectedMedicine] = useState(null);  // เก็บยาที่ถูกเลือก
+  const [quantity, setQuantity] = useState(1);  // จำนวนยา
+  const [orderItems, setOrderItems] = useState([]);  // เก็บรายการยาที่จะสั่ง
+  const [treatmentCost, setTreatmentCost] = useState(""); // เพิ่มสำหรับค่ารักษา
+  const [openSnackbar, setOpenSnackbar] = useState(false);  // ควบคุมการแสดง Snackbar
+  const [openMedicineDialog, setOpenMedicineDialog] = useState(false);  // ควบคุมการเปิด Dialog ค้นหายา
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);  // ควบคุมการแสดง Dialog ยืนยันการบันทึก
   const navigate = useNavigate();
+
+  // ดึง Order_ID ล่าสุดเมื่อ component โหลด
+  useEffect(() => {
+    const fetchLatestOrder = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/order_medicine?HN=${HN}`);
+        console.log(response.data);  // แสดงข้อมูล response
+        if (response.data && response.data.data) {
+          const latestOrder = response.data.data;
+          setOrderID(latestOrder.Order_ID);  // ตั้งค่า Order_ID ล่าสุด
+        } else {
+          console.error('ไม่พบออเดอร์สำหรับ HN นี้');
+        }
+      } catch (error) {
+        console.error("เกิดข้อผิดพลาดในการดึง Order ล่าสุด:", error);
+      }
+    };
+  
+    fetchLatestOrder();
+  }, [HN]);
 
   useEffect(() => {
     if (searchName) {
@@ -43,9 +64,10 @@ const AddOrder = () => {
           const response = await axios.get(
             "http://localhost:5000/api/medicines",
             {
-              params: { medicineName: searchName },
+              params: { medicineName: searchName }, // ตรวจสอบว่าค่าที่ส่งเป็นชื่อยาถูกต้อง
             }
           );
+          console.log(response.data); // แสดงข้อมูล response ใน console
           setMedicines(response.data.data);
         } catch (error) {
           console.error("Error fetching medicines:", error);
@@ -74,34 +96,45 @@ const AddOrder = () => {
   };
 
   const handleConfirmSubmit = async () => {
+    if (!treatmentCost || orderItems.length === 0) {
+      alert("กรุณากรอกราคาค่ารักษาและรายการยาให้ครบถ้วน");
+      return;
+    }
+  
     setConfirmDialogOpen(false);
   
     try {
       if (orderItems.length > 0) {
         const orderData = {
           items: orderItems,
+          treatmentCost, // เพิ่มค่ารักษาไปกับข้อมูล
         };
   
-        // บันทึกออเดอร์ยาลงฐานข้อมูล
-        await axios.post(
-          `http://localhost:5000/api/orders/${orderID}/items`,
-          orderData
-        );
+        if (orderID) {
+          // บันทึกออเดอร์ยาลงฐานข้อมูล
+          await axios.post(
+            `http://localhost:5000/api/orders/${orderID}/items`,
+            orderData
+          );
+  
+          // อัปเดตสถานะของคิวเป็น "รอจ่ายยา"
+          await axios.put(`http://localhost:5000/api/walkinqueue/${HN}`, {
+            Status: "รอจ่ายยา",
+          });
+  
+          setOpenSnackbar(true);
+          setOrderItems([]); // ล้างรายการที่เลือก
+          navigate("/doctor_queue"); // ย้ายไปยังหน้าคิวหลังจากบันทึกสำเร็จ
+        } else {
+          console.error("ไม่พบ Order_ID สำหรับการบันทึกออเดอร์");
+        }
       }
-  
-      // อัปเดตสถานะของคิวเป็น "รอจ่ายยา"
-      await axios.put(`http://localhost:5000/api/walkinqueue/${HN}`, {
-        Status: "รอจ่ายยา",
-      });
-  
-      setOpenSnackbar(true);
-      setOrderItems([]);
-      navigate("/doctor_queue"); // ย้ายไปยังหน้าคิวหลังจากบันทึกสำเร็จ
     } catch (error) {
-      console.error("Error submitting order:", error.message);
+      console.error("เกิดข้อผิดพลาดในการบันทึกออเดอร์:", error.message);
     }
   };
   
+
   const handleSnackbarClose = () => {
     setOpenSnackbar(false);
   };
@@ -162,6 +195,16 @@ const AddOrder = () => {
             </Table>
           </TableContainer>
 
+          <TextField
+            label="ราคาค่ารักษา"  // เพิ่ม input field สำหรับค่ารักษา
+            type="number"
+            variant="outlined"
+            fullWidth
+            value={treatmentCost}
+            onChange={(e) => setTreatmentCost(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+
           <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
             <Button
               variant="outlined"
@@ -179,6 +222,7 @@ const AddOrder = () => {
               variant="contained"
               color="secondary"
               onClick={handleSubmitOrder}
+              disabled={!orderID}  // ถ้าไม่มี orderID ให้ปิดปุ่มบันทึก
             >
               บันทึกออเดอร์
             </Button>
@@ -286,7 +330,6 @@ const AddOrder = () => {
             </DialogActions>
           </Dialog>
         </Paper>
-
     </Box>
   );
 };
