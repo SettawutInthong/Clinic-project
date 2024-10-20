@@ -34,29 +34,25 @@ const AddTreatment = () => {
   const [patientData, setPatientData] = useState(null);
   const [diseaseName, setDiseaseName] = useState("");
   const [allergyDetails, setAllergyDetails] = useState("");
-  const [treatmentData, setTreatmentData] = useState(() => {
-    // ดึงข้อมูลจาก localStorage ถ้ามี
-    const savedData = localStorage.getItem("treatmentData");
-    return savedData ? JSON.parse(savedData) : {
-      Heart_Rate: "",
-      Pressure: "",
-      Temp: "",
-      Height: "",
-      Weight: "",
-      Symptom: "",
-      Treatment_Detail: "",
-      Treatment_Others: "",
-      Pregnancy_Control_Type: "",
-      Last_Control_Date: null,
-      Freq_Pregnancies: "",
-      Pregnancy_Problems: "",
-      Total_Pregnancies: "",
-      Total_Children: "",
-      Last_Pregnancy_Date: null,
-      Abortion_History: "",
-      Pregmed_Detail: "",
-      Preg_Others: ""
-    };
+  const [treatmentData, setTreatmentData] = useState({
+    Heart_Rate: "",
+    Pressure: "",
+    Temp: "",
+    Height: "",
+    Weight: "",
+    Symptom: "",
+    Treatment_Detail: "",
+    Treatment_Others: "",
+    Pregnancy_Control_Type: "",
+    Last_Control_Date: null,
+    Freq_Pregnancies: "",
+    Pregnancy_Problems: "",
+    Total_Pregnancies: "",
+    Total_Children: "",
+    Last_Pregnancy_Date: null,
+    Abortion_History: "",
+    Pregmed_Detail: "",
+    Preg_Others: ""
   });
   const [treatmentType, setTreatmentType] = useState("");
   const [historyPopupOpen, setHistoryPopupOpen] = useState(false);
@@ -85,68 +81,50 @@ const AddTreatment = () => {
 
   const handleSubmitGeneralTreatment = async () => {
     try {
-        const data = {
-            HN: HN,
-            Treatment_Detail: treatmentData.Treatment_Detail || "N/A",
-            General_Details: treatmentData.General_Details || "N/A",
-            Treatment_Others: treatmentData.Treatment_Others || "N/A",
-        };
-
-        console.log("Data being sent: ", data);
-
-        const response = await axios.post("http://localhost:5000/api/general_treatment", data);
-        alert("บันทึกข้อมูลสำเร็จ!");
-
-        // บันทึกข้อมูลลงใน localStorage ก่อนที่จะเปลี่ยนหน้า
-        localStorage.setItem("treatmentData", JSON.stringify(treatmentData));
-
-        // นำทางไปยังหน้าใหม่โดยไม่ต้องรีเฟรช
-        navigate(`/doctor_addorder/${HN}/${response.data.orderID}`);
+      const data = {
+        HN: HN,
+        Treatment_Detail: treatmentData.Treatment_Detail || "N/A",
+        General_Details: treatmentData.General_Details || "N/A",
+        Treatment_Others: treatmentData.Treatment_Others || "N/A",
+      };
+  
+      console.log("Data being sent: ", data);
+  
+      const response = await axios.post("http://localhost:5000/api/general_treatment", data);
+      alert("บันทึกข้อมูลสำเร็จ!");
+      navigate(`/doctor_addorder/${HN}/${response.data.orderID}`);
     } catch (error) {
-        console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
-        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + (error.response?.data?.error || "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้"));
+      console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
+      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + (error.response?.data?.error || "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้"));
     }
-};
+  };  
+  
 
-const handleSubmitPregnancyTreatment = async () => {
+
+  const handleSubmitPregnancyTreatment = async () => {
     try {
-        const data = {
-            HN: HN,
-            Pregnancy_Control_Type: treatmentData.Pregnancy_Control_Type,
-            Last_Control_Date: treatmentData.Last_Control_Date,
-            Freq_Pregnancies: treatmentData.Freq_Pregnancies,
-            Pregnancy_Problems: treatmentData.Pregnancy_Problems,
-            Total_Pregnancies: treatmentData.Total_Pregnancies,
-            Total_Children: treatmentData.Total_Children,
-            Last_Pregnancy_Date: treatmentData.Last_Pregnancy_Date,
-            Abortion_History: treatmentData.Abortion_History,
-            Pregmed_Detail: treatmentData.Pregmed_Detail,
-            Preg_Others: treatmentData.Preg_Others,
-        };
+      const data = {
+        HN: HN,
+        Pregnancy_Control_Type: treatmentData.Pregnancy_Control_Type,
+        Last_Control_Date: treatmentData.Last_Control_Date,
+        Freq_Pregnancies: treatmentData.Freq_Pregnancies,
+        Pregnancy_Problems: treatmentData.Pregnancy_Problems,
+        Total_Pregnancies: treatmentData.Total_Pregnancies,
+        Total_Children: treatmentData.Total_Children,
+        Last_Pregnancy_Date: treatmentData.Last_Pregnancy_Date,
+        Abortion_History: treatmentData.Abortion_History,
+        Pregmed_Detail: treatmentData.Pregmed_Detail,
+        Preg_Others: treatmentData.Preg_Others,
+      };
 
-        const response = await axios.post("http://localhost:5000/api/pregnancy_treatment", data);
-        alert("บันทึกข้อมูลสำเร็จ!");
-
-        // บันทึกข้อมูลลงใน localStorage
-        localStorage.setItem("treatmentData", JSON.stringify(treatmentData));
-
-        // นำทางไปยังหน้าใหม่โดยไม่ต้องรีเฟรช
-        navigate(`/doctor_addorder/${HN}/${response.data.orderID}`);
+      const response = await axios.post("http://localhost:5000/api/pregnancy_treatment", data);
+      alert("บันทึกข้อมูลสำเร็จ!");
+      navigate(`/doctor_addorder/${HN}/${response.data.orderID}`);
     } catch (error) {
-        console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
-        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + (error.response?.data?.error || "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้"));
+      console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
+      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + (error.response?.data?.error || "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้"));
     }
-};
-
-// เมื่อคอมโพเนนต์ถูกโหลดครั้งแรก ให้ดึงข้อมูลจาก localStorage ทันที
-useEffect(() => {
-    const savedData = localStorage.getItem("treatmentData");
-    if (savedData) {
-        setTreatmentData(JSON.parse(savedData));
-    }
-}, [HN]);
-
-
+  };
 
   const ConfirmAppointment = async () => {
     if (!HN || !appointmentDate) {
@@ -261,7 +239,7 @@ useEffect(() => {
             multiline
             rows={5}
             value={treatmentData.Treatment_Others || ""}  // ตรวจสอบและตั้งค่าให้ไม่เป็น undefined
-            onChange={(e) => setTreatmentData({ ...treatmentData, Treatment_Others: e.target.value })}
+              onChange={(e) => setTreatmentData({ ...treatmentData, Treatment_Others: e.target.value })}
           />
         </>
       );
@@ -418,7 +396,7 @@ useEffect(() => {
                   onChange={(e) => setTreatmentData({ ...treatmentData, Pregmed_Detail: e.target.value })}
                 />
 
-
+                
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
