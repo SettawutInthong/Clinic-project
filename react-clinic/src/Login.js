@@ -28,6 +28,17 @@ const deleteOldQueue = async () => {
   }
 };
 
+// ฟังก์ชันสำหรับลบคิวที่มี Queue_Date น้อยกว่าวันปัจจุบัน
+const deleteOldAppointmentQueue = async () => {
+  try {
+    const today = new Date().toISOString().split("T")[0]; // วันที่ปัจจุบันในรูปแบบ YYYY-MM-DD
+    await axios.delete(`http://localhost:5000/api/remove_old_appointmentqueue/${today}`);
+    console.log("ลบคิวที่มี Queue_Date น้อยกว่าวันนี้สำเร็จ");
+  } catch (error) {
+    console.error("เกิดข้อผิดพลาดในการลบคิวจาก appointmentqueue:", error);
+  }
+};
+
 const Login = () => {
   const [username, setUsername] = useState();
   const [password, setPassword] = useState();
@@ -46,6 +57,7 @@ const Login = () => {
 
       // ลบคิวเมื่อเข้าสู่ระบบสำเร็จ
       await deleteOldQueue(); // เรียกใช้ฟังก์ชันลบคิว
+      await deleteOldAppointmentQueue(); // เรียกใช้ฟังก์ชันลบคิวจาก appointmentqueue
 
       // ตรวจสอบ Role_ID เพื่อนำทางไปยังหน้า dashboard
       if (response.user.Role_ID === 1) {

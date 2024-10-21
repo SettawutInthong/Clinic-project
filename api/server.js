@@ -1428,6 +1428,22 @@ app.delete("/api/remove_old_queue", (req, res) => {
   });
 });
 
+app.delete('/api/remove_old_appointmentqueue/:date', async (req, res) => {
+  const { date } = req.params;
+  
+  try {
+    // ลบข้อมูลที่ Queue_Date น้อยกว่าวันที่ที่ได้รับมา
+    await db.query(
+      'DELETE FROM appointmentqueue WHERE Queue_Date < ?',
+      [date]
+    );
+    res.status(200).json({ message: 'ลบคิวที่มี Queue_Date น้อยกว่าวันนี้สำเร็จ' });
+  } catch (error) {
+    console.error('Error deleting old appointment queue:', error);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการลบคิว' });
+  }
+});
+
 app.put("/api/medicine_stock/:Medicine_ID", async (req, res) => {
   const { Medicine_ID } = req.params;
   const {

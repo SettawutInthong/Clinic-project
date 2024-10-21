@@ -630,7 +630,7 @@ const NurseQueue = () => {
                         วันและเวลานัดหมาย :
                         {queueTime
                           ? formatDateTime(queueTime.date, queueTime.time)
-                          : "ไม่มีข้อมูลวันและเวลานัดหมาย"}
+                          : "ไม่มีข้อมูลวันและเวลานัดหมาย"} น.
                       </Typography>
                     </Grid>
                     <Grid item xs={12} sm={6}>
