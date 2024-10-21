@@ -930,8 +930,8 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
 
     // เพิ่มข้อมูลการรักษาลงในตาราง treatment
     await db.query(
-      `INSERT INTO treatment (Treatment_ID, HN, Order_ID, Treatment_Date, Treatment_Details, Treatment_cost, Total_Cost, Symptom, Weight, Height, Temp, Pressure, Heart_Rate)
-      VALUES (?, ?, ?, NOW(), NULL, NULL, NULL, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO treatment (Treatment_ID, HN, Order_ID, Treatment_Date, Treatment_Details, Symptom, Weight, Height, Temp, Pressure, Heart_Rate)
+      VALUES (?, ?, ?, NOW(), NULL, ?, ?, ?, ?, ?, ?)
       `,
       [
         newTreatmentID,
