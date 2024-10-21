@@ -580,7 +580,7 @@ const AddTreatment = () => {
                   </Button>
                   <Button
                     variant="contained"
-                    color="secondary"
+                    color="primary"
                     onClick={() => {
                       if (treatmentType === "ทั่วไป") {
                         handleSubmitGeneralTreatment();

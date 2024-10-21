@@ -161,7 +161,7 @@ const AddStock = () => {
         <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
           <Button
             variant="contained"
-            color="secondary"
+            color="primary"
             onClick={handleSubmitStock}
             disabled={stockItems.length === 0} // ปิดปุ่มหากยังไม่มีรายการยาที่เพิ่ม
           >

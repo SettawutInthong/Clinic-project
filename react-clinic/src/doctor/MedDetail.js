@@ -457,7 +457,7 @@ const MedDetail = () => {
           <Button onClick={() => setAddPopup(false)} color="primary">
             ยกเลิก
           </Button>
-          <Button onClick={handleAddSubmit} color="primary">
+          <Button onClick={handleAddSubmit} color="primary" variant="contained">
             เพิ่ม
           </Button>
         </DialogActions>

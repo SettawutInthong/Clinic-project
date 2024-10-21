@@ -265,7 +265,7 @@ const AddOrder = () => {
           </Button>
           <Button
             variant="contained"
-            color="secondary"
+            color="primary"
             onClick={handleSubmitOrder}
             disabled={!orderID}  // ถ้าไม่มี orderID ให้ปิดปุ่มบันทึก
           >
