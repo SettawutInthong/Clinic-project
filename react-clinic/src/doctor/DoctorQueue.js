@@ -113,13 +113,13 @@ const DoctorQueue = () => {
 
       const patientData = await Promise.all(patientDataPromises);
       // ตรวจสอบว่าข้อมูลเรียงตามเวลาจาก API หรือไม่ ถ้าไม่ต้องปรับใน API
-      
+
       setData(patientData);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
-  
+
   const AddQueue = async () => {
     // ตรวจสอบว่ากรอก HN หรือยัง
     if (!queueHN) {
@@ -372,17 +372,24 @@ const DoctorQueue = () => {
                         <Typography
                           sx={{
                             display: "inline-block",
-                            padding: "4px 12px", // เพิ่มพื้นที่ในกรอบ
-                            borderRadius: "16px", // ปรับให้ขอบโค้งมนมากขึ้น
+                            padding: "4px 12px",
+                            borderRadius: "16px",
                             backgroundColor:
                               row.Status === "รอจ่ายยา"
-                                ? "rgba(144, 238, 144, 0.2)" // พื้นหลังสีเขียวอ่อน (รอจ่ายยา)
+                                ? "rgba(170, 255, 195, 0.5)" // พื้นหลังสีมิ้น (รอจ่ายยา)
                                 : row.Status === "กำลังตรวจ"
-                                ? "rgba(255, 182, 193, 0.2)" // พื้นหลังสีแดงอ่อน (กำลังตรวจ)
+                                ? "rgba(255, 255, 0, 0.5)" // พื้นหลังสีเหลือง (กำลังตรวจ)
                                 : row.Status === "รอตรวจ"
-                                ? "rgba(255, 255, 0, 0.2)" // พื้นหลังสีเหลืองอ่อน (รอตรวจ)
-                                : "transparent", // ไม่มีพื้นหลังสำหรับสถานะอื่น
-                            color: row.Status === "กำลังตรวจ" ? "red" : "black", // เปลี่ยนสีข้อความตามสถานะ
+                                ? "rgba(0, 0, 255, 0.2)" // พื้นหลังสีน้ำเงินอ่อน (รอตรวจ)
+                                : "transparent",
+                            color:
+                              row.Status === "กำลังตรวจ"
+                                ? "black" // สีข้อความสำหรับสถานะ "กำลังตรวจ"
+                                : row.Status === "รอตรวจ"
+                                ? "black"// สีข้อความสำหรับสถานะ "รอตรวจ"
+                                : row.Status === "รอจ่ายยา"
+                                ? "black" // สีข้อความสำหรับสถานะ "รอจ่ายยา"
+                                : "black", // สีข้อความเริ่มต้น
                           }}
                         >
                           {row.Status || "-"}
