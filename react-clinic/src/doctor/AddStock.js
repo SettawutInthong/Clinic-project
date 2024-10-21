@@ -36,23 +36,25 @@ const AddStock = () => {
   const navigate = useNavigate(); // ใช้ useNavigate แทน useHistory
 
   useEffect(() => {
-    if (searchName) {
-      const fetchMedicines = async () => {
+    const fetchMedicines = async () => {
+      if (searchName.trim() !== "") {
         try {
-          const response = await axios.get(
-            "http://localhost:5000/api/medicines",
-            {
-              params: { medicineName: searchName },
-            }
-          );
+          const response = await axios.get("http://localhost:5000/api/medicines", {
+            params: { medicineName: searchName },
+          });
           setMedicines(response.data.data);
         } catch (error) {
           console.error("Error fetching medicines:", error);
         }
-      };
-      fetchMedicines();
-    }
-  }, [searchName]);
+      } else {
+        // ถ้า searchName ว่างอยู่ ก็จะล้างข้อมูลใน medicines
+        setMedicines([]);
+      }
+    };
+  
+    fetchMedicines();
+  }, [searchName]); // เมื่อ searchName เปลี่ยนแปลงถึงจะเรียก API
+  
 
   const handleAddMedicine = () => {
     if (selectedMedicine && quantityInsert > 0) {

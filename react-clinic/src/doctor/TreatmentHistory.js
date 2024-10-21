@@ -281,7 +281,7 @@ const TreatmentHistory = () => {
           </Button>
           <Button
             variant="contained"
-            color="secondary"
+            color="primary"
             onClick={() => navigate(`/doctor_addtreatment/${HN}`)}
           >
             ต่อไป

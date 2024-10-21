@@ -294,6 +294,10 @@ app.get("/api/treatment/:HN/latest", async (req, res) => {
 app.get("/api/medicines", (req, res) => {
   const { medicineName } = req.query;
 
+  if (!medicineName) {
+    return res.status(400).json({ error: "กรุณากรอกชื่อยาเพื่อทำการค้นหา" });
+  }
+
   const sql = "SELECT * FROM medicine WHERE Medicine_Name LIKE ?";
   const params = [`%${medicineName}%`];
 
@@ -303,6 +307,7 @@ app.get("/api/medicines", (req, res) => {
     res.json({ data: results });
   });
 });
+
 
 app.post("/api/medicine_stock", async (req, res) => {
   const { Medicine_Name, Description, medicine_type, Quantity, Quantity_type, Med_Cost } = req.body;

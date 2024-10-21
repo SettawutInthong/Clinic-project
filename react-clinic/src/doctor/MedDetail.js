@@ -21,6 +21,8 @@ import {
   DialogActions,
   MenuItem,
   Select,
+  FormControl, 
+  InputLabel  
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
@@ -200,6 +202,9 @@ const MedDetail = () => {
             <MenuItem value="ยาฆ่าเชื้อ">ยาฆ่าเชื้อ</MenuItem>
             <MenuItem value="ยาบำรุง">ยาบำรุง</MenuItem>
             <MenuItem value="ยาทา">ยาทา</MenuItem>
+            <MenuItem value="ยาทางเดินอาหาร">ยาทางเดินอาหาร</MenuItem>
+            <MenuItem value="ยาคุม">ยาคุม</MenuItem>
+            <MenuItem value="ยาฉีด">ยาฉีด</MenuItem>
           </Select>
           <Button
             variant="contained"
@@ -255,21 +260,23 @@ const MedDetail = () => {
                 <TableCell>{medicine.Quantity_type}</TableCell>
                 <TableCell>{medicine.Med_Cost}</TableCell>
                 <TableCell>
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    onClick={() => handleEditClick(medicine)}
-                  >
-                    แก้ไข
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={() => handleDeleteClick(medicine)}
-                    sx={{ ml: 1 }} // เพิ่มระยะห่างระหว่างปุ่มแก้ไขกับลบ
-                  >
-                    ลบ
-                  </Button>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => handleEditClick(medicine)}
+                    >
+                      แก้ไข
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      onClick={() => handleDeleteClick(medicine)}
+                      sx={{ ml: 1 }} // เพิ่มระยะห่างระหว่างปุ่มแก้ไขกับลบ
+                    >
+                      ลบ
+                    </Button>
+                  </Box>
                 </TableCell>
               </TableRow>
             ))}
@@ -380,44 +387,68 @@ const MedDetail = () => {
         <DialogTitle>เพิ่มยาชนิดใหม่</DialogTitle>
         <DialogContent>
           <TextField
-            margin="dense"
+            margin="normal"
             label="ชื่อยา"
             name="Medicine_Name"
             onChange={handleNewMedicineChange}
             fullWidth
           />
           <TextField
-            margin="dense"
+            margin="normal"
             label="คำอธิบาย"
             name="Description"
             onChange={handleNewMedicineChange}
             fullWidth
           />
+          {/* ใช้ FormControl และ InputLabel สำหรับ Select */}
+          <FormControl fullWidth margin="normal">
+            <InputLabel>ประเภทยา</InputLabel>
+            <Select
+              label="ประเภทยา"
+              name="medicine_type"
+              value={newMedicine.medicine_type || ""}
+              onChange={handleNewMedicineChange}
+            >
+              <MenuItem value="ยาแก้ปวด">ยาแก้ปวด</MenuItem>
+            <MenuItem value="ยาฆ่าเชื้อ">ยาฆ่าเชื้อ</MenuItem>
+            <MenuItem value="ยาบำรุง">ยาบำรุง</MenuItem>
+            <MenuItem value="ยาทา">ยาทา</MenuItem>
+            <MenuItem value="ยาทางเดินอาหาร">ยาทางเดินอาหาร</MenuItem>
+            <MenuItem value="ยาคุม">ยาคุม</MenuItem>
+            <MenuItem value="ยาฉีด">ยาฉีด</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl fullWidth margin="normal">
+            <InputLabel>ประเภทหน่วยนับ</InputLabel>
+            <Select
+              label="ประเภทหน่วยนับ"
+              name="Quantity_type"
+              value={newMedicine.Quantity_type || ""}
+              onChange={handleNewMedicineChange}
+            >
+              <MenuItem value="Tablet">Tablet</MenuItem>
+              <MenuItem value="Capsule">Capsule</MenuItem>
+              <MenuItem value="Syrup">Syrup</MenuItem>
+              <MenuItem value="Bottle">Bottle</MenuItem>
+              <MenuItem value="Sheet">Sheet</MenuItem>
+              <MenuItem value="Dose">Dose</MenuItem>
+              </Select>
+          </FormControl>
+
           <TextField
-            margin="dense"
-            label="ประเภทยา"
-            name="medicine_type"
-            onChange={handleNewMedicineChange}
-            fullWidth
-          />
-          <TextField
-            margin="dense"
+            margin="normal"
             label="คงเหลือในคลัง"
             name="Quantity"
+            type="number"
             onChange={handleNewMedicineChange}
             fullWidth
           />
           <TextField
-            margin="dense"
-            label="หน่วยนับ"
-            name="Quantity_type"
-            onChange={handleNewMedicineChange}
-            fullWidth
-          />
-          <TextField
-            margin="dense"
+            margin="normal"
             label="ราคา(บาท)"
             name="Med_Cost"
+            type="number"
             onChange={handleNewMedicineChange}
             fullWidth
           />
@@ -431,6 +462,8 @@ const MedDetail = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+
 
       <Snackbar
         open={snackbarOpen}
