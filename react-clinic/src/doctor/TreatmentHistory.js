@@ -19,6 +19,7 @@ import {
   Paper,
   Box,
   Grid,
+  ButtonGroup,
 } from "@mui/material"; // นำเข้าทุก component ที่จำเป็น
 import { useNavigate } from "react-router-dom";
 
@@ -104,6 +105,13 @@ const TreatmentHistory = () => {
 
   return (
     <Paper sx={{ padding: 3, margin: 2 }}>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+          <ButtonGroup variant="outlined" color="primary">
+            <Button onClick={() => navigate(`/doctor_patientdetail/${HN}`)}>ไปยังประวัติผู้ป่วย</Button>
+            <Button onClick={() => navigate(`/doctor_addtreatment/${HN}`)}>ไปยังบันทึกการรักษา</Button>
+            <Button onClick={() => navigate(`/doctor_addorder/${HN}`)}>ไปยังรายการจ่ายยา</Button>
+          </ButtonGroup>
+        </Box>
       <Typography variant="h6" gutterBottom>
         ประวัติการรักษา
       </Typography>

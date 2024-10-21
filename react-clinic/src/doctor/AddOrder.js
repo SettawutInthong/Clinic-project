@@ -19,6 +19,7 @@ import {
   Snackbar,
   Alert,
   IconButton,
+  ButtonGroup,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate, useParams } from "react-router-dom";
@@ -42,20 +43,46 @@ const AddOrder = () => {
     const fetchLatestOrder = async () => {
       try {
         const response = await axios.get(`http://localhost:5000/api/order_medicine?HN=${HN}`);
-        console.log(response.data);  // แสดงข้อมูล response
         if (response.data && response.data.data) {
           const latestOrder = response.data.data;
           setOrderID(latestOrder.Order_ID);  // ตั้งค่า Order_ID ล่าสุด
-        } else {
-          console.error('ไม่พบออเดอร์สำหรับ HN นี้');
         }
       } catch (error) {
         console.error("เกิดข้อผิดพลาดในการดึง Order ล่าสุด:", error);
       }
     };
-  
+
     fetchLatestOrder();
   }, [HN]);
+
+  // โหลดข้อมูลจาก localStorage เมื่อเริ่มต้น
+  useEffect(() => {
+    const savedOrderItems = JSON.parse(localStorage.getItem("orderItems"));
+    const savedTreatmentCost = localStorage.getItem("treatmentCost");
+    const savedSelectedMedicine = JSON.parse(localStorage.getItem("selectedMedicine"));
+    const savedQuantity = localStorage.getItem("quantity");
+
+    if (savedOrderItems) {
+      setOrderItems(savedOrderItems);
+    }
+    if (savedTreatmentCost) {
+      setTreatmentCost(savedTreatmentCost);
+    }
+    if (savedSelectedMedicine) {
+      setSelectedMedicine(savedSelectedMedicine);
+    }
+    if (savedQuantity) {
+      setQuantity(parseInt(savedQuantity));
+    }
+  }, []);
+
+  // เก็บข้อมูลใน localStorage เมื่อมีการเปลี่ยนแปลง
+  useEffect(() => {
+    localStorage.setItem("orderItems", JSON.stringify(orderItems));
+    localStorage.setItem("treatmentCost", treatmentCost);
+    localStorage.setItem("selectedMedicine", JSON.stringify(selectedMedicine));
+    localStorage.setItem("quantity", quantity);
+  }, [orderItems, treatmentCost, selectedMedicine, quantity]);
 
   useEffect(() => {
     if (searchName) {
@@ -67,7 +94,6 @@ const AddOrder = () => {
               params: { medicineName: searchName }, // ตรวจสอบว่าค่าที่ส่งเป็นชื่อยาถูกต้อง
             }
           );
-          console.log(response.data); // แสดงข้อมูล response ใน console
           setMedicines(response.data.data);
         } catch (error) {
           console.error("Error fetching medicines:", error);
@@ -84,7 +110,12 @@ const AddOrder = () => {
         Medicine_Name: selectedMedicine.Medicine_Name,
         Quantity: quantity,
       };
-      setOrderItems([...orderItems, newItem]);
+      const updatedOrderItems = [...orderItems, newItem];
+      setOrderItems(updatedOrderItems);
+
+      // อัปเดต localStorage ทันทีที่เพิ่มยา
+      localStorage.setItem("orderItems", JSON.stringify(updatedOrderItems));
+
       setSelectedMedicine(null);
       setQuantity(1);
     }
@@ -93,6 +124,7 @@ const AddOrder = () => {
   const handleRemoveItem = (index) => {
     const updatedItems = orderItems.filter((_, i) => i !== index);
     setOrderItems(updatedItems);
+    localStorage.setItem("orderItems", JSON.stringify(updatedItems));  // อัปเดตใน localStorage หลังจากลบยา
   };
 
   const handleConfirmSubmit = async () => {
@@ -100,28 +132,34 @@ const AddOrder = () => {
       alert("กรุณากรอกราคาค่ารักษาและรายการยาให้ครบถ้วน");
       return;
     }
-  
+
     setConfirmDialogOpen(false);
-  
+
     try {
       if (orderItems.length > 0) {
         const orderData = {
           items: orderItems,
           treatmentCost, // เพิ่มค่ารักษาไปกับข้อมูล
         };
-  
+
         if (orderID) {
           // บันทึกออเดอร์ยาลงฐานข้อมูล
           await axios.post(
             `http://localhost:5000/api/orders/${orderID}/items`,
             orderData
           );
-  
+
           // อัปเดตสถานะของคิวเป็น "รอจ่ายยา"
           await axios.put(`http://localhost:5000/api/walkinqueue/${HN}`, {
             Status: "รอจ่ายยา",
           });
-  
+
+          // ลบข้อมูลที่เก็บไว้ใน localStorage
+          localStorage.removeItem("orderItems");
+          localStorage.removeItem("treatmentCost");
+          localStorage.removeItem("selectedMedicine");
+          localStorage.removeItem("quantity");
+
           setOpenSnackbar(true);
           setOrderItems([]); // ล้างรายการที่เลือก
           navigate("/doctor_queue"); // ย้ายไปยังหน้าคิวหลังจากบันทึกสำเร็จ
@@ -133,7 +171,6 @@ const AddOrder = () => {
       console.error("เกิดข้อผิดพลาดในการบันทึกออเดอร์:", error.message);
     }
   };
-  
 
   const handleSnackbarClose = () => {
     setOpenSnackbar(false);
@@ -145,191 +182,197 @@ const AddOrder = () => {
 
   return (
     <Box sx={{ flexGrow: 1, padding: 3 }}>
-        <Paper sx={{ padding: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            สั่งยาสำหรับผู้ป่วย HN: {HN}
-          </Typography>
-
-          <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-            <TextField
-              label="ค้นหายา"
-              variant="outlined"
-              fullWidth
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
-            />
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => setOpenMedicineDialog(true)}
-            >
-              ค้นหา
-            </Button>
-          </Box>
-
-          <TableContainer component={Paper} sx={{ mb: 2 }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>ชื่อยา</TableCell>
-                  <TableCell>จำนวน</TableCell>
-                  <TableCell>ลบ</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {orderItems.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.Medicine_Name}</TableCell>
-                    <TableCell>{item.Quantity}</TableCell>
-                    <TableCell>
-                      <IconButton
-                        onClick={() => handleRemoveItem(index)}
-                        color="error"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
+      <Paper sx={{ padding: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          สั่งยาสำหรับผู้ป่วย HN: {HN}
+        </Typography>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+          <ButtonGroup variant="outlined" color="primary">
+            <Button onClick={() => navigate(`/doctor_patientdetail/${HN}`)}>ไปยังประวัติผู้ป่วย</Button>
+            <Button onClick={() => navigate(`/doctor_treatmenthistory/${HN}`)}>ไปยังประวัติการรักษา</Button>
+            <Button onClick={() => navigate(`/doctor_addtreatment/${HN}`)}>ไปยังบันทึกการรักษา</Button>
+          </ButtonGroup>
+        </Box>
+        <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
           <TextField
-            label="ราคาค่ารักษา"  // เพิ่ม input field สำหรับค่ารักษา
-            type="number"
+            label="ค้นหายา"
             variant="outlined"
             fullWidth
-            value={treatmentCost}
-            onChange={(e) => setTreatmentCost(e.target.value)}
-            sx={{ mb: 2 }}
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
           />
-
-          <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
-            <Button
-              variant="outlined"
-              style={{
-                color: "#1976d2",
-                borderColor: "#1976d2",
-                textTransform: "none",
-                marginRight: "10px",
-              }}
-              onClick={() => navigate(`/doctor_patientdetail/${HN}`)}
-            >
-              กลับ
-            </Button>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={handleSubmitOrder}
-              disabled={!orderID}  // ถ้าไม่มี orderID ให้ปิดปุ่มบันทึก
-            >
-              บันทึกออเดอร์
-            </Button>
-          </Box>
-
-          <Snackbar
-            open={openSnackbar}
-            autoHideDuration={3000}
-            onClose={handleSnackbarClose}
-            anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setOpenMedicineDialog(true)}
           >
-            <Alert onClose={handleSnackbarClose} severity="success">
-              บันทึกออเดอร์สำเร็จ
-            </Alert>
-          </Snackbar>
+            ค้นหา
+          </Button>
+        </Box>
 
-          <Dialog
-            open={openMedicineDialog}
-            onClose={() => setOpenMedicineDialog(false)}
+        <TableContainer component={Paper} sx={{ mb: 2 }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>ชื่อยา</TableCell>
+                <TableCell>จำนวน</TableCell>
+                <TableCell>ลบ</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {orderItems.map((item, index) => (
+                <TableRow key={index}>
+                  <TableCell>{item.Medicine_Name}</TableCell>
+                  <TableCell>{item.Quantity}</TableCell>
+                  <TableCell>
+                    <IconButton
+                      onClick={() => handleRemoveItem(index)}
+                      color="error"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        <TextField
+          label="ราคาค่ารักษา"  // เพิ่ม input field สำหรับค่ารักษา
+          type="number"
+          variant="outlined"
+          fullWidth
+          value={treatmentCost}
+          onChange={(e) => setTreatmentCost(e.target.value)}
+          sx={{ mb: 2 }}
+        />
+
+        <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
+          <Button
+            variant="outlined"
+            style={{
+              color: "#1976d2",
+              borderColor: "#1976d2",
+              textTransform: "none",
+              marginRight: "10px",
+            }}
+            onClick={() => navigate(`/doctor_patientdetail/${HN}`)}
           >
-            <DialogTitle>ค้นหายา</DialogTitle>
-            <DialogContent>
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>ID</TableCell>
-                      <TableCell>ชื่อยา</TableCell>
-                      <TableCell>เลือก</TableCell>
+            กลับ
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={handleSubmitOrder}
+            disabled={!orderID}  // ถ้าไม่มี orderID ให้ปิดปุ่มบันทึก
+          >
+            บันทึกออเดอร์
+          </Button>
+        </Box>
+
+        <Snackbar
+          open={openSnackbar}
+          autoHideDuration={3000}
+          onClose={handleSnackbarClose}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert onClose={handleSnackbarClose} severity="success">
+            บันทึกออเดอร์สำเร็จ
+          </Alert>
+        </Snackbar>
+
+        <Dialog
+          open={openMedicineDialog}
+          onClose={() => setOpenMedicineDialog(false)}
+        >
+          <DialogTitle>ค้นหายา</DialogTitle>
+          <DialogContent>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>ID</TableCell>
+                    <TableCell>ชื่อยา</TableCell>
+                    <TableCell>เลือก</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {medicines.map((medicine) => (
+                    <TableRow key={medicine.Medicine_ID}>
+                      <TableCell>{medicine.Medicine_ID}</TableCell>
+                      <TableCell>{medicine.Medicine_Name}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => {
+                            setSelectedMedicine(medicine);
+                          }}
+                        >
+                          เลือก
+                        </Button>
+                      </TableCell>
                     </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {medicines.map((medicine) => (
-                      <TableRow key={medicine.Medicine_ID}>
-                        <TableCell>{medicine.Medicine_ID}</TableCell>
-                        <TableCell>{medicine.Medicine_Name}</TableCell>
-                        <TableCell>
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={() => {
-                              setSelectedMedicine(medicine);
-                            }}
-                          >
-                            เลือก
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              {selectedMedicine && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    ยาที่เลือก: {selectedMedicine.Medicine_Name}
-                  </Typography>
-                  <TextField
-                    label="จำนวน"
-                    type="number"
-                    variant="outlined"
-                    fullWidth
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                  />
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{ mt: 2 }}
-                    onClick={handleAddMedicine}
-                  >
-                    เพิ่มยาในออเดอร์
-                  </Button>
-                </Box>
-              )}
-            </DialogContent>
-            <DialogActions>
-              <Button
-                onClick={() => setOpenMedicineDialog(false)}
-                color="primary"
-              >
-                ปิด
-              </Button>
-            </DialogActions>
-          </Dialog>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            {selectedMedicine && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  ยาที่เลือก: {selectedMedicine.Medicine_Name}
+                </Typography>
+                <TextField
+                  label="จำนวน"
+                  type="number"
+                  variant="outlined"
+                  fullWidth
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                />
+                <Button
+                  variant="contained"
+                  color="primary"
+                  sx={{ mt: 2 }}
+                  onClick={handleAddMedicine}
+                >
+                  เพิ่มยาในออเดอร์
+                </Button>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => setOpenMedicineDialog(false)}
+              color="primary"
+            >
+              ปิด
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-          <Dialog
-            open={confirmDialogOpen}
-            onClose={() => setConfirmDialogOpen(false)}
-          >
-            <DialogTitle>ยืนยันการบันทึกออเดอร์</DialogTitle>
-            <DialogContent>
-              <Typography>คุณต้องการบันทึกออเดอร์ใช่หรือไม่?</Typography>
-            </DialogContent>
-            <DialogActions>
-              <Button
-                onClick={() => setConfirmDialogOpen(false)}
-                color="primary"
-              >
-                ยกเลิก
-              </Button>
-              <Button onClick={handleConfirmSubmit} color="secondary">
-                ยืนยัน
-              </Button>
-            </DialogActions>
-          </Dialog>
-        </Paper>
+        <Dialog
+          open={confirmDialogOpen}
+          onClose={() => setConfirmDialogOpen(false)}
+        >
+          <DialogTitle>ยืนยันการบันทึกออเดอร์</DialogTitle>
+          <DialogContent>
+            <Typography>คุณต้องการบันทึกออเดอร์ใช่หรือไม่?</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => setConfirmDialogOpen(false)}
+              color="primary"
+            >
+              ยกเลิก
+            </Button>
+            <Button onClick={handleConfirmSubmit} color="secondary">
+              ยืนยัน
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Paper>
     </Box>
   );
 };

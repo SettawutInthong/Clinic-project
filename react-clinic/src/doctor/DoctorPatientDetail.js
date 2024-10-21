@@ -10,6 +10,7 @@ import {
   TextField,
   DialogContent,
   CircularProgress,
+  ButtonGroup,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
@@ -71,6 +72,13 @@ const DoctorPatientDetail = () => {
   return (
     <Box sx={{ flexGrow: 1, padding: 3 }}>
       <Paper sx={{ padding: 3 }}>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+          <ButtonGroup variant="outlined" color="primary">
+            <Button onClick={() => navigate(`/doctor_treatmenthistory/${HN}`)}>ไปยังประวัติการรักษา</Button>
+            <Button onClick={() => navigate(`/doctor_addtreatment/${HN}`)}>ไปยังบันทึกการรักษา</Button>
+            <Button onClick={() => navigate(`/doctor_addorder/${HN}`)}>ไปยังรายการจ่ายยา</Button>
+          </ButtonGroup>
+        </Box>
         {patientData ? (
           <Grid container spacing={2}>
             <Grid item xs={12}>

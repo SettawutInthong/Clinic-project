@@ -17,6 +17,7 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  ButtonGroup,
 } from "@mui/material";
 import { Card, CardContent } from "@mui/material";
 import { useNavigate } from "react-router-dom";
@@ -52,9 +53,9 @@ const AddTreatment = () => {
     Last_Pregnancy_Date: null,
     Abortion_History: "",
     Pregmed_Detail: "",
-    Preg_Others: ""
+    Preg_Others: "",
   });
-  const [treatmentType, setTreatmentType] = useState("");
+  const [treatmentType, setTreatmentType] = useState(""); // treatment type select
   const [historyPopupOpen, setHistoryPopupOpen] = useState(false);
   const [treatmentHistory, setTreatmentHistory] = useState([]);
   const [isContraceptionVisible, setContraceptionVisible] = useState(false);
@@ -62,6 +63,25 @@ const AddTreatment = () => {
   const [appointmentPopup, setAppointmentPopup] = useState(false);
   const [appointmentDate, setAppointmentDate] = useState(null);
   const navigate = useNavigate();
+
+  // Persist data to localStorage
+  useEffect(() => {
+    localStorage.setItem("treatmentData", JSON.stringify(treatmentData));
+    localStorage.setItem("treatmentType", treatmentType);  // Save the treatment type
+  }, [treatmentData, treatmentType]);
+
+  // Restore form data from localStorage on component mount
+  useEffect(() => {
+    const savedData = JSON.parse(localStorage.getItem("treatmentData"));
+    const savedTreatmentType = localStorage.getItem("treatmentType");
+
+    if (savedData) {
+      setTreatmentData(savedData);
+    }
+    if (savedTreatmentType) {
+      setTreatmentType(savedTreatmentType);  // Restore the treatment type
+    }
+  }, []);
 
   const handleOpenAppointmentPopup = () => {
     setAppointmentPopup(true);
@@ -87,19 +107,23 @@ const AddTreatment = () => {
         General_Details: treatmentData.General_Details || "N/A",
         Treatment_Others: treatmentData.Treatment_Others || "N/A",
       };
-  
+
       console.log("Data being sent: ", data);
-  
-      const response = await axios.post("http://localhost:5000/api/general_treatment", data);
+
+      const response = await axios.post(
+        "http://localhost:5000/api/general_treatment",
+        data
+      );
       alert("บันทึกข้อมูลสำเร็จ!");
       navigate(`/doctor_addorder/${HN}`);
     } catch (error) {
       console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + (error.response?.data?.error || "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้"));
+      alert(
+        "เกิดข้อผิดพลาดในการบันทึกข้อมูล: " +
+        (error.response?.data?.error || "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้")
+      );
     }
-  };  
-  
-
+  };
 
   const handleSubmitPregnancyTreatment = async () => {
     try {
@@ -117,12 +141,18 @@ const AddTreatment = () => {
         Preg_Others: treatmentData.Preg_Others,
       };
 
-      const response = await axios.post("http://localhost:5000/api/pregnancy_treatment", data);
+      const response = await axios.post(
+        "http://localhost:5000/api/pregnancy_treatment",
+        data
+      );
       alert("บันทึกข้อมูลสำเร็จ!");
       navigate(`/doctor_addorder/${HN}`);
     } catch (error) {
       console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + (error.response?.data?.error || "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้"));
+      alert(
+        "เกิดข้อผิดพลาดในการบันทึกข้อมูล: " +
+        (error.response?.data?.error || "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้")
+      );
     }
   };
 
@@ -190,13 +220,6 @@ const AddTreatment = () => {
     if (treatmentType === "ทั่วไป") {
       return (
         <>
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={handleOpenHistoryPopup}
-          >
-            ดูประวัติการรักษา
-          </Button>
           <Grid item xs={12}>
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom>
@@ -204,13 +227,15 @@ const AddTreatment = () => {
               </Typography>
             </Grid>
             <TextField
-              label="การวินิจฉัยเบื้องต้น"
+              label="ตรวจร่างกาย"
               fullWidth
               margin="dense"
               multiline
               size="small"
-              value={treatmentData.General_Details || ""}  // ตรวจสอบและตั้งค่าให้ไม่เป็น undefined
-              onChange={(e) => setTreatmentData({ ...treatmentData, General_Details: e.target.value })}
+              value={treatmentData.General_Details || ""} // ตรวจสอบและตั้งค่าให้ไม่เป็น undefined
+              onChange={(e) =>
+                setTreatmentData({ ...treatmentData, General_Details: e.target.value })
+              }
             />
 
             <TextField
@@ -219,18 +244,21 @@ const AddTreatment = () => {
               margin="dense"
               multiline
               rows={10}
-              value={treatmentData.Treatment_Detail || ""}  // ตรวจสอบและตั้งค่าให้ไม่เป็น undefined
-              onChange={(e) => setTreatmentData({ ...treatmentData, Treatment_Detail: e.target.value })}
+              value={treatmentData.Treatment_Detail || ""} // ตรวจสอบและตั้งค่าให้ไม่เป็น undefined
+              onChange={(e) =>
+                setTreatmentData({ ...treatmentData, Treatment_Detail: e.target.value })
+              }
             />
-            <Button variant="outlined" onClick={handleOpenAppointmentPopup}>
-              นัดหมายผู้ป่วย
-            </Button>
+
           </Grid>
           <Grid item xs={12}>
             <Typography variant="h6" gutterBottom>
               2. บันทึกเพิ่มเติม
             </Typography>
           </Grid>
+          <Button variant="outlined" onClick={handleOpenAppointmentPopup}>
+            นัดหมายผู้ป่วย
+          </Button>
           <TextField
             label="บันทึกเพิ่มเติม"
             fullWidth
@@ -238,21 +266,16 @@ const AddTreatment = () => {
             size="small"
             multiline
             rows={5}
-            value={treatmentData.Treatment_Others || ""}  // ตรวจสอบและตั้งค่าให้ไม่เป็น undefined
-              onChange={(e) => setTreatmentData({ ...treatmentData, Treatment_Others: e.target.value })}
+            value={treatmentData.Treatment_Others || ""} // ตรวจสอบและตั้งค่าให้ไม่เป็น undefined
+            onChange={(e) =>
+              setTreatmentData({ ...treatmentData, Treatment_Others: e.target.value })
+            }
           />
         </>
       );
     } else if (treatmentType === "ฉีดยาคุม") {
       return (
         <>
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={handleOpenHistoryPopup}
-          >
-            ดูประวัติการรักษา
-          </Button>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
@@ -274,7 +297,12 @@ const AddTreatment = () => {
                       <Select
                         defaultValue=""
                         label="ประเภทของการคุมกำเนิด"
-                        onChange={(e) => setTreatmentData({ ...treatmentData, Pregnancy_Control_Type: e.target.value })}
+                        onChange={(e) =>
+                          setTreatmentData({
+                            ...treatmentData,
+                            Pregnancy_Control_Type: e.target.value,
+                          })
+                        }
                       >
                         <MenuItem value="ยาคุมกำเนิด">ยาคุมกำเนิด</MenuItem>
                         <MenuItem value="ฉีดยาคุม">ฉีดยาคุม</MenuItem>
@@ -286,7 +314,12 @@ const AddTreatment = () => {
                       label="วันที่ฉีดครั้งล่าสุด"
                       inputFormat="dd/MM/yyyy"
                       value={treatmentData.Last_Control_Date}
-                      onChange={(date) => setTreatmentData({ ...treatmentData, Last_Control_Date: date })}
+                      onChange={(date) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Last_Control_Date: date,
+                        })
+                      }
                       slotProps={{
                         textField: {
                           fullWidth: true,
@@ -298,13 +331,17 @@ const AddTreatment = () => {
                   </Grid>
 
                   <Grid item xs={12} sm={6}>
-
                     <FormControl fullWidth margin="dense" size="small">
                       <InputLabel>ความถี่ในการฉีดยาคุมกำเนิด</InputLabel>
                       <Select
                         defaultValue=""
                         label="ความถี่ในการฉีดยาคุมกำเนิด"
-                        onChange={(e) => setTreatmentData({ ...treatmentData, Freq_Pregnancies: e.target.value })}
+                        onChange={(e) =>
+                          setTreatmentData({
+                            ...treatmentData,
+                            Freq_Pregnancies: e.target.value,
+                          })
+                        }
                       >
                         <MenuItem value="1 เดือนครั้ง">1 เดือนครั้ง</MenuItem>
                         <MenuItem value="3 เดือนครั้ง">3 เดือนครั้ง</MenuItem>
@@ -320,7 +357,12 @@ const AddTreatment = () => {
                       size="small"
                       multiline
                       rows={3}
-                      onChange={(e) => setTreatmentData({ ...treatmentData, Pregnancy_Problems: e.target.value })}
+                      onChange={(e) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Pregnancy_Problems: e.target.value,
+                        })
+                      }
                     />
                   </Grid>
                 </>
@@ -343,7 +385,12 @@ const AddTreatment = () => {
                       margin="dense"
                       size="small"
                       type="number"
-                      onChange={(e) => setTreatmentData({ ...treatmentData, Total_Pregnancies: e.target.value })}
+                      onChange={(e) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Total_Pregnancies: e.target.value,
+                        })
+                      }
                     />
 
                     <TextField
@@ -352,7 +399,12 @@ const AddTreatment = () => {
                       margin="dense"
                       size="small"
                       type="number"
-                      onChange={(e) => setTreatmentData({ ...treatmentData, Total_Children: e.target.value })}
+                      onChange={(e) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Total_Children: e.target.value,
+                        })
+                      }
                     />
                   </Grid>
 
@@ -361,7 +413,12 @@ const AddTreatment = () => {
                       label="การตั้งครรภ์ล่าสุด (ถ้ามี)"
                       inputFormat="dd/MM/yyyy"
                       value={treatmentData.Last_Pregnancy_Date}
-                      onChange={(date) => setTreatmentData({ ...treatmentData, Last_Pregnancy_Date: date })}
+                      onChange={(date) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Last_Pregnancy_Date: date,
+                        })
+                      }
                       slotProps={{
                         textField: {
                           fullWidth: true,
@@ -376,7 +433,12 @@ const AddTreatment = () => {
                       fullWidth
                       margin="dense"
                       size="small"
-                      onChange={(e) => setTreatmentData({ ...treatmentData, Abortion_History: e.target.value })}
+                      onChange={(e) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Abortion_History: e.target.value,
+                        })
+                      }
                     />
                   </Grid>
                 </>
@@ -393,10 +455,13 @@ const AddTreatment = () => {
                   fullWidth
                   margin="dense"
                   size="small"
-                  onChange={(e) => setTreatmentData({ ...treatmentData, Pregmed_Detail: e.target.value })}
+                  onChange={(e) =>
+                    setTreatmentData({
+                      ...treatmentData,
+                      Pregmed_Detail: e.target.value,
+                    })
+                  }
                 />
-
-                
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -404,7 +469,12 @@ const AddTreatment = () => {
                   fullWidth
                   margin="dense"
                   size="small"
-                  onChange={(e) => setTreatmentData({ ...treatmentData, Pregmed_Detail: e.target.value })}
+                  onChange={(e) =>
+                    setTreatmentData({
+                      ...treatmentData,
+                      Pregmed_Detail: e.target.value,
+                    })
+                  }
                 />
               </Grid>
 
@@ -425,7 +495,12 @@ const AddTreatment = () => {
                   size="small"
                   multiline
                   rows={5}
-                  onChange={(e) => setTreatmentData({ ...treatmentData, Preg_Others: e.target.value })}
+                  onChange={(e) =>
+                    setTreatmentData({
+                      ...treatmentData,
+                      Preg_Others: e.target.value,
+                    })
+                  }
                 />
               </Grid>
             </Grid>
@@ -454,6 +529,13 @@ const AddTreatment = () => {
   return (
     <Box sx={{ flexGrow: 1, padding: 3 }}>
       <Paper sx={{ padding: 3 }}>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+          <ButtonGroup variant="outlined" color="primary">
+            <Button onClick={() => navigate(`/doctor_patientdetail/${HN}`)}>ไปยังประวัติผู้ป่วย</Button>
+            <Button onClick={() => navigate(`/doctor_treatmenthistory/${HN}`)}>ไปยังประวัติการรักษา</Button>
+            <Button onClick={() => navigate(`/doctor_addorder/${HN}`)}>ไปยังรายการสั่งยา</Button>
+          </ButtonGroup>
+        </Box>
         {patientData ? (
           <CardContent>
             <Grid container spacing={2}>
@@ -496,7 +578,9 @@ const AddTreatment = () => {
                       textTransform: "none",
                       marginRight: "10px",
                     }}
-                    onClick={() => navigate(`/doctor_treatmenthistory/${patientData.HN}`)}
+                    onClick={() =>
+                      navigate(`/doctor_treatmenthistory/${patientData.HN}`)
+                    }
                   >
                     กลับ
                   </Button>

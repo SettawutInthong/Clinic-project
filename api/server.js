@@ -297,23 +297,37 @@ app.get("/api/medicines", (req, res) => {
 
 app.post("/api/orders/:orderID/items", async (req, res) => {
   const { orderID } = req.params;
-  const { items, treatmentCost } = req.body; // รับค่ารักษา
+  const { items, treatmentCost } = req.body;
+
+  // ฟังก์ชัน generateID สำหรับสร้าง Item_ID ในรูปแบบ I00001
+  const generateID = (currentMaxID, prefix) => {
+    if (!currentMaxID || isNaN(parseInt(currentMaxID.substring(1), 10))) {
+      // ถ้าไม่มีค่า currentMaxID หรือแปลงเป็นตัวเลขไม่ได้ ให้เริ่มต้นที่ I00001
+      return `${prefix}00001`;
+    }
+    const nextNumber = parseInt(currentMaxID.substring(1), 10) + 1;
+    return `${prefix}${nextNumber.toString().padStart(5, "0")}`;
+  };
 
   try {
     // ดึงค่า Item_ID สูงสุดปัจจุบันเพื่อใช้ในการสร้าง ID ใหม่
     const [result] = await db.query(`
-      SELECT MAX(CAST(Item_ID AS UNSIGNED)) as maxItemID FROM order_medicine
+      SELECT MAX(Item_ID) as maxItemID FROM order_medicine
     `);
 
-    let maxItemID = result[0].maxItemID ? parseInt(result[0].maxItemID, 10) : 0;
+    // กำหนดค่าเริ่มต้นสำหรับ Item_ID
+    let maxItemID = result[0].maxItemID || null;
 
     // ทำการ Insert ยาแต่ละรายการลงใน order_medicine
     const itemPromises = items.map((item) => {
-      maxItemID++;
+      // สร้าง Item_ID ใหม่โดยใช้ฟังก์ชัน generateID
+      const newItemID = generateID(maxItemID, 'I');
+      maxItemID = newItemID; // อัปเดตค่า maxItemID หลังจากเพิ่มแต่ละรายการ
+
       return db.query(`
         INSERT INTO order_medicine (Item_ID, Order_ID, Medicine_ID, Quantity_Order)
         VALUES (?, ?, ?, ?)
-      `, [maxItemID, orderID, item.Medicine_ID, item.Quantity]);
+      `, [newItemID, orderID, item.Medicine_ID, item.Quantity]);
     });
 
     await Promise.all(itemPromises);
@@ -331,6 +345,7 @@ app.post("/api/orders/:orderID/items", async (req, res) => {
     res.status(500).json({ error: "เกิดข้อผิดพลาดในการเพิ่มรายการยา" });
   }
 });
+
 
 
 
