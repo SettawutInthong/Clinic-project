@@ -1237,7 +1237,7 @@ const NursePatient = () => {
                 <Button onClick={() => setDeletePopup(false)} color="primary">
                   ยกเลิก
                 </Button>
-                <Button onClick={ConfirmDeletePatient} color="primary">
+                <Button onClick={ConfirmDeletePatient} color="error">
                   ลบ
                 </Button>
               </DialogActions>

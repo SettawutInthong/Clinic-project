@@ -722,7 +722,7 @@ const DoctorQueue = () => {
                 <Button onClick={() => setDeletePopup(false)} color="primary">
                   ยกเลิก
                 </Button>
-                <Button onClick={ConfirmDeleteQueue} color="primary">
+                <Button onClick={ConfirmDeleteQueue} color="error">
                   ลบ
                 </Button>
               </DialogActions>
