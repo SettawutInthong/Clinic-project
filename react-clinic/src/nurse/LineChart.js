@@ -46,18 +46,18 @@ const LineChart = () => {
         params: { filter },
       });
       const orderData = response.data;
-  
+
       let groupedData;
       if (filter === "last_6_months") {
         groupedData = groupOrdersByMonth(orderData);
       } else {
         groupedData = groupOrdersByDay(orderData);
       }
-  
+
       const limit = filter === "last_6_months" ? 6 : 7; // ลบตัวเลือก "last_2_months" ออก
       const labels = Object.keys(groupedData).slice(0, limit);
       const data = Object.values(groupedData).slice(0, limit);
-  
+
       setChartData({
         labels: labels,
         datasets: [
@@ -76,7 +76,7 @@ const LineChart = () => {
       console.error("Error fetching order data:", error);
     }
   };
-  
+
   // ฟังก์ชันจัดกลุ่มคำสั่งซื้อตามเดือน
   const groupOrdersByMonth = (orderData) => {
     const grouped = {};
@@ -154,7 +154,6 @@ const LineChart = () => {
           color: "#000",
         }}
       >
-      
         <select
           id="filter"
           value={selectedFilter}
@@ -162,7 +161,7 @@ const LineChart = () => {
           style={{ marginLeft: "10px", color: "#000" }} // เปลี่ยนสีเป็นสีดำ
         >
           <option value="last_6_months">6 เดือนที่ผ่านมา</option>
-          
+
           <option value="last_7_days">7 วันที่ผ่านมา</option>
         </select>
       </div>
@@ -179,8 +178,14 @@ const LineChart = () => {
               title: {
                 display: true,
                 text: "สถิติรายรับ", // เปลี่ยนคำว่า Statistics เป็น สถิติรายรับ
+                align: "start", // จัดหัวข้อไปทางซ้าย
+                font: {
+                  size: 15, // เพิ่มขนาดตัวอักษรของหัวข้อ
+                },
+                padding: {
+                  bottom: 20, // เพิ่มระยะห่างระหว่างหัวข้อและกราฟ
+                },
               },
-              
             },
             scales: {
               x: {

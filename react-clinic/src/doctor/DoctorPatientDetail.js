@@ -235,7 +235,7 @@ const DoctorPatientDetail = () => {
                 </Button>
                 <Button
                   variant="contained"
-                  color="secondary"
+                  color="primary"
                   onClick={() => navigate(`/doctor_treatmenthistory/${HN}`)}
                 >
                   ต่อไป

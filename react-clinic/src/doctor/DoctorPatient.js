@@ -939,7 +939,7 @@ const handleCloseOrderDetails = () => {
                     AddPatient();
                     ResetForm();
                   }}
-                  color="primary"
+                  color="primary" variant="contained"
                 >
                   บันทึก
                 </Button>
@@ -1139,7 +1139,7 @@ const handleCloseOrderDetails = () => {
                     <Button onClick={() => setEdit(false)} color="primary">
                       ยกเลิก
                     </Button>
-                    <Button onClick={EditPatient} color="primary">
+                    <Button onClick={EditPatient} color="primary" variant="contained"> 
                       บันทึก
                     </Button>
                   </>
@@ -1475,7 +1475,7 @@ const handleCloseOrderDetails = () => {
                 <Button onClick={() => setAddQueuePopup(false)} color="primary">
                   ยกเลิก
                 </Button>
-                <Button onClick={ConfirmAddQueue} color="primary">
+                <Button onClick={ConfirmAddQueue} color="primary" variant="contained">
                   จองคิว
                 </Button>
               </DialogActions>

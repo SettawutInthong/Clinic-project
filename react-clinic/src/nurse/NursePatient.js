@@ -907,6 +907,7 @@ const NursePatient = () => {
                     AddPatient();
                   }}
                   color="primary"
+                  variant="contained"
                 >
                   บันทึก
                 </Button>
@@ -1008,7 +1009,7 @@ const NursePatient = () => {
                 <Button onClick={() => setAddQueuePopup(false)} color="primary">
                   ยกเลิก
                 </Button>
-                <Button onClick={ConfirmAddQueue} color="primary">
+                <Button onClick={ConfirmAddQueue} color="primary" variant="contained">
                   จองคิว
                 </Button>
               </DialogActions>
@@ -1206,7 +1207,7 @@ const NursePatient = () => {
                     <Button onClick={() => setEdit(false)} color="primary">
                       ยกเลิก
                     </Button>
-                    <Button onClick={EditPatient} color="primary">
+                    <Button onClick={EditPatient} color="primary" variant="contained">
                       บันทึก
                     </Button>
                   </>
@@ -1279,7 +1280,7 @@ const NursePatient = () => {
                 <Button onClick={handleCloseAppointmentPopup} color="primary">
                   ยกเลิก
                 </Button>
-                <Button onClick={ConfirmAppointment} color="primary">
+                <Button onClick={ConfirmAppointment} color="primary" variant="contained">
                   บันทึก
                 </Button>
               </DialogActions>
