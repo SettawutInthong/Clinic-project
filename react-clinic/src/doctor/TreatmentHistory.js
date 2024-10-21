@@ -20,26 +20,32 @@ import {
   Box,
   Grid,
   ButtonGroup,
-} from "@mui/material"; // นำเข้าทุก component ที่จำเป็น
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 const TreatmentHistory = () => {
-  const { HN } = useParams(); // ดึง HN จาก URL
-  const [treatments, setTreatments] = useState([]); // เก็บข้อมูลประวัติการรักษา
-  const [selectedGeneralTreatment, setSelectedGeneralTreatment] = useState(null); // สำหรับแสดงรายละเอียดการรักษาทั่วไป
-  const [selectedPregnancyTreatment, setSelectedPregnancyTreatment] = useState(null); // สำหรับแสดงรายละเอียดการรักษาการตั้งครรภ์
+  const { HN } = useParams();
+  const [treatments, setTreatments] = useState([]);
+  const [selectedGeneralTreatment, setSelectedGeneralTreatment] = useState(null);
+  const [selectedPregnancyTreatment, setSelectedPregnancyTreatment] = useState(null);
   const [dialogState, setDialogState] = useState({
     open: false,
     selectedOrder: [],
   });
+  const [patientTitle, setPatientTitle] = useState(""); // เก็บคำนำหน้าชื่อผู้ป่วย
   const navigate = useNavigate();
 
   // ดึงข้อมูลการรักษาจาก backend
   useEffect(() => {
     const fetchTreatments = async () => {
       try {
+        // ดึงข้อมูลผู้ป่วยเพื่อตรวจสอบคำนำหน้าชื่อ
+        const patientResponse = await axios.get(`http://localhost:5000/api/patient/${HN}`);
+        setPatientTitle(patientResponse.data.data.Title); // เก็บคำนำหน้าผู้ป่วย
+
+        // ดึงข้อมูลประวัติการรักษา
         const response = await axios.get(`http://localhost:5000/api/treatments/${HN}`);
-        console.log(response.data.data); // ตรวจสอบข้อมูลที่ได้
+        console.log(response.data.data);
         setTreatments(response.data.data || []);
       } catch (error) {
         console.error("เกิดข้อผิดพลาดในการดึงข้อมูลการรักษา:", error);
@@ -53,19 +59,18 @@ const TreatmentHistory = () => {
     const hasPregnancyTreatment = treatment.PregnancyTreatmentID ? "รักษาการตั้งครรภ์" : "";
     const hasMedicineOrder = treatment.Order_ID ? "จ่ายยา" : "";
 
-    // สร้าง array สำหรับเก็บข้อมูลการรักษาที่มี
+    // รวมประเภทการรักษาที่มี
     const treatmentTypes = [hasGeneralTreatment, hasPregnancyTreatment, hasMedicineOrder]
-      .filter(Boolean) // กรองค่าว่างออก
-      .join(", "); // รวมข้อมูลการรักษาในรูปแบบของข้อความ
+      .filter(Boolean)
+      .join(", ");
 
     return treatmentTypes || "ไม่มีข้อมูลการรักษา";
   };
 
-  // ดึงข้อมูลการรักษาทั่วไปจาก GeneralTreatmentID
   const handleOpenGeneralTreatment = async (generalTreatmentID) => {
     try {
       const response = await axios.get(`http://localhost:5000/api/general_treatment/${generalTreatmentID}`);
-      setSelectedGeneralTreatment(response.data.data); // เก็บข้อมูลการรักษาทั่วไป
+      setSelectedGeneralTreatment(response.data.data);
     } catch (error) {
       console.error("เกิดข้อผิดพลาดในการดึงข้อมูลการรักษาทั่วไป:", error);
     }
@@ -75,11 +80,10 @@ const TreatmentHistory = () => {
     setSelectedGeneralTreatment(null);
   };
 
-  // ดึงข้อมูลการรักษาการตั้งครรภ์จาก PregnancyTreatmentID
   const handleOpenPregnancyTreatment = async (pregnancyTreatmentID) => {
     try {
       const response = await axios.get(`http://localhost:5000/api/pregnancy_treatment/${pregnancyTreatmentID}`);
-      setSelectedPregnancyTreatment(response.data.data); // เก็บข้อมูลการรักษาการตั้งครรภ์
+      setSelectedPregnancyTreatment(response.data.data);
     } catch (error) {
       console.error("เกิดข้อผิดพลาดในการดึงข้อมูลการรักษาการตั้งครรภ์:", error);
     }
@@ -103,15 +107,20 @@ const TreatmentHistory = () => {
     setDialogState({ open: false, selectedOrder: [] });
   };
 
+  const isFemaleTitle = () => {
+    // ตรวจสอบคำนำหน้าผู้ป่วยว่าตรงกับเพศหญิงหรือไม่
+    return ["นาง", "นางสาว"].includes(patientTitle);
+  };
+
   return (
     <Paper sx={{ padding: 3, margin: 2 }}>
       <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-          <ButtonGroup variant="outlined" color="primary">
-            <Button onClick={() => navigate(`/doctor_patientdetail/${HN}`)}>ไปยังประวัติผู้ป่วย</Button>
-            <Button onClick={() => navigate(`/doctor_addtreatment/${HN}`)}>ไปยังบันทึกการรักษา</Button>
-            <Button onClick={() => navigate(`/doctor_addorder/${HN}`)}>ไปยังรายการจ่ายยา</Button>
-          </ButtonGroup>
-        </Box>
+        <ButtonGroup variant="outlined" color="primary">
+          <Button onClick={() => navigate(`/doctor_patientdetail/${HN}`)}>ไปยังประวัติผู้ป่วย</Button>
+          <Button onClick={() => navigate(`/doctor_addtreatment/${HN}`)}>ไปยังบันทึกการรักษา</Button>
+          <Button onClick={() => navigate(`/doctor_addorder/${HN}`)}>ไปยังรายการจ่ายยา</Button>
+        </ButtonGroup>
+      </Box>
       <Typography variant="h6" gutterBottom>
         ประวัติการรักษา
       </Typography>
@@ -123,7 +132,9 @@ const TreatmentHistory = () => {
               <TableCell align="center">ประเภทการรักษา</TableCell>
               <TableCell align="center">รายการจ่ายยา</TableCell>
               <TableCell align="center">การรักษาทั่วไป</TableCell>
-              <TableCell align="center">การรักษาผดุงครรภ์</TableCell>
+              {isFemaleTitle() && (
+                <TableCell align="center">การรักษาผดุงครรภ์</TableCell> // แสดงคอลัมน์เฉพาะผู้ป่วยหญิง
+              )}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -133,7 +144,7 @@ const TreatmentHistory = () => {
                   <TableCell>
                     {new Date(treatment.Treatment_Date).toLocaleDateString("th-TH")}
                   </TableCell>
-                  <TableCell align="center"> {/* เพิ่มคอลัมน์แสดงประเภทการรักษา */}
+                  <TableCell align="center">
                     {getTreatmentType(treatment)}
                   </TableCell>
                   <TableCell align="center">
@@ -149,22 +160,24 @@ const TreatmentHistory = () => {
                     <Button
                       variant="outlined"
                       color="primary"
-                      disabled={!treatment.GeneralTreatmentID} // ถ้าไม่มี GeneralTreatmentID ปิดปุ่ม
+                      disabled={!treatment.GeneralTreatmentID}
                       onClick={() => handleOpenGeneralTreatment(treatment.GeneralTreatmentID)}
                     >
                       {treatment.GeneralTreatmentID ? "ดูการรักษาทั่วไป" : "ไม่มีการรักษาทั่วไป"}
                     </Button>
                   </TableCell>
-                  <TableCell align="center">
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      disabled={!treatment.PregnancyTreatmentID} // ถ้าไม่มี PregnancyTreatmentID ปิดปุ่ม
-                      onClick={() => handleOpenPregnancyTreatment(treatment.PregnancyTreatmentID)}
-                    >
-                      {treatment.PregnancyTreatmentID ? "ดูการรักษาการผดุงครรภ์" : "ไม่มีการรักษาการผดุงครรภ์"}
-                    </Button>
-                  </TableCell>
+                  {isFemaleTitle() && ( // แสดงปุ่มเฉพาะผู้ป่วยหญิง
+                    <TableCell align="center">
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        disabled={!treatment.PregnancyTreatmentID}
+                        onClick={() => handleOpenPregnancyTreatment(treatment.PregnancyTreatmentID)}
+                      >
+                        {treatment.PregnancyTreatmentID ? "ดูการรักษาการผดุงครรภ์" : "ไม่มีการรักษาการผดุงครรภ์"}
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             ) : (
