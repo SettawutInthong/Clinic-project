@@ -12,6 +12,8 @@ import {
   CircularProgress,
   ButtonGroup,
 } from "@mui/material";
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useNavigate } from "react-router-dom";
 
 const DoctorPatientDetail = () => {
@@ -74,9 +76,9 @@ const DoctorPatientDetail = () => {
       <Paper sx={{ padding: 3 }}>
       <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
           <ButtonGroup variant="outlined" color="primary">
-            <Button onClick={() => navigate(`/doctor_treatmenthistory/${HN}`)}>ไปยังประวัติการรักษา</Button>
-            <Button onClick={() => navigate(`/doctor_addtreatment/${HN}`)}>ไปยังบันทึกการรักษา</Button>
-            <Button onClick={() => navigate(`/doctor_addorder/${HN}`)}>ไปยังรายการจ่ายยา</Button>
+            <Button onClick={() => navigate(`/doctor_treatmenthistory/${HN}`)}>ไปยังประวัติการรักษา<PlayArrowIcon /></Button>
+            <Button onClick={() => navigate(`/doctor_addtreatment/${HN}`)}>ไปยังบันทึกการรักษา<PlayArrowIcon /><PlayArrowIcon /></Button>
+            <Button onClick={() => navigate(`/doctor_addorder/${HN}`)}>ไปยังรายการจ่ายยา<PlayArrowIcon /><PlayArrowIcon /><PlayArrowIcon /></Button>
           </ButtonGroup>
         </Box>
         {patientData ? (

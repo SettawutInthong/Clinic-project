@@ -19,6 +19,7 @@ import {
   InputLabel,
   ButtonGroup,
 } from "@mui/material";
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { Card, CardContent } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import TreatmentHistory from "./TreatmentHistory";
@@ -69,6 +70,14 @@ const AddTreatment = () => {
     localStorage.setItem("treatmentData", JSON.stringify(treatmentData));
     localStorage.setItem("treatmentType", treatmentType);  // Save the treatment type
   }, [treatmentData, treatmentType]);
+
+  const triangleStyle = {
+    width: 0,
+    height: 0,
+    borderTop: '10px solid transparent',
+    borderBottom: '10px solid transparent',
+    borderRight: '10px solid blue',
+  };
 
   // Restore form data from localStorage on component mount
   useEffect(() => {
@@ -516,9 +525,9 @@ const AddTreatment = () => {
       <Paper sx={{ padding: 3 }}>
         <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
           <ButtonGroup variant="outlined" color="primary">
-            <Button onClick={() => navigate(`/doctor_patientdetail/${HN}`)}>ไปยังประวัติผู้ป่วย</Button>
-            <Button onClick={() => navigate(`/doctor_treatmenthistory/${HN}`)}>ไปยังประวัติการรักษา</Button>
-            <Button onClick={() => navigate(`/doctor_addorder/${HN}`)}>ไปยังรายการสั่งยา</Button>
+            <Button onClick={() => navigate(`/doctor_patientdetail/${HN}`)}><PlayArrowIcon style={{ transform: "rotate(180deg)" }} /><PlayArrowIcon style={{ transform: "rotate(180deg)" }} />ไปยังประวัติผู้ป่วย</Button>
+            <Button onClick={() => navigate(`/doctor_treatmenthistory/${HN}`)}> <PlayArrowIcon style={{ transform: "rotate(180deg)" }} />  ไปยังประวัติการรักษา</Button>
+            <Button onClick={() => navigate(`/doctor_addorder/${HN}`)}>ไปยังรายการสั่งยา<PlayArrowIcon /></Button>
           </ButtonGroup>
         </Box>
         {patientData ? (
