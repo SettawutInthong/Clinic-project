@@ -5,7 +5,6 @@ import DoctorHeaderbar from "./doctor/DoctorHeaderbar";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { useState, useEffect } from "react";
 import NurseDashboard from "./nurse/NurseDashboard";
-import DoctorDashboard from "./doctor/DoctorDashboard";
 import NursePatient from "./nurse/NursePatient";
 import NurseQueue from "./nurse/NurseQueue";
 import NurseOrder from "./nurse/NurseOrder";
@@ -49,7 +48,7 @@ const App = () => {
             </>
           ) : userRole === 0 ? (
             <>
-              <Route path="/" element={<DoctorDashboard />} />
+              <Route path="/" element={<NurseDashboard />} />
               <Route path="/nurse_dashboard" element={<NurseDashboard />} />
               <Route path="/doctor_queue" element={<DoctorQueue />} />
               <Route path="/doctor_patientdetail/:HN" element={<DoctorPatientDetail />} />
