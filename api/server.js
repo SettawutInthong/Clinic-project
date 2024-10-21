@@ -251,6 +251,16 @@ app.get("/api/patients", function (req, res) {
 //   });
 // });
 
+function generateMedicineID(currentMaxID, prefix) { 
+  if (!currentMaxID || isNaN(parseInt(currentMaxID.substring(1), 10))) {
+    // If no max ID or unable to parse, start at m001
+    return `${prefix}001`;
+  }
+  const nextNumber = parseInt(currentMaxID.substring(1), 10) + 1;
+  return `${prefix}${nextNumber.toString().padStart(3, "0")}`;
+}
+
+
 function generateID(currentMaxID, prefix) {
   if (!currentMaxID || isNaN(parseInt(currentMaxID.substring(3), 10))) {
     // ถ้าไม่มีค่า currentMaxID หรือแปลงเป็นตัวเลขไม่ได้ ให้เริ่มต้นที่ INO00001
@@ -293,6 +303,55 @@ app.get("/api/medicines", (req, res) => {
     res.json({ data: results });
   });
 });
+
+app.post("/api/medicine_stock", async (req, res) => {
+  const { Medicine_Name, Description, medicine_type, Quantity, Quantity_type, Med_Cost } = req.body;
+
+  if (!Medicine_Name || !medicine_type || !Quantity || !Quantity_type || !Med_Cost) {
+    return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
+  }
+
+  try {
+    // Get the maximum existing Medicine_ID
+    const [maxMedicineResult] = await db.query("SELECT MAX(Medicine_ID) as maxMedicineID FROM medicine");
+
+    // Generate the new Medicine_ID
+    const newMedicineID = generateMedicineID(maxMedicineResult[0].maxMedicineID, "m");
+
+    // Insert the new medicine
+    await db.query(
+      "INSERT INTO medicine (Medicine_ID, Medicine_Name, Description, medicine_type, Quantity, Quantity_type, Med_Cost) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [newMedicineID, Medicine_Name, Description, medicine_type, Quantity, Quantity_type, Med_Cost]
+    );
+
+    res.status(201).json({ message: "เพิ่มยาชนิดใหม่สำเร็จ" });
+  } catch (error) {
+    console.error("Error adding new medicine:", error);
+    res.status(500).json({ message: "เกิดข้อผิดพลาดในการเพิ่มยา" });
+  }
+});
+
+app.delete("/api/medicine_stock/:Medicine_ID", async (req, res) => {
+  const { Medicine_ID } = req.params;
+
+  try {
+    // ตรวจสอบว่า Medicine_ID มีอยู่ในฐานข้อมูลหรือไม่
+    const [medicine] = await db.query("SELECT * FROM medicine WHERE Medicine_ID = ?", [Medicine_ID]);
+
+    if (medicine.length === 0) {
+      return res.status(404).json({ message: "ไม่พบยาในระบบ" });
+    }
+
+    // ลบรายการยาที่ตรงกับ Medicine_ID
+    await db.query("DELETE FROM medicine WHERE Medicine_ID = ?", [Medicine_ID]);
+
+    res.status(200).json({ message: "ลบยาสำเร็จ" });
+  } catch (error) {
+    console.error("Error deleting medicine:", error);
+    res.status(500).json({ message: "เกิดข้อผิดพลาดในการลบยา" });
+  }
+});
+
 
 
 app.post("/api/orders/:orderID/items", async (req, res) => {
