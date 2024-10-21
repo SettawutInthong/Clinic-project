@@ -836,7 +836,7 @@ const NurseQueue = () => {
                 <Button onClick={handleCancel} color="primary">
                   ยกเลิก
                 </Button>
-                <Button onClick={CheckInAppointment} color="primary">
+                <Button onClick={CheckInAppointment} color="primary" variant="contained">
                   จองคิว
                 </Button>
               </DialogActions>
@@ -1076,7 +1076,7 @@ const NurseQueue = () => {
                 <Button onClick={handleCancel} color="primary">
                   ยกเลิก
                 </Button>
-                <Button onClick={AddQueue} color="primary">
+                <Button onClick={AddQueue} color="primary" variant="contained">
                   จองคิว
                 </Button>
               </DialogActions>
