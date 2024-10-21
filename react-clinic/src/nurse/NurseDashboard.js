@@ -238,7 +238,7 @@ const Dashboard = () => {
                           text={`${newPatients + oldPatients}`}
                           styles={buildStyles({
                             textColor: "#000",
-                            pathColor: "#508D4E",
+                            pathColor: "#4CAF50",
                             trailColor: "#B7B7B7",
                           })}
                         />
@@ -250,7 +250,7 @@ const Dashboard = () => {
                         <Box
                           width={30}
                           height={30}
-                          bgcolor="#4CAF50"
+                          
                           borderRadius="50%"
                           display="flex"
                           alignItems="center"
