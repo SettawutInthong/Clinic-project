@@ -1359,18 +1359,19 @@ const DoctorPatient = () => {
               maxWidth="sm"
               fullWidth
             >
-              <DialogTitle>รายละเอียดการรักษาการตั้งครรภ์</DialogTitle>
+              <DialogTitle>รายละเอียดการคุมกำเนิด</DialogTitle>
               <DialogContent>
                 {selectedPregnancyTreatment ? (
                   <Box>
-                    <Typography>ประเภทการควบคุมการตั้งครรภ์: {selectedPregnancyTreatment.Pregnancy_Control_Type}</Typography>
-                    <Typography>ปัญหาการตั้งครรภ์: {selectedPregnancyTreatment.Pregnancy_Problems}</Typography>
-                    <Typography>จำนวนการตั้งครรภ์: {selectedPregnancyTreatment.Total_Pregnancies}</Typography>
+                    <Typography>ประเภทของการคุมกำเนิด: {selectedPregnancyTreatment.Pregnancy_Control_Type}</Typography>
+                    <Typography>ความถี่ในการฉีดยาคุมกำเนิด: {selectedPregnancyTreatment.Freq_Pregnancies}</Typography>
+                    <Typography>ปัญหาหรืออาการข้างเคียงจากการใช้ยาคุม: {selectedPregnancyTreatment.Pregnancy_Problems}</Typography>
+                    <Typography>จำนวนครั้งในการตั้งครรภ์: {selectedPregnancyTreatment.Total_Pregnancies}</Typography>
                     <Typography>จำนวนบุตรทั้งหมด: {selectedPregnancyTreatment.Total_Children}</Typography>
                     <Typography>วันที่การตั้งครรภ์ล่าสุด: {selectedPregnancyTreatment.Last_Pregnancy_Date}</Typography>
                     <Typography>ประวัติการแท้ง: {selectedPregnancyTreatment.Abortion_History}</Typography>
-                    <Typography>รายละเอียดการรักษาอื่น ๆ: {selectedPregnancyTreatment.Pregmed_Detail}</Typography>
-                    <Typography>การรักษาอื่น ๆ: {selectedPregnancyTreatment.Preg_Others}</Typography>
+                    <Typography>รายละเอียดการรักษา: {selectedPregnancyTreatment.Pregmed_Detail}</Typography>
+                    <Typography>เพิ่มเติม: {selectedPregnancyTreatment.Preg_Others}</Typography>
                   </Box>
                 ) : (
                   <Typography>ไม่มีข้อมูลการรักษาการตั้งครรภ์</Typography>

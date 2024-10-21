@@ -451,7 +451,7 @@ const AddTreatment = () => {
 
               <Grid item xs={12} sm={6}>
                 <TextField
-                  label="ชนิดของยาคุมกำเนิดที่ฉีด"
+                  label="รายละเอียดการรักษา"
                   fullWidth
                   margin="dense"
                   size="small"
@@ -462,22 +462,7 @@ const AddTreatment = () => {
                     })
                   }
                 />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="จำนวนยา"
-                  fullWidth
-                  margin="dense"
-                  size="small"
-                  onChange={(e) =>
-                    setTreatmentData({
-                      ...treatmentData,
-                      Pregmed_Detail: e.target.value,
-                    })
-                  }
-                />
-              </Grid>
-
+              </Grid>      
               <Grid item xs={12}>
                 <Typography variant="h6" gutterBottom>
                   4. บันทึกเพิ่มเติม
