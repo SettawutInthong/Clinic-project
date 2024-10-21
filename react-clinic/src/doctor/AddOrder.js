@@ -22,6 +22,7 @@ import {
   ButtonGroup,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useNavigate, useParams } from "react-router-dom";
 
 const AddOrder = () => {
@@ -183,16 +184,17 @@ const AddOrder = () => {
   return (
     <Box sx={{ flexGrow: 1, padding: 3 }}>
       <Paper sx={{ padding: 3 }}>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+          <ButtonGroup variant="outlined" color="primary">
+            <Button onClick={() => navigate(`/doctor_patientdetail/${HN}`)}><PlayArrowIcon style={{ transform: "rotate(180deg)" }} /> <PlayArrowIcon style={{ transform: "rotate(180deg)" }} /> <PlayArrowIcon style={{ transform: "rotate(180deg)" }} /> ไปยังประวัติผู้ป่วย</Button>
+            <Button onClick={() => navigate(`/doctor_treatmenthistory/${HN}`)}><PlayArrowIcon style={{ transform: "rotate(180deg)" }} /> <PlayArrowIcon style={{ transform: "rotate(180deg)" }} /> ไปยังประวัติการรักษา</Button>
+            <Button onClick={() => navigate(`/doctor_addtreatment/${HN}`)}><PlayArrowIcon style={{ transform: "rotate(180deg)" }} /> ไปยังบันทึกการรักษา</Button>
+          </ButtonGroup>
+        </Box>
         <Typography variant="h6" gutterBottom>
           สั่งยาสำหรับผู้ป่วย HN: {HN}
         </Typography>
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-          <ButtonGroup variant="outlined" color="primary">
-            <Button onClick={() => navigate(`/doctor_patientdetail/${HN}`)}>ไปยังประวัติผู้ป่วย</Button>
-            <Button onClick={() => navigate(`/doctor_treatmenthistory/${HN}`)}>ไปยังประวัติการรักษา</Button>
-            <Button onClick={() => navigate(`/doctor_addtreatment/${HN}`)}>ไปยังบันทึกการรักษา</Button>
-          </ButtonGroup>
-        </Box>
+        
         <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
           <TextField
             label="ค้นหายา"
