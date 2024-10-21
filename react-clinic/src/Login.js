@@ -51,7 +51,7 @@ const Login = () => {
       if (response.user.Role_ID === 1) {
         window.location.href = "/nurse_dashboard";
       } else if (response.user.Role_ID === 0) {
-        window.location.href = "/doctor_dashboard";
+        window.location.href = "/nurse_dashboard";
       }
     } else {
       console.error("เข้าสู่ระบบไม่สำเร็จ");
