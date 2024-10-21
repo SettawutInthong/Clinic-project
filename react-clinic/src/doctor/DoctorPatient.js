@@ -1180,7 +1180,10 @@ const DoctorPatient = () => {
                           <TableCell align="center">ประเภทการรักษา</TableCell>
                           <TableCell align="center">รายการจ่ายยา</TableCell>
                           <TableCell align="center">การรักษาทั่วไป</TableCell>
-                          <TableCell align="center">การรักษาผดุงครรภ์</TableCell>
+                          {/* Conditionally render pregnancy treatment column based on patient's title (newTitle) */}
+                          {(newTitle === 'นาง' || newTitle === 'นางสาว') && (
+                            <TableCell align="center">การรักษาผดุงครรภ์</TableCell>
+                          )}
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -1190,9 +1193,7 @@ const DoctorPatient = () => {
                               <TableCell>
                                 {new Date(treatment.Treatment_Date).toLocaleDateString()}
                               </TableCell>
-                              <TableCell align="center">
-                                {getTreatmentType(treatment)}
-                              </TableCell>
+                              <TableCell align="center">{getTreatmentType(treatment)}</TableCell>
                               <TableCell align="center">
                                 <Button
                                   onClick={() => handleOpenOrderDetails(treatment.Order_ID)}
@@ -1205,36 +1206,33 @@ const DoctorPatient = () => {
                               </TableCell>
                               <TableCell align="center">
                                 <Button
-                                  onClick={() =>
-                                    handleOpenGeneralTreatment(treatment.GeneralTreatmentID)
-                                  }
+                                  onClick={() => handleOpenGeneralTreatment(treatment.GeneralTreatmentID)}
                                   disabled={!treatment.GeneralTreatmentID}
                                   variant="outlined"
                                   color="primary"
                                   sx={{ borderRadius: '15px' }}
                                 >
                                   {treatment.GeneralTreatmentID
-                                    ? "ดูการรักษาทั่วไป"
-                                    : "ไม่มีการรักษาทั่วไป"}
+                                    ? 'ดูการรักษาทั่วไป'
+                                    : 'ไม่มีการรักษาทั่วไป'}
                                 </Button>
                               </TableCell>
-                              <TableCell align="center">
-                                <Button
-                                  onClick={() =>
-                                    handleOpenPregnancyTreatment(
-                                      treatment.PregnancyTreatmentID
-                                    )
-                                  }
-                                  disabled={!treatment.PregnancyTreatmentID}
-                                  variant="outlined"
-                                  color="primary"
-                                  sx={{ borderRadius: '15px' }}
-                                >
-                                  {treatment.PregnancyTreatmentID
-                                    ? "ดูการรักษาผดุงครรภ์"
-                                    : "ไม่มีการรักษาผดุงครรภ์"}
-                                </Button>
-                              </TableCell>
+                              {/* Conditionally render pregnancy treatment button */}
+                              {(newTitle === 'นาง' || newTitle === 'นางสาว') && (
+                                <TableCell align="center">
+                                  <Button
+                                    onClick={() => handleOpenPregnancyTreatment(treatment.PregnancyTreatmentID)}
+                                    disabled={!treatment.PregnancyTreatmentID}
+                                    variant="outlined"
+                                    color="primary"
+                                    sx={{ borderRadius: '15px' }}
+                                  >
+                                    {treatment.PregnancyTreatmentID
+                                      ? 'ดูการรักษาผดุงครรภ์'
+                                      : 'ไม่มีการรักษาผดุงครรภ์'}
+                                  </Button>
+                                </TableCell>
+                              )}
                             </TableRow>
                           ))
                         ) : (
@@ -1247,6 +1245,7 @@ const DoctorPatient = () => {
                       </TableBody>
                     </Table>
                   </TableContainer>
+
                 </DialogContent>
                 <DialogActions>
                   <Button onClick={() => setHistoryPopup(false)} color="primary">
