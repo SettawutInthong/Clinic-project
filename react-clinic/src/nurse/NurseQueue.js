@@ -116,7 +116,6 @@ const NurseQueue = () => {
       });
 
       const patientData = await Promise.all(patientDataPromises);
-      // ตรวจสอบว่าข้อมูลเรียงตามเวลาจาก API หรือไม่ ถ้าไม่ต้องปรับใน API
       
       setData(patientData);
     } catch (error) {
@@ -142,24 +141,20 @@ const NurseQueue = () => {
 
   const fetchAvailablePatients = async () => {
     try {
-      // ดึงข้อมูล HN ทั้งหมดจาก patient
       const responsePatients = await axios.get(
         "http://localhost:5000/api/patient"
       );
       const allPatients = responsePatients.data.data;
 
-      // ดึงข้อมูล HN ทั้งหมดที่มีอยู่แล้วใน walkinqueue
       const responseQueue = await axios.get(
         "http://localhost:5000/api/walkinqueue"
       );
       const queuePatients = responseQueue.data.data.map((item) => item.HN);
 
-      // กรองเฉพาะ HN ที่ยังไม่มีใน walkinqueue
       const availablePatients = allPatients.filter(
         (patient) => !queuePatients.includes(patient.HN)
       );
 
-      // สร้าง options สำหรับ ReactSelect
       setPatientOptions(
         availablePatients.map((patient) => ({
           value: patient.HN,
@@ -171,12 +166,10 @@ const NurseQueue = () => {
     }
   };
 
-  // เพิ่มฟังก์ชันใหม่สำหรับการจองคิวและการเช็คอิน
   const AddQueue = async () => {
-    // ตรวจสอบว่ากรอก HN หรือยัง
     if (!queueHN) {
       showMessage("กรุณาเลือก HN ของผู้ป่วย", "error");
-      return; // หยุดทำงานถ้าไม่กรอก HN
+      return;
     }
 
     try {
@@ -197,7 +190,7 @@ const NurseQueue = () => {
         });
 
         FetchData();
-        ResetForm(); // รีเซ็ตฟอร์มหลังจากจองคิวเสร็จสิ้น
+        ResetForm();
         setAddQueuePopup(false);
         showMessage("จองคิวสำเร็จ", "success");
       } else {
@@ -210,10 +203,9 @@ const NurseQueue = () => {
   };
 
   const CheckInAppointment = async () => {
-    // ตรวจสอบว่ากรอก HN หรือยัง
     if (!queueHN) {
       showMessage("กรุณาเลือก HN ของผู้ป่วย", "error");
-      return; // หยุดทำงานถ้าไม่กรอก HN
+      return; 
     }
 
     try {
@@ -228,7 +220,7 @@ const NurseQueue = () => {
         });
 
         FetchData();
-        ResetForm(); // รีเซ็ตฟอร์มหลังจากเช็คอินเสร็จสิ้น
+        ResetForm(); 
         setAddQueueCheckInPopup(false);
         showMessage("เช็คอินสำเร็จ", "success");
       } else {
@@ -242,7 +234,7 @@ const NurseQueue = () => {
 
   const handleHNSelect = async (selectedOption) => {
     setQueueHN(selectedOption ? selectedOption.value : "");
-    setShowTextFields(!!selectedOption); // แสดงกล่องข้อความเมื่อ HN ถูกเลือก
+    setShowTextFields(!!selectedOption); 
 
     if (selectedOption) {
       try {
@@ -271,11 +263,10 @@ const NurseQueue = () => {
 
   const handleHNCHechInSelect = async (selectedOption) => {
     setQueueHN(selectedOption ? selectedOption.value : "");
-    setShowTextFields(!!selectedOption); // แสดงกล่องข้อความเมื่อ HN ถูกเลือก
+    setShowTextFields(!!selectedOption);
 
     if (selectedOption) {
       try {
-        // ดึงข้อมูลจาก appointmentqueue และ join กับข้อมูลผู้ป่วยจากตาราง patient
         const response = await axios.get(
           `http://localhost:5000/api/appointmentqueue/details?HN=${selectedOption.value}`
         );
@@ -291,7 +282,6 @@ const NurseQueue = () => {
           setNewAllergy(patient.Allergy);
           setNewDisease(patient.Disease);
 
-          // ดึงข้อมูลวันที่และเวลา
           const queueDate = new Date(patient.Queue_Date);
           const queueTime = patient.Queue_Time;
           setQueueTime({
@@ -332,7 +322,7 @@ const NurseQueue = () => {
   };
 
   const ResetForm = () => {
-    setQueueHN(""); // รีเซ็ตค่า HN เพื่อบังคับให้กรอกใหม่ทุกครั้ง
+    setQueueHN("");
     setNewTitle("");
     setNewFirstName("");
     setNewLastName("");
@@ -350,23 +340,23 @@ const NurseQueue = () => {
       Height: "",
       Symptom: "",
     });
-    setShowTextFields(false); // ซ่อนฟอร์ม
+    setShowTextFields(false);
   };
 
   const DeleteQueue = (HN) => {
     setSelectedHN(HN);
-    setDeletePopup(true); // เปิดป๊อปอัพยืนยันการลบ
+    setDeletePopup(true); 
   };
 
   const ConfirmDeleteQueue = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/walkinqueue/${selectedHN}`); // เรียกใช้งาน API เพื่อลบคิว
-      FetchData(); // ดึงข้อมูลใหม่หลังจากลบเสร็จ
-      setDeletePopup(false); // ปิดป๊อปอัพยืนยันการลบ
-      showMessage("ลบคิวผู้ป่วยจากคิวสำเร็จ", "success"); // แสดงข้อความเมื่อการลบสำเร็จ
+      await axios.delete(`http://localhost:5000/api/walkinqueue/${selectedHN}`); 
+      FetchData(); 
+      setDeletePopup(false); 
+      showMessage("ลบคิวผู้ป่วยจากคิวสำเร็จ", "success"); 
     } catch (error) {
-      console.error("Error deleting queue:", error); // แสดงข้อผิดพลาดในคอนโซล
-      showMessage("เกิดข้อผิดพลาดในการลบคิวผู้ป่วยรายนี้", "error"); // แสดงข้อความเมื่อเกิดข้อผิดพลาด
+      console.error("Error deleting queue:", error); 
+      showMessage("เกิดข้อผิดพลาดในการลบคิวผู้ป่วยรายนี้", "error"); 
     }
   };
 
@@ -387,7 +377,7 @@ const NurseQueue = () => {
       await axios.put(`http://localhost:5000/api/walkinqueue/${HN}`, {
         Status: "กำลังตรวจ",
       });
-      FetchData(); // อัพเดทข้อมูลหลังจากเปลี่ยนสถานะ
+      FetchData();
       showMessage("เรียกเข้าตรวจสำเร็จ", "success");
     } catch (error) {
       console.error("Error calling to checkup:", error);
@@ -401,13 +391,13 @@ const NurseQueue = () => {
 
   useEffect(() => {
     if (addQueueCheckInPopup) {
-      fetchAppointmentPatients(); // ดึงข้อมูล HN จาก appointmentqueue เมื่อเปิด popup
+      fetchAppointmentPatients(); 
     }
   }, [addQueueCheckInPopup]);
 
   useEffect(() => {
     if (addQueuePopup) {
-      fetchAvailablePatients(); // เรียกฟังก์ชันที่กรอง HN ที่ไม่มีใน walkinqueue
+      fetchAvailablePatients();
     }
   }, [addQueuePopup]);
 
@@ -415,7 +405,7 @@ const NurseQueue = () => {
     const checkInProgress = data.some(
       (patient) => patient.Status === "กำลังตรวจ"
     );
-    setIsInProgress(checkInProgress); // สร้าง state ใหม่เพื่อตรวจสอบสถานะการตรวจ
+    setIsInProgress(checkInProgress); 
   }, [data]);
 
   return (
@@ -519,20 +509,20 @@ const NurseQueue = () => {
                             borderRadius: "16px",
                             backgroundColor:
                               row.Status === "รอจ่ายยา"
-                                ? "rgba(170, 255, 195, 0.5)" // พื้นหลังสีมิ้น (รอจ่ายยา)
+                                ? "rgba(170, 255, 195, 0.5)" 
                                 : row.Status === "กำลังตรวจ"
-                                ? "rgba(255, 255, 0, 0.5)" // พื้นหลังสีเหลือง (กำลังตรวจ)
+                                ? "rgba(255, 255, 0, 0.5)" 
                                 : row.Status === "รอตรวจ"
-                                ? "rgba(0, 0, 255, 0.2)" // พื้นหลังสีน้ำเงินอ่อน (รอตรวจ)
+                                ? "rgba(0, 0, 255, 0.2)"
                                 : "transparent",
                             color:
                               row.Status === "กำลังตรวจ"
-                                ? "black" // สีข้อความสำหรับสถานะ "กำลังตรวจ"
+                                ? "black" 
                                 : row.Status === "รอตรวจ"
-                                ? "black"// สีข้อความสำหรับสถานะ "รอตรวจ"
+                                ? "black"
                                 : row.Status === "รอจ่ายยา"
-                                ? "black" // สีข้อความสำหรับสถานะ "รอจ่ายยา"
-                                : "black", // สีข้อความเริ่มต้น
+                                ? "black" 
+                                : "black", 
                           }}
                         >
                           {row.Status || "-"}
@@ -549,7 +539,7 @@ const NurseQueue = () => {
                               row.Status === "รอจ่ายยา" ||
                               isInProgress ||
                               row.Status === "กำลังตรวจ"
-                            } // รวมเงื่อนไขทั้งสองเข้าไว้ด้วยกัน
+                            } 
                             color="primary"
                           >
                             <ContentPasteGoIcon />
@@ -607,8 +597,8 @@ const NurseQueue = () => {
               <DialogContent>
                 <ReactSelect
                   autoFocus
-                  options={patientOptions} // ใช้ข้อมูล HN จาก appointmentqueue ที่ดึงมา
-                  onChange={handleHNCHechInSelect} // ใช้ฟังก์ชัน handleHNCHechInSelect
+                  options={patientOptions} 
+                  onChange={handleHNCHechInSelect} 
                   placeholder="กรอก HN"
                   isClearable
                   isSearchable
@@ -624,7 +614,7 @@ const NurseQueue = () => {
                       <Typography
                         variant="body1"
                         sx={{
-                          marginTop: "16px", // เพิ่มระยะห่างจากช่อง HN
+                          marginTop: "16px", 
                         }}
                       >
                         วันและเวลานัดหมาย :
@@ -858,7 +848,7 @@ const NurseQueue = () => {
               <DialogContent>
                 <ReactSelect
                   autoFocus
-                  options={patientOptions} // ใช้ข้อมูล HN ที่ดึงมาแล้วถูกกรอง
+                  options={patientOptions} 
                   onChange={handleHNSelect}
                   placeholder="กรอก HN"
                   isClearable

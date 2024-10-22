@@ -733,17 +733,15 @@ app.post("/api/addWalkInQueue", async (req, res) => {
       }
     }
 
-    // เพิ่มข้อมูลเข้า orders
     await db.query(
       "INSERT INTO orders (Order_ID, HN, Order_Date) VALUES (?, ?, NOW())",
       [newOrderID, HN]
     );
 
-    // สร้าง Treatment_ID ใหม่
     const [maxTreatmentResult] = await db.query(
       "SELECT MAX(Treatment_ID) as maxTreatmentID FROM treatment"
     );
-    let newTreatmentID = "T00001"; // กำหนดค่าเริ่มต้นสำหรับ Treatment_ID
+    let newTreatmentID = "T00001"; 
     if (maxTreatmentResult[0].maxTreatmentID !== null) {
       const maxTreatmentID = maxTreatmentResult[0].maxTreatmentID;
       if (typeof maxTreatmentID === "string") {
@@ -754,7 +752,6 @@ app.post("/api/addWalkInQueue", async (req, res) => {
       }
     }
 
-    // เพิ่มข้อมูลการรักษาใน treatment โดยใช้ Order_ID
     await db.query(
       `INSERT INTO treatment (Treatment_ID, HN, Order_ID, Treatment_Date, Symptom, Weight, Height, Temp, Pressure, Heart_Rate)
        VALUES (?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?)`,
@@ -783,12 +780,10 @@ app.post("/api/addWalkInQueue", async (req, res) => {
   }
 });
 
-//เพิ่มการเช็คอิน
 app.post("/api/checkInAppointmentQueue", async (req, res) => {
   const { HN, Symptom, Weight, Height, Temp, Pressure, Heart_Rate } = req.body;
 
   try {
-    // ดึงข้อมูล Queue_Time จาก appointmentqueue โดยใช้ HN
     const [appointment] = await db.query(
       "SELECT Queue_Time FROM appointmentqueue WHERE HN = ?",
       [HN]
@@ -802,23 +797,18 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
 
     let queueTime = appointment[0].Queue_Time;
 
-    // ดึงเวลาล่าสุดจาก walkinqueue
     const [lastQueue] = await db.query(
       "SELECT Time FROM walkinqueue ORDER BY Time DESC LIMIT 1"
     );
 
-    let newQueueTime = queueTime; // กำหนดค่าเริ่มต้นเป็นเวลาจาก appointmentqueue
+    let newQueueTime = queueTime; 
 
-    // ตรวจสอบว่ามีคิวใน walkinqueue หรือไม่
     if (lastQueue.length === 0) {
-      // ถ้าไม่มีคิวในระบบ ให้กำหนดเวลาเริ่มต้นเป็นเวลาใกล้เคียงกับนาที 00, 15, 30, 45
       let currentTime = new Date();
       const currentMinutes = currentTime.getMinutes();
 
-      // คำนวณเวลาใกล้เคียงกับนาทีที่ลงท้ายด้วย 00, 15, 30, 45
       const nextSlotMinutes = Math.ceil(currentMinutes / 15) * 15;
 
-      // ถ้าเกิน 60 นาที ให้อัพเดตชั่วโมง
       if (nextSlotMinutes === 60) {
         currentTime.setHours(currentTime.getHours() + 1);
         currentTime.setMinutes(0);
@@ -828,31 +818,26 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
 
       newQueueTime = currentTime.toTimeString().split(" ")[0];
     } else {
-      // ตรวจสอบว่าเวลาล่าสุดใน walkinqueue มีค่าน้อยกว่าเวลานัดหมายหรือไม่
       if (lastQueue.length > 0) {
         let lastQueueTime = new Date(`1970-01-01T${lastQueue[0].Time}`);
 
-        // ถ้าเวลาคิวล่าสุดมากกว่าเวลานัดหมาย ให้แทรกคิวโดยใช้เวลาจาก queueTime และปรับเวลาที่ทับซ้อน
         if (lastQueueTime >= new Date(`1970-01-01T${queueTime}`)) {
           const [conflictingQueue] = await db.query(
             "SELECT * FROM walkinqueue WHERE Time >= ? ORDER BY Time ASC",
             [queueTime]
           );
 
-          // ปรับเวลาคิวที่ทับซ้อน โดยเพิ่มทีละ 15 นาที
           for (let i = 0; i < conflictingQueue.length; i++) {
             const currentQueue = conflictingQueue[i];
             let newTime = new Date(`1970-01-01T${currentQueue.Time}`);
-            newTime = new Date(newTime.getTime() + 15 * 60000); // เพิ่ม 15 นาที
+            newTime = new Date(newTime.getTime() + 15 * 60000);
 
-            // อัปเดตเวลาของแถวนี้
             await db.query(
               "UPDATE walkinqueue SET Time = ? WHERE Queue_ID = ?",
               [newTime.toTimeString().split(" ")[0], currentQueue.Queue_ID]
             );
           }
         } else {
-          // ถ้าเวลาคิวล่าสุดน้อยกว่าเวลานัดหมาย ให้ใช้เวลาคิวล่าสุด + 15 นาที
           newQueueTime = new Date(lastQueueTime.getTime() + 15 * 60000)
             .toTimeString()
             .split(" ")[0];
@@ -860,23 +845,20 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
       }
     }
 
-    // ดึงค่า Queue_ID สูงสุดและเพิ่ม 1
     const [maxQueue] = await db.query(
       "SELECT MAX(Queue_ID) as maxQueueID FROM walkinqueue"
     );
     const newQueueID = maxQueue[0].maxQueueID ? maxQueue[0].maxQueueID + 1 : 1;
 
-    // เพิ่มข้อมูลเข้า walkinqueue พร้อมกับเวลาที่คำนวณแล้ว
     await db.query(
       "INSERT INTO walkinqueue (Queue_ID, HN, Time, Status) VALUES (?, ?, ?, 'รอตรวจ')",
       [newQueueID, HN, newQueueTime]
     );
 
-    // สร้าง Order_ID ใหม่
     const [maxOrderResult] = await db.query(
       "SELECT MAX(Order_ID) as maxOrderID FROM orders"
     );
-    let newOrderID = "O00001"; // กำหนดค่าเริ่มต้นสำหรับ Order_ID
+    let newOrderID = "O00001"; 
     if (maxOrderResult[0].maxOrderID !== null) {
       const maxOrderID = maxOrderResult[0].maxOrderID;
       if (typeof maxOrderID === "string") {
@@ -885,17 +867,15 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
       }
     }
 
-    // เพิ่มข้อมูลเข้า orders
     await db.query(
       "INSERT INTO orders (Order_ID, HN, Order_Date) VALUES (?, ?, NOW())",
       [newOrderID, HN]
     );
 
-    // สร้าง Treatment_ID ใหม่
     const [maxTreatmentResult] = await db.query(
       "SELECT MAX(Treatment_ID) as maxTreatmentID FROM treatment"
     );
-    let newTreatmentID = "T00001"; // กำหนดค่าเริ่มต้นสำหรับ Treatment_ID
+    let newTreatmentID = "T00001";
     if (maxTreatmentResult[0].maxTreatmentID !== null) {
       const maxTreatmentID = maxTreatmentResult[0].maxTreatmentID;
       const treatmentNumberPart = parseInt(maxTreatmentID.substring(1), 10);
@@ -904,7 +884,6 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
         .padStart(5, "0")}`;
     }
 
-    // เพิ่มข้อมูลการรักษาลงในตาราง treatment
     await db.query(
       `INSERT INTO treatment (Treatment_ID, HN, Order_ID, Treatment_Date, Treatment_Details, Symptom, Weight, Height, Temp, Pressure, Heart_Rate)
       VALUES (?, ?, ?, NOW(), NULL, ?, ?, ?, ?, ?, ?)
@@ -922,7 +901,6 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
       ]
     );
 
-    // ลบข้อมูลออกจาก appointmentqueue หลังจากเช็คอินสำเร็จ
     await db.query("DELETE FROM appointmentqueue WHERE HN = ?", [HN]);
 
     res.status(201).json({
@@ -936,7 +914,6 @@ app.post("/api/checkInAppointmentQueue", async (req, res) => {
   }
 });
 
-// สำหรับ API เรียกข้อมูลผู้ป่วยพร้อมรายละเอียดการนัดหมาย
 app.get("/api/appointmentqueue/details", async (req, res) => {
   const { HN } = req.query;
   if (!HN) {
@@ -961,7 +938,6 @@ app.get("/api/appointmentqueue/details", async (req, res) => {
   }
 });
 
-//ลบคิว
 app.delete("/api/walkinqueue/:HN", async function (req, res) {
   const HN = req.params.HN;
   try {
@@ -979,7 +955,6 @@ app.delete("/api/walkinqueue/:HN", async function (req, res) {
   }
 });
 
-//เปลี่ยนสถานะเป็นกำลังตรวจ
 app.put("/api/walkinqueue/:HN", async (req, res) => {
   const { HN } = req.params;
   const { Status } = req.body;
@@ -999,7 +974,6 @@ app.put("/api/walkinqueue/:HN", async (req, res) => {
   }
 });
 
-//เพิ่มผู้ป่วย
 app.post("/api/addPatientWithDetails", async (req, res) => {
   let {
     Title,
@@ -1020,7 +994,6 @@ app.post("/api/addPatientWithDetails", async (req, res) => {
   } = req.body;
 
   try {
-    // ตรวจสอบค่าว่างและแทนที่ด้วย NULL ถ้าจำเป็น
     Title = Title || null;
     First_Name = First_Name || null;
     Last_Name = Last_Name || null;
@@ -1037,7 +1010,6 @@ app.post("/api/addPatientWithDetails", async (req, res) => {
     Height = Height || null;
     Symptom = Symptom || null;
 
-    // สร้าง HN ใหม่
     const [maxHNResult] = await db.query(
       "SELECT MAX(HN) as maxHN FROM patient"
     );
@@ -1048,7 +1020,6 @@ app.post("/api/addPatientWithDetails", async (req, res) => {
       newHN = `HN${(numberPart + 1).toString().padStart(3, "0")}`;
     }
 
-    // เพิ่มข้อมูลในตาราง patient
     const addPatientSql = `
       INSERT INTO patient (HN, Title, First_Name, Last_Name, ID, Gender, Birthdate, Phone, Disease, Allergy) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -1066,7 +1037,6 @@ app.post("/api/addPatientWithDetails", async (req, res) => {
       Allergy,
     ]);
 
-    // เพิ่มข้อมูลในตาราง walkinqueue โดยเพิ่มเวลามากสุด + 15 นาที
     const [maxQueueTimeResult] = await db.query(
       "SELECT MAX(Time) as maxTime FROM walkinqueue"
     );
@@ -1074,7 +1044,7 @@ app.post("/api/addPatientWithDetails", async (req, res) => {
     let newQueueTime = new Date();
     if (maxQueueTimeResult[0].maxTime) {
       const maxTime = new Date(`1970-01-01T${maxQueueTimeResult[0].maxTime}`);
-      newQueueTime = new Date(maxTime.getTime() + 15 * 60000); // เพิ่ม 15 นาที
+      newQueueTime = new Date(maxTime.getTime() + 15 * 60000); 
     }
 
     const formattedQueueTime = newQueueTime.toTimeString().split(" ")[0];
@@ -1083,21 +1053,19 @@ app.post("/api/addPatientWithDetails", async (req, res) => {
       "INSERT INTO walkinqueue (HN, Time, Status) VALUES (?, ?, 'รอตรวจ')";
     await db.execute(addQueueSql, [newHN, formattedQueueTime]);
 
-    // เพิ่มข้อมูลในตาราง treatment
     const addTreatmentSql = `
 INSERT INTO treatment (Treatment_ID, HN, Symptom, Weight, Height, Temp, Pressure, Heart_Rate, Treatment_Date)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
 `;
 
-    // ต้องแน่ใจว่า generateID ถูกเรียกใช้เพื่อสร้าง Treatment_ID ใหม่
     const [maxTreatmentResult] = await db.query(
       "SELECT MAX(Treatment_ID) as maxTreatmentID FROM treatment"
     );
     let newTreatmentID = generateID(maxTreatmentResult[0].maxTreatmentID, "T");
 
     await db.execute(addTreatmentSql, [
-      newTreatmentID, // ใช้ Treatment_ID ใหม่ที่สร้างขึ้น
-      newHN, // ใช้ HN ของผู้ป่วยใหม่
+      newTreatmentID, 
+      newHN, 
       Symptom,
       Weight,
       Height,
@@ -1119,10 +1087,8 @@ app.delete("/api/patient/:HN", async function (req, res) {
   const HN = req.params.HN;
 
   try {
-    // ลบข้อมูลในตาราง treatment ที่อ้างอิงถึง HN นี้
     await db.query("DELETE FROM treatment WHERE HN = ?", [HN]);
 
-    // ดึง Order_ID ทั้งหมดที่เกี่ยวข้องกับ HN
     const [orderIdsResult] = await db.query(
       "SELECT Order_ID FROM orders WHERE HN = ?",
       [HN]
@@ -1131,22 +1097,17 @@ app.delete("/api/patient/:HN", async function (req, res) {
     if (orderIdsResult.length > 0) {
       const orderIds = orderIdsResult.map((row) => row.Order_ID);
 
-      // ลบข้อมูลในตาราง order_medicine ที่อ้างอิงถึง Order_ID เหล่านี้
       await db.query("DELETE FROM order_medicine WHERE Order_ID IN (?)", [
         orderIds,
       ]);
 
-      // ลบข้อมูลในตาราง orders ที่เกี่ยวข้องกับ HN
       await db.query("DELETE FROM orders WHERE HN = ?", [HN]);
     }
 
-    // ลบข้อมูลในตาราง walkinqueue ที่อ้างอิงถึง HN นี้
     await db.query("DELETE FROM walkinqueue WHERE HN = ?", [HN]);
 
-    // ลบข้อมูลในตาราง appointmentqueue ที่อ้างอิงถึง HN นี้
     await db.query("DELETE FROM appointmentqueue WHERE HN = ?", [HN]);
 
-    // ลบข้อมูลในตาราง patient
     await db.query("DELETE FROM patient WHERE HN = ?", [HN]);
 
     res.json({ message: "ลบข้อมูลผู้ป่วยสำเร็จ" });
@@ -1156,7 +1117,6 @@ app.delete("/api/patient/:HN", async function (req, res) {
   }
 });
 
-//ค้นหารายชื่อผู้ป่วย
 app.get("/api/patient", function (req, res) {
   const HN = req.query.HN;
   const title = req.query.Title;
@@ -1197,12 +1157,10 @@ app.get("/api/patient", function (req, res) {
   });
 });
 
-//เพิ่ม appointments
 app.post("/api/appointments", async (req, res) => {
   const { HN, Queue_Date, Queue_Time } = req.body;
 
   try {
-    // ตรวจสอบว่า HN ที่ได้รับมีอยู่ในตาราง patient หรือไม่
     const [rows] = await db.execute("SELECT HN FROM patient WHERE HN = ?", [
       HN,
     ]);
@@ -1212,7 +1170,6 @@ app.post("/api/appointments", async (req, res) => {
         .json({ message: "ไม่พบ HN ที่ระบุในฐานข้อมูลผู้ป่วย" });
     }
 
-    // เพิ่มข้อมูลนัดหมายใหม่โดยไม่ต้องระบุ Queue_ID
     await db.execute(
       "INSERT INTO appointmentqueue (HN, Queue_Date, Queue_Time) VALUES (?, ?, ?)",
       [HN, Queue_Date, Queue_Time]
@@ -1227,7 +1184,6 @@ app.post("/api/appointments", async (req, res) => {
   }
 });
 
-//แก้ไขข้อมูลผู้ป่วย
 app.put("/api/patient/:HN", function (req, res) {
   const HN = req.params.HN;
   const {
@@ -1332,7 +1288,6 @@ app.get('/api/treatments/:HN', async (req, res) => {
 
 
 
-// ฟังก์ชันดึงข้อมูลผู้ป่วยใหม่ในวันนี้
 app.get("/api/new_patients", (req, res) => {
   const sql = `
     SELECT COUNT(DISTINCT w.HN) AS newPatientCount
@@ -1345,11 +1300,10 @@ app.get("/api/new_patients", (req, res) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-    res.json({ newPatients: results[0].newPatientCount }); // ส่งชื่อให้ตรงกับที่ frontend ใช้
+    res.json({ newPatients: results[0].newPatientCount }); 
   });
 });
 
-// ฟังก์ชันดึงข้อมูลผู้ป่วยเก่าที่จองคิวที่ไม่ใช่วันนี้
 app.get("/api/repeat_patients", (req, res) => {
   const sql = `
     SELECT COUNT(DISTINCT w.HN) AS repeatPatientCount
@@ -1389,7 +1343,6 @@ app.put("/api/update_queue_status", (req, res) => {
   });
 });
 
-// ฟังก์ชันลบรายการใน walkinqueue ที่ created_at ไม่ตรงกับวันนี้
 app.delete("/api/remove_old_queue", (req, res) => {
   const sql = `
     DELETE FROM walkinqueue
@@ -1408,7 +1361,6 @@ app.delete('/api/remove_old_appointmentqueue/:date', async (req, res) => {
   const { date } = req.params;
   
   try {
-    // ลบข้อมูลที่ Queue_Date น้อยกว่าวันที่ที่ได้รับมา
     await db.query(
       'DELETE FROM appointmentqueue WHERE Queue_Date < ?',
       [date]
@@ -1474,7 +1426,6 @@ app.put("/api/medicine_stock/:Medicine_ID", async (req, res) => {
   }
 });
 
-// API สำหรับดึงผู้ป่วยที่นัดหมายวันนี้
 app.get("/api/appointmentqueue/today", async (req, res) => {
   const { Queue_Date } = req.query;
   try {
@@ -1492,7 +1443,7 @@ app.get("/api/appointmentqueue/today", async (req, res) => {
       return res.status(404).json({ message: "ไม่พบผู้ป่วยนัดวันนี้" });
     }
 
-    res.status(200).json(rows); // ส่งผลลัพธ์กลับไปที่ frontend
+    res.status(200).json(rows); 
   } catch (error) {
     console.error("Error fetching today's appointment:", error);
     res.status(500).json({ error: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
@@ -1509,13 +1460,11 @@ app.get("/api/patients/total", async (req, res) => {
   }
 });
 
-// API สำหรับดึงรายการยาที่มี Quantity ต่ำกว่า 100
 app.get("/api/medicines/low_stock", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT * FROM medicine WHERE Quantity < 100");
     res.json(rows);
   } catch (error) {
-    // จัดการ error ที่เกิดขึ้นและแสดงรายละเอียด
     console.error('Error inserting or updating general_treatment:', error);
     res.status(500).json({ error: 'เกิดข้อผิดพลาดในการบันทึกหรือแก้ไขข้อมูล' });
   }
@@ -1525,7 +1474,6 @@ app.post('/api/general_treatment', async (req, res) => {
   const { HN, Treatment_Detail, General_Details, Treatment_Others } = req.body;
 
   try {
-    // ดึง Treatment_ID ล่าสุดจากตาราง treatment โดยอิงจาก HN
     const [treatmentRows] = await db.query(
       `
       SELECT Treatment_ID FROM treatment 
@@ -1536,14 +1484,12 @@ app.post('/api/general_treatment', async (req, res) => {
       [HN]
     );
 
-    // ตรวจสอบว่าพบ Treatment_ID หรือไม่
     if (treatmentRows.length === 0) {
       return res.status(404).json({ error: 'Treatment not found for this HN' });
     }
 
     const latestTreatmentId = treatmentRows[0].Treatment_ID;
 
-    // ตรวจสอบว่า Treatment_ID นี้มีใน general_treatment หรือไม่
     const [existingGeneralRows] = await db.query(
       `
       SELECT General_ID FROM general_treatment 
@@ -1553,7 +1499,6 @@ app.post('/api/general_treatment', async (req, res) => {
     );
 
     if (existingGeneralRows.length > 0) {
-      // มีข้อมูลแล้ว ให้ทำการแก้ไข
       const generalIdToUpdate = existingGeneralRows[0].General_ID;
 
       await db.query(
@@ -1567,15 +1512,12 @@ app.post('/api/general_treatment', async (req, res) => {
 
       res.status(200).json({ message: 'Data updated successfully' });
     } else {
-      // ไม่พบข้อมูล ให้ทำการเพิ่มข้อมูลใหม่
       const [generalRows] = await db.query(`
         SELECT General_ID FROM general_treatment ORDER BY General_ID DESC LIMIT 1
       `);
 
-      // ใช้ฟังก์ชัน generateID เพื่อสร้าง General_ID ใหม่
       const newGeneralId = generateID(generalRows[0]?.General_ID, 'GT');
 
-      // เพิ่มข้อมูลใหม่ลงใน general_treatment
       await db.query(
         `
         INSERT INTO general_treatment 
@@ -1609,7 +1551,6 @@ app.post('/api/pregnancy_treatment', async (req, res) => {
   } = req.body;
 
   try {
-    // ดึง Treatment_ID ล่าสุดจากตาราง treatment โดยอิงจาก HN
     const [treatmentRows] = await db.query(
       `
       SELECT Treatment_ID FROM treatment 
@@ -1620,14 +1561,11 @@ app.post('/api/pregnancy_treatment', async (req, res) => {
       [HN]
     );
 
-    // ตรวจสอบว่าพบ Treatment_ID หรือไม่
     if (treatmentRows.length === 0) {
       return res.status(404).json({ error: 'Treatment not found for this HN' });
     }
 
     const latestTreatmentId = treatmentRows[0].Treatment_ID;
-
-    // ตรวจสอบว่า Treatment_ID นี้มีใน pregnancy_treatment หรือไม่
     const [existingPregnancyRows] = await db.query(
       `
       SELECT Pregnan_ID FROM pregnancy_treatment 
@@ -1637,7 +1575,6 @@ app.post('/api/pregnancy_treatment', async (req, res) => {
     );
 
     if (existingPregnancyRows.length > 0) {
-      // มีข้อมูลแล้ว ให้ทำการแก้ไข
       const pregnanIdToUpdate = existingPregnancyRows[0].Pregnan_ID;
 
       await db.query(
@@ -1656,15 +1593,12 @@ app.post('/api/pregnancy_treatment', async (req, res) => {
 
       res.status(200).json({ message: 'Data updated successfully' });
     } else {
-      // ไม่พบข้อมูล ให้ทำการเพิ่มข้อมูลใหม่
       const [pregnancyRows] = await db.query(`
         SELECT Pregnan_ID FROM pregnancy_treatment ORDER BY Pregnan_ID DESC LIMIT 1
       `);
 
-      // ใช้ฟังก์ชัน generateID เพื่อสร้าง Pregnan_ID ใหม่
       const newPregnanId = generateID(pregnancyRows[0]?.Pregnan_ID, 'PT');
 
-      // เพิ่มข้อมูลใหม่ลงใน pregnancy_treatment
       await db.query(
         `
         INSERT INTO pregnancy_treatment 
@@ -1686,30 +1620,25 @@ app.post('/api/pregnancy_treatment', async (req, res) => {
   }
 });
 
-// API สำหรับดึงข้อมูล orders และกรองตามช่วงเวลา
 app.get("/api/orders", async (req, res) => {
   try {
-    const { filter } = req.query; // รับ filter จาก query params
+    const { filter } = req.query; 
     let dateCondition = "";
 
-    // กำหนดเงื่อนไขตาม filter ที่ส่งเข้ามา
     switch (filter) {
       case "last_6_months":
-        // คำนวณเงื่อนไขวันที่ให้ดึงข้อมูล 6 เดือนย้อนหลังจากเดือนปัจจุบัน (ไม่รวมเดือนปัจจุบัน)
         dateCondition = `WHERE Order_Date BETWEEN DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 6 MONTH), '%Y-%m-01') 
                         AND LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))`;
         break;
 
       case "last_7_days":
-        // ดึงข้อมูลสำหรับช่วง 7 วันที่ผ่านมา ไม่รวมวันที่ปัจจุบัน
         dateCondition = `WHERE Order_Date BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND DATE_SUB(CURDATE(), INTERVAL 1 DAY)`;
         break;
 
       default:
-        dateCondition = ""; // ถ้าไม่มี filter ใช้ค่า default (ดึงทั้งหมด)
+        dateCondition = ""; 
     }
 
-    // Query สำหรับดึงข้อมูลคำสั่งซื้อที่รวมรายรับ (Total_cost) ตามช่วงเวลาที่กำหนด
     const query = `
       SELECT Order_Date, SUM(Total_cost) AS Total_cost
       FROM orders
@@ -1718,8 +1647,8 @@ app.get("/api/orders", async (req, res) => {
       ORDER BY Order_Date;
     `;
 
-    const [results] = await db.query(query); // ใช้ await กับ promise
-    res.json(results); // ส่งข้อมูลกลับไปที่ frontend
+    const [results] = await db.query(query); 
+    res.json(results); 
   } catch (err) {
     console.error("Error fetching orders data:", err);
     res.status(500).send("Error fetching orders data");
@@ -1730,11 +1659,9 @@ app.put("/api/update_medicine_quantity", async (req, res) => {
   const { orderID } = req.body;
 
   try {
-    // ดึงข้อมูลยาในใบสั่งซื้อมาก่อน
     const queryGetOrder = `SELECT Medicine_ID, Quantity_Order FROM order_medicine WHERE Order_ID = ?`;
     const [medicines] = await db.query(queryGetOrder, [orderID]);
 
-    // อัปเดตจำนวนยาตามรายการ
     for (const medicine of medicines) {
       const updateMedicineQuery = `
         UPDATE medicine 
