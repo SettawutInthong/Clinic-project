@@ -17,33 +17,30 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useNavigate } from "react-router-dom";
 
 const DoctorPatientDetail = () => {
-  const { HN } = useParams(); // รับ HN จาก URL
-  const [patientData, setPatientData] = useState(null); // เก็บข้อมูลผู้ป่วย
-  const [loading, setLoading] = useState(true); // สถานะโหลดข้อมูล
-  const [error, setError] = useState(null); // สถานะข้อผิดพลาด
-  const navigate = useNavigate(); // ใช้เพื่อเปลี่ยนหน้า
+  const { HN } = useParams(); 
+  const [patientData, setPatientData] = useState(null);
+  const [loading, setLoading] = useState(true); 
+  const [error, setError] = useState(null);
+  const navigate = useNavigate(); 
 
   useEffect(() => {
-    // ฟังก์ชันสำหรับดึงข้อมูลผู้ป่วยจาก backend
     const fetchPatientData = async () => {
       try {
         const response = await axios.get(
           `http://localhost:5000/api/patient/${HN}`
         );
-        setPatientData(response.data.data[0]); // เก็บข้อมูลผู้ป่วย
-        setLoading(false); // เปลี่ยนสถานะเป็นโหลดเสร็จสิ้น
+        setPatientData(response.data.data[0]); 
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching patient data:", error);
         setError("เกิดข้อผิดพลาดในการดึงข้อมูลผู้ป่วย");
-        setLoading(false); // เปลี่ยนสถานะเป็นโหลดเสร็จสิ้นพร้อมข้อผิดพลาด
+        setLoading(false); 
       }
     };
 
-    // ดึงข้อมูลผู้ป่วยทุกครั้งที่หน้าโหลดหรือ HN เปลี่ยนแปลง
     fetchPatientData();
   }, [HN]);
 
-  // ฟังก์ชันสำหรับคำนวณอายุ
   const calculateAge = (birthdate) => {
     const today = new Date();
     const birthDate = new Date(birthdate);

@@ -290,7 +290,6 @@ app.get("/api/treatment/:HN/latest", async (req, res) => {
   }
 });
 
-// ตัวอย่างของ backend API สำหรับดึงข้อมูลยา
 app.get("/api/medicines", (req, res) => {
   const { medicineName } = req.query;
 
@@ -303,7 +302,7 @@ app.get("/api/medicines", (req, res) => {
 
   connection.query(sql, params, (error, results) => {
     if (error) return res.status(500).json({ error: error.message });
-    console.log("Results:", results); // แสดงข้อมูลที่ดึงได้จากฐานข้อมูล
+    console.log("Results:", results);
     res.json({ data: results });
   });
 });
@@ -317,13 +316,9 @@ app.post("/api/medicine_stock", async (req, res) => {
   }
 
   try {
-    // Get the maximum existing Medicine_ID
     const [maxMedicineResult] = await db.query("SELECT MAX(Medicine_ID) as maxMedicineID FROM medicine");
-
-    // Generate the new Medicine_ID
     const newMedicineID = generateMedicineID(maxMedicineResult[0].maxMedicineID, "m");
 
-    // Insert the new medicine
     await db.query(
       "INSERT INTO medicine (Medicine_ID, Medicine_Name, Description, medicine_type, Quantity, Quantity_type, Med_Cost) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [newMedicineID, Medicine_Name, Description, medicine_type, Quantity, Quantity_type, Med_Cost]
@@ -340,14 +335,12 @@ app.delete("/api/medicine_stock/:Medicine_ID", async (req, res) => {
   const { Medicine_ID } = req.params;
 
   try {
-    // ตรวจสอบว่า Medicine_ID มีอยู่ในฐานข้อมูลหรือไม่
     const [medicine] = await db.query("SELECT * FROM medicine WHERE Medicine_ID = ?", [Medicine_ID]);
 
     if (medicine.length === 0) {
       return res.status(404).json({ message: "ไม่พบยาในระบบ" });
     }
 
-    // ลบรายการยาที่ตรงกับ Medicine_ID
     await db.query("DELETE FROM medicine WHERE Medicine_ID = ?", [Medicine_ID]);
 
     res.status(200).json({ message: "ลบยาสำเร็จ" });
@@ -363,10 +356,8 @@ app.post("/api/orders/:orderID/items", async (req, res) => {
   const { orderID } = req.params;
   const { items, treatmentCost } = req.body;
 
-  // ฟังก์ชัน generateID สำหรับสร้าง Item_ID ในรูปแบบ I00001
   const generateID = (currentMaxID, prefix) => {
     if (!currentMaxID || isNaN(parseInt(currentMaxID.substring(1), 10))) {
-      // ถ้าไม่มีค่า currentMaxID หรือแปลงเป็นตัวเลขไม่ได้ ให้เริ่มต้นที่ I00001
       return `${prefix}00001`;
     }
     const nextNumber = parseInt(currentMaxID.substring(1), 10) + 1;
@@ -374,19 +365,13 @@ app.post("/api/orders/:orderID/items", async (req, res) => {
   };
 
   try {
-    // ดึงค่า Item_ID สูงสุดปัจจุบันเพื่อใช้ในการสร้าง ID ใหม่
     const [result] = await db.query(`
       SELECT MAX(Item_ID) as maxItemID FROM order_medicine
     `);
-
-    // กำหนดค่าเริ่มต้นสำหรับ Item_ID
     let maxItemID = result[0].maxItemID || null;
-
-    // ทำการ Insert ยาแต่ละรายการลงใน order_medicine
     const itemPromises = items.map((item) => {
-      // สร้าง Item_ID ใหม่โดยใช้ฟังก์ชัน generateID
       const newItemID = generateID(maxItemID, 'I');
-      maxItemID = newItemID; // อัปเดตค่า maxItemID หลังจากเพิ่มแต่ละรายการ
+      maxItemID = newItemID;
 
       return db.query(`
         INSERT INTO order_medicine (Item_ID, Order_ID, Medicine_ID, Quantity_Order)
@@ -395,8 +380,6 @@ app.post("/api/orders/:orderID/items", async (req, res) => {
     });
 
     await Promise.all(itemPromises);
-
-    // บันทึกค่ารักษาลงใน order table
     await db.query(`
       UPDATE orders
       SET Treatment_cost = ?
@@ -415,8 +398,8 @@ app.post("/api/orders/:orderID/items", async (req, res) => {
 
 
 app.get("/api/medicine_stock", async (req, res) => {
-  const name = req.query.name || ""; // รับคีย์เวิร์ดค้นหาจาก query parameters
-  const type = req.query.type || ""; // รับประเภทยา
+  const name = req.query.name || "";
+  const type = req.query.type || ""; 
 
   try {
     let sql = `
@@ -426,7 +409,6 @@ app.get("/api/medicine_stock", async (req, res) => {
     `;
     const params = [`%${name}%`];
 
-    // กรองตามประเภทของยาถ้ามีการส่งค่า type มา
     if (type) {
       sql += " AND medicine_type = ?";
       params.push(type);
@@ -452,21 +434,18 @@ app.post("/api/stocks", async (req, res) => {
 
     console.log("Received items:", items);
 
-    // ดึงค่า Inovic_ID สูงสุดปัจจุบัน
     const [inovicResult] = await connection.promise().query(`
       SELECT MAX(Inovic_ID) as maxInovicID FROM inovic
     `);
 
     console.log("Inovic Result:", inovicResult);
 
-    // ตรวจสอบว่า maxInovicID มีค่าหรือไม่ ถ้าไม่มีให้เริ่มที่ 'INO00001'
     const newInovicID = inovicResult[0].maxInovicID
       ? generateID(inovicResult[0].maxInovicID, "INO")
       : "INO00001";
 
     console.log("New Inovic_ID:", newInovicID);
 
-    // เพิ่มรายการลงในตาราง inovic
     await connection
       .promise()
       .query(`INSERT INTO inovic (Inovic_ID, Inovic_Date) VALUES (?, ?)`, [
@@ -606,7 +585,6 @@ app.get("/api/treatmentDetails/:HN", async (req, res) => {
   const { HN } = req.params;
 
   try {
-      // ตัวอย่างการดึงข้อมูลการรักษาจากฐานข้อมูล
       const treatments = await db.query("SELECT * FROM treatments WHERE HN = ?", [HN]);
 
       if (treatments.length > 0) {
@@ -683,7 +661,6 @@ app.get("/api/appointmentqueue", async (req, res) => {
       params.push(HN);
     }
 
-    // เพิ่มการเรียงลำดับตาม Queue_Date และ Queue_Time
     query +=
       " ORDER BY appointmentqueue.Queue_Date ASC, appointmentqueue.Queue_Time ASC";
 
@@ -700,7 +677,6 @@ app.post("/api/addWalkInQueue", async (req, res) => {
   const { HN, Heart_Rate, Pressure, Temp, Weight, Height, Symptom } = req.body;
 
   try {
-    // ดึงเวลาสูงสุดจาก walkinqueue
     const [maxQueueTimeResult] = await db.query(
       "SELECT MAX(Time) as maxTime FROM walkinqueue"
     );

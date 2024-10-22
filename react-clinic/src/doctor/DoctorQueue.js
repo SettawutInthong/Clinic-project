@@ -60,8 +60,8 @@ const DoctorQueue = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarType, setSnackbarType] = useState("success");
   const [selectedOrder, setSelectedOrder] = useState({});
-  const [currentPage, setCurrentPage] = useState(1); // หน้าปัจจุบันเริ่มที่ 1
-  const patientsPerPage = 10; // จำนวนผู้ป่วยต่อหน้า
+  const [currentPage, setCurrentPage] = useState(1);
+  const patientsPerPage = 10;
   const indexOfLastPatient = currentPage * patientsPerPage;
   const indexOfFirstPatient = indexOfLastPatient - patientsPerPage;
   const currentPatients = data.slice(indexOfFirstPatient, indexOfLastPatient);
@@ -112,7 +112,6 @@ const DoctorQueue = () => {
       });
 
       const patientData = await Promise.all(patientDataPromises);
-      // ตรวจสอบว่าข้อมูลเรียงตามเวลาจาก API หรือไม่ ถ้าไม่ต้องปรับใน API
 
       setData(patientData);
     } catch (error) {
@@ -121,10 +120,9 @@ const DoctorQueue = () => {
   };
 
   const AddQueue = async () => {
-    // ตรวจสอบว่ากรอก HN หรือยัง
     if (!queueHN) {
       showMessage("กรุณาเลือก HN ของผู้ป่วย", "error");
-      return; // หยุดทำงานถ้าไม่กรอก HN
+      return; 
     }
 
     try {
@@ -145,7 +143,7 @@ const DoctorQueue = () => {
         });
 
         FetchData();
-        ResetForm(); // รีเซ็ตฟอร์มหลังจากจองคิวเสร็จสิ้น
+        ResetForm(); 
         setAddQueuePopup(false);
         showMessage("จองคิวสำเร็จ", "success");
       } else {
@@ -191,7 +189,7 @@ const DoctorQueue = () => {
 
   const handleHNSelect = async (selectedOption) => {
     setQueueHN(selectedOption ? selectedOption.value : "");
-    setShowTextFields(!!selectedOption); // แสดงกล่องข้อความเมื่อ HN ถูกเลือก
+    setShowTextFields(!!selectedOption);
 
     if (selectedOption) {
       try {
@@ -219,7 +217,7 @@ const DoctorQueue = () => {
   };
 
   const ResetForm = () => {
-    setQueueHN(""); // รีเซ็ตค่า HN เพื่อบังคับให้กรอกใหม่ทุกครั้ง
+    setQueueHN(""); 
     setNewTitle("");
     setNewFirstName("");
     setNewLastName("");
@@ -237,29 +235,25 @@ const DoctorQueue = () => {
       Height: "",
       Symptom: "",
     });
-    setShowTextFields(false); // ซ่อนฟอร์ม
+    setShowTextFields(false); 
   };
 
   const fetchAvailablePatients = async () => {
     try {
-      // ดึงข้อมูล HN ทั้งหมดจาก patient
       const responsePatients = await axios.get(
         "http://localhost:5000/api/patient"
       );
       const allPatients = responsePatients.data.data;
 
-      // ดึงข้อมูล HN ทั้งหมดที่มีอยู่แล้วใน walkinqueue
       const responseQueue = await axios.get(
         "http://localhost:5000/api/walkinqueue"
       );
       const queuePatients = responseQueue.data.data.map((item) => item.HN);
 
-      // กรองเฉพาะ HN ที่ยังไม่มีใน walkinqueue
       const availablePatients = allPatients.filter(
         (patient) => !queuePatients.includes(patient.HN)
       );
 
-      // สร้าง options สำหรับ ReactSelect
       setPatientOptions(
         availablePatients.map((patient) => ({
           value: patient.HN,
@@ -277,7 +271,7 @@ const DoctorQueue = () => {
 
   useEffect(() => {
     if (addQueuePopup) {
-      fetchAvailablePatients(); // เรียกฟังก์ชันที่กรอง HN ที่ไม่มีใน walkinqueue
+      fetchAvailablePatients(); 
     }
   }, [addQueuePopup]);
 
@@ -376,20 +370,20 @@ const DoctorQueue = () => {
                             borderRadius: "16px",
                             backgroundColor:
                               row.Status === "รอจ่ายยา"
-                                ? "rgba(170, 255, 195, 0.5)" // พื้นหลังสีมิ้น (รอจ่ายยา)
+                                ? "rgba(170, 255, 195, 0.5)" 
                                 : row.Status === "กำลังตรวจ"
-                                ? "rgba(255, 255, 0, 0.5)" // พื้นหลังสีเหลือง (กำลังตรวจ)
+                                ? "rgba(255, 255, 0, 0.5)" 
                                 : row.Status === "รอตรวจ"
-                                ? "rgba(0, 0, 255, 0.2)" // พื้นหลังสีน้ำเงินอ่อน (รอตรวจ)
+                                ? "rgba(0, 0, 255, 0.2)" 
                                 : "transparent",
                             color:
                               row.Status === "กำลังตรวจ"
-                                ? "black" // สีข้อความสำหรับสถานะ "กำลังตรวจ"
+                                ? "black" 
                                 : row.Status === "รอตรวจ"
-                                ? "black"// สีข้อความสำหรับสถานะ "รอตรวจ"
+                                ? "black"
                                 : row.Status === "รอจ่ายยา"
-                                ? "black" // สีข้อความสำหรับสถานะ "รอจ่ายยา"
-                                : "black", // สีข้อความเริ่มต้น
+                                ? "black"
+                                : "black", 
                           }}
                         >
                           {row.Status || "-"}
@@ -404,7 +398,7 @@ const DoctorQueue = () => {
                             onClick={() =>
                               navigate(`/doctor_patientdetail/${row.HN}`)
                             }
-                            //disabled={row.Status !== "กำลังตรวจ"} // ปิดปุ่มถ้าสถานะไม่ใช่กำลังตรวจ
+                            disabled={row.Status !== "กำลังตรวจ"}
                           >
                             <VaccinesIcon />
                           </Button>

@@ -32,8 +32,8 @@ const AddStock = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [openMedicineDialog, setOpenMedicineDialog] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [popupConfirmOpen, setPopupConfirmOpen] = useState(false); // สำหรับ Popup ยืนยันหลังบันทึก
-  const navigate = useNavigate(); // ใช้ useNavigate แทน useHistory
+  const [popupConfirmOpen, setPopupConfirmOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMedicines = async () => {
@@ -47,13 +47,12 @@ const AddStock = () => {
           console.error("Error fetching medicines:", error);
         }
       } else {
-        // ถ้า searchName ว่างอยู่ ก็จะล้างข้อมูลใน medicines
         setMedicines([]);
       }
     };
   
     fetchMedicines();
-  }, [searchName]); // เมื่อ searchName เปลี่ยนแปลงถึงจะเรียก API
+  }, [searchName]);
   
 
   const handleAddMedicine = () => {
@@ -66,7 +65,7 @@ const AddStock = () => {
       setStockItems([...stockItems, newItem]);
       setSelectedMedicine(null);
       setQuantityInsert(1);
-      setSearchName(""); // Clear search after adding
+      setSearchName("");
     }
   };
 
@@ -80,11 +79,11 @@ const AddStock = () => {
     if (stockItems.length > 0) {
       try {
         await axios.post(
-          "http://localhost:5000/api/stocks", // เรียก API เพื่อลงฐานข้อมูล
+          "http://localhost:5000/api/stocks",
           { items: stockItems }
         );
-        setPopupConfirmOpen(true); // แสดง Popup ยืนยันเมื่อบันทึกสำเร็จ
-        setStockItems([]); // ล้างข้อมูล stock items หลังบันทึกสำเร็จ
+        setPopupConfirmOpen(true);
+        setStockItems([]);
       } catch (error) {
         console.error("Error submitting stock:", error.message);
       }
@@ -97,12 +96,12 @@ const AddStock = () => {
 
   const handlePopupClose = () => {
     setPopupConfirmOpen(false);
-    navigate("/doctor_meddetail"); // Redirect กลับไปหน้า meddetail หลังจากกดยืนยัน
+    navigate("/doctor_meddetail");
   };
 
   const handleSubmitStock = () => {
     if (stockItems.length > 0) {
-      setConfirmDialogOpen(true); // เปิด Popup ยืนยันก่อนบันทึก
+      setConfirmDialogOpen(true);
     }
   };
 
@@ -163,7 +162,7 @@ const AddStock = () => {
             variant="contained"
             color="primary"
             onClick={handleSubmitStock}
-            disabled={stockItems.length === 0} // ปิดปุ่มหากยังไม่มีรายการยาที่เพิ่ม
+            disabled={stockItems.length === 0}
           >
             บันทึกสต็อก
           </Button>
@@ -271,7 +270,7 @@ const AddStock = () => {
           </DialogActions>
         </Dialog>
 
-        <Dialog // Popup ยืนยันหลังจากบันทึกสำเร็จ
+        <Dialog
           open={popupConfirmOpen}
           onClose={handlePopupClose}
         >

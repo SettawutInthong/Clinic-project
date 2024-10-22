@@ -76,13 +76,13 @@ const DoctorPatient = () => {
   const [treatmentHistory, setTreatmentHistory] = useState([]);
   const [medicineDetails, setMedicineDetails] = useState([]);
   const [historyPopup, setHistoryPopup] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1); // หน้าปัจจุบันเริ่มที่ 1
-  const patientsPerPage = 10; // จำนวนผู้ป่วยต่อหน้า
+  const [currentPage, setCurrentPage] = useState(1); 
+  const patientsPerPage = 10; 
   const indexOfLastPatient = currentPage * patientsPerPage;
   const indexOfFirstPatient = indexOfLastPatient - patientsPerPage;
   const currentPatients = data.slice(indexOfFirstPatient, indexOfLastPatient);
-  const [selectedGeneralTreatment, setSelectedGeneralTreatment] = useState(null); // สำหรับแสดงรายละเอียดการรักษาทั่วไป
-  const [selectedPregnancyTreatment, setSelectedPregnancyTreatment] = useState(null); // สำหรับแสดงรายละเอียดการรักษาการตั้งครรภ์
+  const [selectedGeneralTreatment, setSelectedGeneralTreatment] = useState(null); 
+  const [selectedPregnancyTreatment, setSelectedPregnancyTreatment] = useState(null);
   const [dialogState, setDialogState] = useState({
     open: false,
     selectedOrder: [],
@@ -97,9 +97,9 @@ const DoctorPatient = () => {
     Height: "",
     Symptom: "",
   });
-  const [isGenderLocked, setIsGenderLocked] = useState(false); // สำหรับล็อกเพศตามคำนำหน้า
-  const [newID, setNewID] = useState(""); // สำหรับจัดการเลขบัตรประชาชน
-  const [errors, setErrors] = useState({}); // สำหรับจัดการข้อผิดพลาดในฟอร์ม
+  const [isGenderLocked, setIsGenderLocked] = useState(false); 
+  const [newID, setNewID] = useState(""); 
+  const [errors, setErrors] = useState({});
   const [appointmentDate, setAppointmentDate] = useState(null);
   const [addQueuePopup, setAddQueuePopup] = useState(false);
   const [queueHN, setQueueHN] = useState("");
@@ -166,28 +166,28 @@ const DoctorPatient = () => {
 
   const SearchSubmit = async (event) => {
     event.preventDefault();
-    FetchData(); // ดึงข้อมูลที่ถูกค้นหามาแสดง
+    FetchData();
   };
 
-  // ฟังก์ชันตรวจสอบประเภทการรักษา
+  
   const getTreatmentType = (treatment) => {
     const hasGeneralTreatment = treatment.GeneralTreatmentID ? "รักษาทั่วไป" : "";
     const hasPregnancyTreatment = treatment.PregnancyTreatmentID ? "รักษาการตั้งครรภ์" : "";
     const hasMedicineOrder = treatment.Order_ID ? "จ่ายยา" : "";
 
-    // รวมข้อมูลการรักษาที่มี
+ 
     const treatmentTypes = [hasGeneralTreatment, hasPregnancyTreatment, hasMedicineOrder]
-      .filter(Boolean) // กรองค่าที่เป็นว่างออก
-      .join(", "); // รวมข้อมูลการรักษาในรูปแบบข้อความ
+      .filter(Boolean)
+      .join(", ");
 
     return treatmentTypes || "ไม่มีข้อมูลการรักษา";
   };
 
   const ViewHistory = async (HN) => {
     try {
-      setSelectedHN(HN); // ตั้งค่า selectedHN ก่อน
+      setSelectedHN(HN);
 
-      // ดึงข้อมูลผู้ป่วยตาม HN เพื่อตรวจสอบคำนำหน้า
+     
       const patientResponse = await axios.get(
         `http://localhost:5000/api/patient?HN=${HN}`
       );
@@ -195,10 +195,9 @@ const DoctorPatient = () => {
       const patient = patientResponse.data.data[0];
 
       if (patient) {
-        setNewTitle(patient.Title); // ตั้งค่า title ของผู้ป่วย
+        setNewTitle(patient.Title); 
       }
 
-      // ดึงประวัติการรักษา
       const treatmentResponse = await axios.get(
         `http://localhost:5000/api/treatments/${HN}`
       );
@@ -234,17 +233,14 @@ const DoctorPatient = () => {
     }
   };
 
-  // Function to close the General Treatment Details Dialog
   const handleCloseGeneralTreatment = () => {
     setSelectedGeneralTreatment(null);
   };
 
-  // Function to close the Pregnancy Treatment Details Dialog
   const handleClosePregnancyTreatment = () => {
     setSelectedPregnancyTreatment(null);
   };
 
-  // Function to close the Medicine Order Dialog
   const handleCloseOrderDetails = () => {
     setDialogState({ open: false, selectedOrder: [] });
   };
@@ -261,7 +257,7 @@ const DoctorPatient = () => {
   };
 
   useEffect(() => {
-    FetchData(); // ดึงข้อมูลผู้ป่วยเมื่อเริ่มโหลดหน้า
+    FetchData();
   }, []);
 
   const ResetForm = () => {
@@ -286,17 +282,13 @@ const DoctorPatient = () => {
     setAppointmentDate(null);
   };
 
-  // ฟังก์ชันสำหรับตรวจสอบข้อมูลในฟอร์ม
   const validateForm = () => {
     const newErrors = {};
 
-    // ตรวจสอบว่าถ้ามีการกรอก ID ต้องเป็นตัวเลขเท่านั้น
     if (newID && isNaN(newID)) {
       newErrors.ID = "เลขบัตรประชาชนต้องเป็นตัวเลข";
     }
 
-    // ตรวจสอบข้อมูลอื่น ๆ ตามที่ต้องการ
-    // เช่น Weight, Height ควรเป็นตัวเลข
     if (treatmentData.Weight && isNaN(treatmentData.Weight)) {
       newErrors.Weight = "น้ำหนักต้องเป็นตัวเลข";
     }
@@ -306,12 +298,10 @@ const DoctorPatient = () => {
 
     setErrors(newErrors);
 
-    // ถ้าไม่มีข้อผิดพลาด (จำนวนข้อผิดพลาดเป็น 0) ให้คืนค่า true
     return Object.keys(newErrors).length === 0;
   };
 
   const AddPatient = async () => {
-    // ตรวจสอบฟอร์มก่อน
     if (!validateForm()) {
       showMessage("ข้อมูลไม่ถูกต้อง", "error");
       return;
@@ -359,11 +349,10 @@ const DoctorPatient = () => {
 
   const ConfirmDeletePatient = async () => {
     try {
-      // ลบข้อมูลทั้งหมดที่เกี่ยวข้องกับ HN โดยใช้ API เดียว
       await axios.delete(`http://localhost:5000/api/patient/${selectedHN}`);
 
-      FetchData(); // โหลดข้อมูลใหม่อีกครั้งหลังจากลบสำเร็จ
-      setDeletePopup(false); // ปิด popup การยืนยันการลบ
+      FetchData(); 
+      setDeletePopup(false); 
       showMessage("ลบข้อมูลผู้ป่วยสำเร็จ", "success");
     } catch (error) {
       console.error("Error deleting patient:", error);
@@ -449,10 +438,8 @@ const DoctorPatient = () => {
 
       showMessage("จองคิวสำเร็จ", "success");
 
-      // อัพเดต queueData ทันทีหลังจากจองคิวเสร็จ
       setQueueData((prevQueueData) => [...prevQueueData, { HN: queueHN }]);
 
-      // รีเซ็ตฟอร์มและปิด Popup
       setAddQueuePopup(false);
       ResetForm();
     } catch (error) {
@@ -475,7 +462,6 @@ const DoctorPatient = () => {
       }
     };
 
-    // ให้แสดงตารางทันทีเมื่อ component ถูกสร้าง
     setShowTable(true);
     FetchData();
     fetchQueueData();
@@ -1037,8 +1023,8 @@ const DoctorPatient = () => {
                   onChange={(e) => setNewFirstName(e.target.value)}
                   disabled={!edit}
                   sx={{
-                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", 
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", 
                   }}
                 />
 
@@ -1051,8 +1037,8 @@ const DoctorPatient = () => {
                   onChange={(e) => setNewLastName(e.target.value)}
                   disabled={!edit}
                   sx={{
-                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)",
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)",
                   }}
                 />
                 <TextField
@@ -1064,8 +1050,8 @@ const DoctorPatient = () => {
                   onChange={(e) => setNewID(e.target.value)}
                   disabled={!edit}
                   sx={{
-                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)",
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)",
                   }}
                 />
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -1083,8 +1069,8 @@ const DoctorPatient = () => {
                         sx: {
                           backgroundColor: edit
                             ? "white"
-                            : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                          color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                            : "rgba(0, 0, 0, 0.1)",
+                          color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)",
                         },
                       },
                     }}
@@ -1099,8 +1085,8 @@ const DoctorPatient = () => {
                   onChange={(e) => setNewPhone(e.target.value)}
                   disabled={!edit}
                   sx={{
-                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)",
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)",
                   }}
                 />
                 <TextField
@@ -1112,8 +1098,8 @@ const DoctorPatient = () => {
                   onChange={(e) => setNewDisease(e.target.value)}
                   disabled={!edit}
                   sx={{
-                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)",
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)",
                   }}
                 />
                 <TextField
@@ -1125,8 +1111,8 @@ const DoctorPatient = () => {
                   onChange={(e) => setNewAllergy(e.target.value)}
                   disabled={!edit}
                   sx={{
-                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)",
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)",
                   }}
                 />
               </DialogContent>
@@ -1158,8 +1144,6 @@ const DoctorPatient = () => {
               maxWidth="lg"
               fullWidth
             >
-              {/* Treatment History Dialog */}
-              {/* Treatment History Dialog */}
               <Dialog
                 open={historyPopup}
                 onClose={() => setHistoryPopup(false)}
@@ -1178,7 +1162,6 @@ const DoctorPatient = () => {
                           <TableCell align="center">ประเภทการรักษา</TableCell>
                           <TableCell align="center">รายการจ่ายยา</TableCell>
                           <TableCell align="center">การรักษาทั่วไป</TableCell>
-                          {/* Conditionally render pregnancy treatment column based on patient's title */}
                           {(newTitle === 'นาง' || newTitle === 'นางสาว') && (
                             <TableCell align="center">การรักษาผดุงครรภ์</TableCell>
                           )}
@@ -1213,7 +1196,6 @@ const DoctorPatient = () => {
                                     : 'ไม่มีการรักษาทั่วไป'}
                                 </Button>
                               </TableCell>
-                              {/* Conditionally render pregnancy treatment button */}
                               {(newTitle === 'นาง' || newTitle === 'นางสาว') && (
                                 <TableCell align="center">
                                   <Button
@@ -1250,8 +1232,6 @@ const DoctorPatient = () => {
               </Dialog>
 
             </Dialog>
-
-            {/* Popup แสดงรายละเอียดออเดอร์ */}
             <Dialog
               open={dialogState.open}
               onClose={handleCloseOrderDetails}
@@ -1276,8 +1256,6 @@ const DoctorPatient = () => {
                 )}
               </DialogContent>
             </Dialog>
-
-            {/* Popup แสดงรายละเอียดการรักษาทั่วไป */}
             <Dialog
               open={!!selectedGeneralTreatment}
               onClose={handleCloseGeneralTreatment}
@@ -1291,7 +1269,6 @@ const DoctorPatient = () => {
               <DialogContent sx={{ paddingX: 4, paddingBottom: 2 }}>
                 {selectedGeneralTreatment ? (
                   <Box>
-                    {/* Diagnosis Section */}
                     <Paper elevation={2} sx={{ padding: 2, marginBottom: 2 }}>
                       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                         การวินิจฉัยเบื้องต้น:
@@ -1300,8 +1277,6 @@ const DoctorPatient = () => {
                         {selectedGeneralTreatment.General_Details || 'ไม่มีข้อมูลการวินิจฉัย'}
                       </Typography>
                     </Paper>
-
-                    {/* Treatment Details Section */}
                     <Paper elevation={2} sx={{ padding: 2, marginBottom: 2 }}>
                       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                         รายละเอียดการรักษา:
@@ -1310,8 +1285,6 @@ const DoctorPatient = () => {
                         {selectedGeneralTreatment.Treatment_Detail || 'ไม่มีรายละเอียดการรักษา'}
                       </Typography>
                     </Paper>
-
-                    {/* Additional Notes Section */}
                     <Paper elevation={2} sx={{ padding: 2, marginBottom: 2 }}>
                       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                         บันทึกเพิ่มเติม:
@@ -1334,9 +1307,6 @@ const DoctorPatient = () => {
                 </Button>
               </DialogActions>
             </Dialog>
-
-
-            {/* Popup แสดงรายละเอียดการรักษาการตั้งครรภ์ */}
             <Dialog
               open={!!selectedPregnancyTreatment}
               onClose={handleClosePregnancyTreatment}
@@ -1350,7 +1320,6 @@ const DoctorPatient = () => {
               <DialogContent sx={{ paddingX: 4, paddingBottom: 2 }}>
                 {selectedPregnancyTreatment ? (
                   <Box>
-                    {/* Contraception Type Section */}
                     <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                         ประเภทของการคุมกำเนิด:
@@ -1359,8 +1328,6 @@ const DoctorPatient = () => {
                         {selectedPregnancyTreatment.Pregnancy_Control_Type || 'ไม่มีข้อมูล'}
                       </Typography>
                     </Paper>
-
-                    {/* Injection Frequency Section */}
                     <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                         ความถี่ในการฉีดยาคุมกำเนิด:
@@ -1369,8 +1336,6 @@ const DoctorPatient = () => {
                         {selectedPregnancyTreatment.Freq_Pregnancies || 'ไม่มีข้อมูล'}
                       </Typography>
                     </Paper>
-
-                    {/* Problems Section */}
                     <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                         ปัญหาหรืออาการข้างเคียงจากการใช้ยาคุม:
@@ -1379,8 +1344,6 @@ const DoctorPatient = () => {
                         {selectedPregnancyTreatment.Pregnancy_Problems || 'ไม่มีข้อมูล'}
                       </Typography>
                     </Paper>
-
-                    {/* Pregnancy Count Section */}
                     <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                         จำนวนครั้งในการตั้งครรภ์:
@@ -1389,8 +1352,6 @@ const DoctorPatient = () => {
                         {selectedPregnancyTreatment.Total_Pregnancies || 'ไม่มีข้อมูล'}
                       </Typography>
                     </Paper>
-
-                    {/* Children Count Section */}
                     <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                         จำนวนบุตรทั้งหมด:
@@ -1399,8 +1360,6 @@ const DoctorPatient = () => {
                         {selectedPregnancyTreatment.Total_Children || 'ไม่มีข้อมูล'}
                       </Typography>
                     </Paper>
-
-                    {/* Last Pregnancy Date Section */}
                     <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                         วันที่การตั้งครรภ์ล่าสุด:
@@ -1409,8 +1368,6 @@ const DoctorPatient = () => {
                         {selectedPregnancyTreatment.Last_Pregnancy_Date || 'ไม่มีข้อมูล'}
                       </Typography>
                     </Paper>
-
-                    {/* Abortion History Section */}
                     <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                         ประวัติการแท้ง:
@@ -1419,8 +1376,6 @@ const DoctorPatient = () => {
                         {selectedPregnancyTreatment.Abortion_History || 'ไม่มีข้อมูล'}
                       </Typography>
                     </Paper>
-
-                    {/* Other Treatment Details Section */}
                     <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                         รายละเอียดการรักษา:
@@ -1429,8 +1384,6 @@ const DoctorPatient = () => {
                         {selectedPregnancyTreatment.Pregmed_Detail || 'ไม่มีรายละเอียดการรักษา'}
                       </Typography>
                     </Paper>
-
-                    {/* Additional Notes Section */}
                     <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                         เพิ่มเติม:
