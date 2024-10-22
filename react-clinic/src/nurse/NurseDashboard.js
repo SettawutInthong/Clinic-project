@@ -243,9 +243,7 @@ const Dashboard = () => {
                           })}
                         />
                       </Box>
-                      {/* <Typography variant="subtitle1" color="#000">
-                        ผู้ป่วยที่มาวันนี้
-                      </Typography> */}
+                  
                       <Box mt={2} display="flex" alignItems="center">
                         <Box
                           width={30}
@@ -321,10 +319,10 @@ const Dashboard = () => {
               </Grid>
               <Grid item xs={12} md={12}>
                 <FramBox2 style={{ height: "255px" }}>
-                  {/* หัวข้อที่ไม่เลื่อน */}
+          
                   <Typography variant="h6">รายการยาที่ต้องเติม</Typography>
 
-                  {/* กล่องสำหรับรายการยาที่เลื่อนได้ */}
+               
                   <Box style={{ height: "200px", overflowY: "auto" }}>
                     {lowStockMedicines.map((medicine, index) => (
                       <MedicineBox key={index}>
@@ -332,14 +330,14 @@ const Dashboard = () => {
                           display="flex"
                           flexDirection="row"
                           alignItems="center"
-                          justifyContent="flex-start" // ชิดซ้าย
+                          justifyContent="flex-start" 
                           width="100%"
                         >
                           <Typography variant="body1" color="#000">
                             {medicine.Medicine_Name}
                           </Typography>
 
-                          {/* DividerBox และ "คงเหลือ" จะชิดซ้ายตามไปด้วย */}
+                          
                           <Box
                             display="flex"
                             alignItems="center"

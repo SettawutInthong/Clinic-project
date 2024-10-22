@@ -28,8 +28,8 @@ const NurseBill = () => {
   const [patientName, setPatientName] = useState("");
   const [totalCost, setTotalCost] = useState(0);
   const [orderID, setOrderID] = useState("");
-  const [orderDate, setOrderDate] = useState(""); // เพิ่ม state สำหรับ Order_Date
-  const [HN, setHN] = useState(""); // เพิ่ม state สำหรับ HN
+  const [orderDate, setOrderDate] = useState(""); 
+  const [HN, setHN] = useState(""); 
   const navigate = useNavigate();
 
   const FetchBillData = async () => {
@@ -42,12 +42,12 @@ const NurseBill = () => {
       );
       const order = orderResponse.data.data;
       const orderID = order.Order_ID;
-      const orderDate = order.Order_Date; // เก็บข้อมูลวันที่จากการสั่งซื้อ
+      const orderDate = order.Order_Date; 
 
   
-      setOrderID(orderID); // บันทึก orderID ใน state
-      setOrderDate(orderDate); // บันทึก Order_Date ใน state
-      setHN(HN); // บันทึก HN ใน state
+      setOrderID(orderID); 
+      setOrderDate(orderDate); 
+      setHN(HN); 
 
   
       const patientResponse = await axios.get(
@@ -99,7 +99,7 @@ const NurseBill = () => {
   const updateMedicineQuantity = async () => {
     try {
       await axios.put(`http://localhost:5000/api/update_medicine_quantity`, {
-        orderID: orderID, // ใช้ orderID จากข้อมูลใบเสร็จ
+        orderID: orderID, 
       });
   
       console.log("อัปเดตจำนวนยาเสร็จสิ้น");
@@ -115,14 +115,14 @@ const NurseBill = () => {
     try {
       await axios.put(`http://localhost:5000/api/update_queue_status`, {
         HN: HN,
-        status: "เสร็จสิ้น", // เปลี่ยนสถานะเป็น 'เสร็จสิ้น'
+        status: "เสร็จสิ้น", 
       });
   
-      // เรียกใช้ฟังก์ชันอัปเดตจำนวนยา
+    
       await updateMedicineQuantity();
   
       console.log("สถานะคิวอัปเดตสำเร็จ");
-      navigate("/nurse_queue"); // เปลี่ยนเส้นทางกลับไปยังคิว
+      navigate("/nurse_queue"); 
     } catch (error) {
       console.error("เกิดข้อผิดพลาดในการอัปเดตสถานะคิว:", error);
     }
@@ -144,14 +144,14 @@ const NurseBill = () => {
             คลินิครุงเรือง
           </Typography>
           <Typography variant="subtitle1" gutterBottom style={{ textAlign: "left" }}>
-            ที่อยู่: 144/1 หมู่ 2 ตำบลท่าแพ อำเภอท่าแพ จังหวัดสตูล 91150 {/* แสดงที่อยู่ */}
+            ที่อยู่: 144/1 หมู่ 2 ตำบลท่าแพ อำเภอท่าแพ จังหวัดสตูล 91150 
           </Typography>
           <Typography variant="subtitle1" gutterBottom style={{ textAlign: "right" }}>
-            วันที่สั่งซื้อ: {formattedOrderDate} {/* แสดงวันที่ที่ฟอร์แมตแล้ว */}
+            วันที่สั่งซื้อ: {formattedOrderDate} 
           </Typography>
           <Typography>----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</Typography>
           <Typography variant="subtitle1" gutterBottom style={{ textAlign: "left" }}>
-            หมายเลขผู้ป่วย: {HN} {/* แสดง HN */}
+            หมายเลขผู้ป่วย: {HN} 
           </Typography>
           <Typography
             variant="subtitle1"
@@ -222,7 +222,7 @@ const NurseBill = () => {
             <Button
               variant="contained"
               color="primary"
-              onClick={updateQueueStatus} // เรียกใช้ฟังก์ชัน updateQueueStatus เมื่อกดปุ่ม
+              onClick={updateQueueStatus} 
             >
               บันทึกใบเสร็จ
             </Button>

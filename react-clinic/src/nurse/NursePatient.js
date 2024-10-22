@@ -86,8 +86,8 @@ const NursePatient = () => {
     Height: "",
     Symptom: "",
   });
-  const [currentPage, setCurrentPage] = useState(1); // หน้าปัจจุบันเริ่มที่ 1
-  const patientsPerPage = 10; // จำนวนผู้ป่วยต่อหน้า
+  const [currentPage, setCurrentPage] = useState(1); 
+  const patientsPerPage = 10; 
   const indexOfLastPatient = currentPage * patientsPerPage;
   const indexOfFirstPatient = indexOfLastPatient - patientsPerPage;
   const currentPatients = data.slice(indexOfFirstPatient, indexOfLastPatient);
@@ -176,7 +176,7 @@ const NursePatient = () => {
 
   const SearchSubmit = async (event) => {
     event.preventDefault();
-    FetchData(); // ดึงข้อมูลที่ถูกค้นหามาแสดง
+    FetchData(); 
   };
 
   const ResetForm = () => {
@@ -201,17 +201,15 @@ const NursePatient = () => {
     setAppointmentDate(null);
   };
 
-  // ฟังก์ชันสำหรับตรวจสอบข้อมูลในฟอร์ม
+  
   const validateForm = () => {
     const newErrors = {};
 
-    // ตรวจสอบว่าถ้ามีการกรอก ID ต้องเป็นตัวเลขเท่านั้น
+    
     if (newID && isNaN(newID)) {
       newErrors.ID = "เลขบัตรประชาชนต้องเป็นตัวเลข";
     }
 
-    // ตรวจสอบข้อมูลอื่น ๆ ตามที่ต้องการ
-    // เช่น Weight, Height ควรเป็นตัวเลข
     if (treatmentData.Weight && isNaN(treatmentData.Weight)) {
       newErrors.Weight = "น้ำหนักต้องเป็นตัวเลข";
     }
@@ -221,12 +219,12 @@ const NursePatient = () => {
 
     setErrors(newErrors);
 
-    // ถ้าไม่มีข้อผิดพลาด (จำนวนข้อผิดพลาดเป็น 0) ให้คืนค่า true
+   
     return Object.keys(newErrors).length === 0;
   };
 
   const AddPatient = async () => {
-    // ตรวจสอบฟอร์มก่อน
+
     if (!validateForm()) {
       showMessage("ข้อมูลไม่ถูกต้อง", "error");
       return;
@@ -274,11 +272,11 @@ const NursePatient = () => {
 
   const ConfirmDeletePatient = async () => {
     try {
-      // ลบข้อมูลทั้งหมดที่เกี่ยวข้องกับ HN โดยใช้ API เดียว
+   
       await axios.delete(`http://localhost:5000/api/patient/${selectedHN}`);
 
-      FetchData(); // โหลดข้อมูลใหม่อีกครั้งหลังจากลบสำเร็จ
-      setDeletePopup(false); // ปิด popup การยืนยันการลบ
+      FetchData(); 
+      setDeletePopup(false); 
       showMessage("ลบข้อมูลผู้ป่วยสำเร็จ", "success");
     } catch (error) {
       console.error("Error deleting patient:", error);
@@ -364,10 +362,10 @@ const NursePatient = () => {
 
       showMessage("จองคิวสำเร็จ", "success");
 
-      // อัพเดต queueData ทันทีหลังจากจองคิวเสร็จ
+     
       setQueueData((prevQueueData) => [...prevQueueData, { HN: queueHN }]);
 
-      // รีเซ็ตฟอร์มและปิด Popup
+
       setAddQueuePopup(false);
       ResetForm();
     } catch (error) {
@@ -376,7 +374,7 @@ const NursePatient = () => {
     }
   };
 
-  // ฟังก์ชันตรวจสอบว่าผู้ป่วยอยู่ในคิวหรือยัง
+
   const isInQueue = (HN) => {
     return queueData.some((queue) => queue.HN === HN);
   };
@@ -393,10 +391,10 @@ const NursePatient = () => {
     }
 
     try {
-      const date = appointmentDate.toISOString().split("T")[0]; // แปลงวันที่เป็นรูปแบบ YYYY-MM-DD
-      const time = appointmentDate.toLocaleTimeString("it-IT"); // แปลงเวลาเป็นรูปแบบ HH:mm:ss
+      const date = appointmentDate.toISOString().split("T")[0]; 
+      const time = appointmentDate.toLocaleTimeString("it-IT"); 
 
-      // ส่งข้อมูลไปยังเซิร์ฟเวอร์
+  
       await axios.post(`http://localhost:5000/api/appointments`, {
         HN: selectedHN,
         Queue_Date: date,
@@ -413,7 +411,7 @@ const NursePatient = () => {
   };
 
   const handleCloseAppointmentPopup = () => {
-    ResetForm(); // รีเซ็ตฟอร์มเมื่อปิด Popup
+    ResetForm(); 
     setAppointmentPopup(false);
   };
 
@@ -427,7 +425,7 @@ const NursePatient = () => {
       }
     };
   
-    // ให้แสดงตารางทันทีเมื่อ component ถูกสร้าง
+   
     setShowTable(true);
     FetchData();
     fetchQueueData();
@@ -436,17 +434,16 @@ const NursePatient = () => {
   useEffect(() => {
     if (newTitle === "นาย" || newTitle === "ด.ช.") {
       setNewGender("ชาย");
-      setIsGenderLocked(true); // ล็อกฟิลด์เพศ
+      setIsGenderLocked(true); 
     } else if (
       newTitle === "นาง" ||
       newTitle === "นางสาว" ||
       newTitle === "ด.ญ."
     ) {
       setNewGender("หญิง");
-      setIsGenderLocked(true); // ล็อกฟิลด์เพศ
-    } else {
-      setNewGender(""); // หรือให้เป็นค่าว่างถ้าไม่ตรงกับเงื่อนไขใด
-      setIsGenderLocked(false); // ปลดล็อกฟิลด์เพศ
+      setIsGenderLocked(true); 
+      setNewGender(""); 
+      setIsGenderLocked(false); 
     }
   }, [newTitle]);
 
@@ -721,7 +718,7 @@ const NursePatient = () => {
                           label="เลือกเพศ"
                           value={newGender}
                           onChange={(e) => setNewGender(e.target.value)}
-                          disabled={isGenderLocked} // ล็อกฟิลด์ถ้า isGenderLocked เป็น true
+                          disabled={isGenderLocked} 
                         >
                           <MenuItem value="">- เลือกเพศ -</MenuItem>
                           <MenuItem value="ชาย">ชาย</MenuItem>
@@ -1108,8 +1105,8 @@ const NursePatient = () => {
                   onChange={(e) => setNewFirstName(e.target.value)}
                   disabled={!edit}
                   sx={{
-                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", 
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", 
                   }}
                 />
                 <TextField
@@ -1121,8 +1118,8 @@ const NursePatient = () => {
                   onChange={(e) => setNewLastName(e.target.value)}
                   disabled={!edit}
                   sx={{
-                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", 
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", 
                   }}
                 />
                 <TextField
@@ -1134,8 +1131,8 @@ const NursePatient = () => {
                   onChange={(e) => setNewID(e.target.value)}
                   disabled={!edit}
                   sx={{
-                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", 
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", 
                   }}
                 />
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -1153,8 +1150,8 @@ const NursePatient = () => {
                         sx: {
                           backgroundColor: edit
                             ? "white"
-                            : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                          color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                            : "rgba(0, 0, 0, 0.1)", 
+                          color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", 
                         },
                       },
                     }}
@@ -1169,8 +1166,8 @@ const NursePatient = () => {
                   onChange={(e) => setNewPhone(e.target.value)}
                   disabled={!edit}
                   sx={{
-                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", 
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", 
                   }}
                 />
                 <TextField
@@ -1182,8 +1179,8 @@ const NursePatient = () => {
                   onChange={(e) => setNewDisease(e.target.value)}
                   disabled={!edit}
                   sx={{
-                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", 
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", 
                   }}
                 />
                 <TextField
@@ -1195,8 +1192,8 @@ const NursePatient = () => {
                   onChange={(e) => setNewAllergy(e.target.value)}
                   disabled={!edit}
                   sx={{
-                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", // เปลี่ยนสีพื้นหลัง
-                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", // เปลี่ยนสีข้อความ
+                    backgroundColor: edit ? "white" : "rgba(0, 0, 0, 0.1)", 
+                    color: edit ? "inherit" : "rgba(255, 255, 255, 0.7)", 
                   }}
                 />
               </DialogContent>
@@ -1249,7 +1246,7 @@ const NursePatient = () => {
               aria-labelledby="appointment-dialog-title"
               maxWidth="sm"
               fullWidth
-              sx={{ "& .MuiDialog-paper": { minHeight: "80vh" } }} // เพิ่มบรรทัดนี้
+              sx={{ "& .MuiDialog-paper": { minHeight: "80vh" } }} 
             >
               <DialogTitle
                 id="appointment-dialog-title"
@@ -1263,9 +1260,9 @@ const NursePatient = () => {
                     label="เลือกวันที่และเวลา"
                     value={appointmentDate}
                     onChange={(date) => setAppointmentDate(date)}
-                    ampm={false} // ใช้รูปแบบ 24 ชั่วโมง
-                    minTime={setHours(setMinutes(new Date(), 0), 8)} // จำกัดเวลาเริ่มต้นเป็น 08:00
-                    maxTime={setHours(setMinutes(new Date(), 0), 20)} // จำกัดเวลาสิ้นสุดเป็น 20:00
+                    ampm={false} 
+                    minTime={setHours(setMinutes(new Date(), 0), 8)} 
+                    maxTime={setHours(setMinutes(new Date(), 0), 20)} 
                     slotProps={{
                       textField: {
                         fullWidth: true,
