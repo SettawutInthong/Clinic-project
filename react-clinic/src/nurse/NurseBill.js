@@ -28,37 +28,42 @@ const NurseBill = () => {
   const [patientName, setPatientName] = useState("");
   const [totalCost, setTotalCost] = useState(0);
   const [orderID, setOrderID] = useState("");
+  const [orderDate, setOrderDate] = useState(""); // เพิ่ม state สำหรับ Order_Date
+  const [HN, setHN] = useState(""); // เพิ่ม state สำหรับ HN
   const navigate = useNavigate();
 
   const FetchBillData = async () => {
     const params = new URLSearchParams(window.location.search);
     const HN = params.get("HN");
-  
+
     try {
       const orderResponse = await axios.get(
         `http://localhost:5000/api/order_medicine?HN=${HN}`
       );
       const order = orderResponse.data.data;
       const orderID = order.Order_ID;
-  
+      const orderDate = order.Order_Date; // เก็บข้อมูลวันที่จากการสั่งซื้อ
+
       setOrderID(orderID); // บันทึก orderID ใน state
-  
+      setOrderDate(orderDate); // บันทึก Order_Date ใน state
+      setHN(HN); // บันทึก HN ใน state
+
       const patientResponse = await axios.get(
         `http://localhost:5000/api/patient/${HN}`
       );
       const patient = patientResponse.data.data[0];
-      setPatientName(`${patient.First_Name} ${patient.Last_Name}`);
-  
+      setPatientName(`${patient.Title} ${patient.First_Name} ${patient.Last_Name}`);
+
       const medicineResponse = await axios.get(
         `http://localhost:5000/api/medicine_details?Order_ID=${orderID}`
       );
       const medicines = medicineResponse.data.data;
-  
+
       const treatmentResponse = await axios.get(
         `http://localhost:5000/api/treatment_cost?Order_ID=${orderID}`
       );
       const treatmentCost = treatmentResponse.data.Treatment_cost;
-  
+
       let totalCost = treatmentCost;
       const billDetails = medicines.map((item) => {
         const itemTotal = item.Med_Cost * item.Quantity_Order;
@@ -70,51 +75,57 @@ const NurseBill = () => {
           Item_Total: itemTotal,
         };
       });
-  
+
       billDetails.push({
         Medicine_Name: "ค่ารักษา",
         Item_Total: treatmentCost,
       });
-  
+
       setBillData(billDetails);
       setTotalCost(totalCost);
     } catch (error) {
       console.error("Error fetching bill data:", error);
     }
   };
-  
+
   const updateMedicineQuantity = async () => {
     try {
       await axios.put(`http://localhost:5000/api/update_medicine_quantity`, {
         orderID: orderID, // ใช้ orderID จากข้อมูลใบเสร็จ
       });
-  
+
       console.log("อัปเดตจำนวนยาเสร็จสิ้น");
     } catch (error) {
       console.error("เกิดข้อผิดพลาดในการอัปเดตจำนวนยา:", error);
     }
   };
-  
+
   const updateQueueStatus = async () => {
     const params = new URLSearchParams(window.location.search);
     const HN = params.get("HN");
-  
+
     try {
       await axios.put(`http://localhost:5000/api/update_queue_status`, {
         HN: HN,
         status: "เสร็จสิ้น", // เปลี่ยนสถานะเป็น 'เสร็จสิ้น'
       });
-  
+
       // เรียกใช้ฟังก์ชันอัปเดตจำนวนยา
       await updateMedicineQuantity();
-  
+
       console.log("สถานะคิวอัปเดตสำเร็จ");
       navigate("/nurse_queue"); // เปลี่ยนเส้นทางกลับไปยังคิว
     } catch (error) {
       console.error("เกิดข้อผิดพลาดในการอัปเดตสถานะคิว:", error);
     }
   };
-  
+
+  const formattedOrderDate = new Date(orderDate).toLocaleDateString("th-TH", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   useEffect(() => {
     FetchBillData();
   }, []);
@@ -126,6 +137,20 @@ const NurseBill = () => {
           <Typography variant="h6" gutterBottom style={{ textAlign: "center" }}>
             ใบเสร็จ
           </Typography>
+          <Typography></Typography>
+          <Typography variant="h6" gutterBottom style={{ textAlign: "left" }}>
+            คลินิครุงเรือง
+          </Typography>
+          <Typography variant="subtitle1" gutterBottom style={{ textAlign: "left" }}>
+            ที่อยู่: 144/1 หมู่ 2 ตำบลท่าแพ อำเภอท่าแพ จังหวัดสตูล 91150 {/* แสดงที่อยู่ */}
+          </Typography>
+          <Typography variant="subtitle1" gutterBottom style={{ textAlign: "right" }}>
+            วันที่สั่งซื้อ: {formattedOrderDate} {/* แสดงวันที่ที่ฟอร์แมตแล้ว */}
+          </Typography>
+          <Typography>----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</Typography>
+          <Typography variant="subtitle1" gutterBottom style={{ textAlign: "left" }}>
+            หมายเลขผู้ป่วย: {HN} {/* แสดง HN */}
+          </Typography>
           <Typography
             variant="subtitle1"
             gutterBottom
@@ -133,6 +158,8 @@ const NurseBill = () => {
           >
             ชื่อ: {patientName}
           </Typography>
+
+
           <TableContainer component={Paper}>
             <Table sx={{ minWidth: 650 }} aria-label="simple table">
               <TableHead>
@@ -194,7 +221,7 @@ const NurseBill = () => {
             </Button>
             <Button
               variant="contained"
-              color="secondary"
+              color="primary"
               onClick={updateQueueStatus} // เรียกใช้ฟังก์ชัน updateQueueStatus เมื่อกดปุ่ม
             >
               บันทึกใบเสร็จ
