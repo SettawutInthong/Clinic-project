@@ -12,29 +12,101 @@ import {
   CircularProgress,
   ButtonGroup,
 } from "@mui/material";
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { useNavigate } from "react-router-dom";
 
 const DoctorPatientDetail = () => {
-  const { HN } = useParams(); 
+  const { HN } = useParams();
   const [patientData, setPatientData] = useState(null);
-  const [loading, setLoading] = useState(true); 
-  const [error, setError] = useState(null);
-  const navigate = useNavigate(); 
+  const [diseaseName, setDiseaseName] = useState("");
+  const [allergyDetails, setAllergyDetails] = useState("");
+  const [treatmentData, setTreatmentData] = useState({
+    Heart_Rate: "",
+    Pressure: "",
+    Temp: "",
+    Height: "",
+    Weight: "",
+    Symptom: "",
+  });
+  const [treatmentType, setTreatmentType] = useState(""); // สร้าง state สำหรับประเภทการรักษา
+  const [historyPopupOpen, setHistoryPopupOpen] = useState(false);
+  const [treatmentHistory, setTreatmentHistory] = useState([]);
+  const [isContraceptionVisible, setContraceptionVisible] = useState(false); // สถานะสำหรับเปิด/ปิดข้อ 1
+  const [isPregnancyVisible, setPregnancyVisible] = useState(false); // สถานะสำหรับเปิด/ปิดข้อ 2
+  const [appointmentPopup, setAppointmentPopup] = useState(false);
+  const [appointmentDate, setAppointmentDate] = useState(null);
+  const navigate = useNavigate();
 
+  const handleOpenAppointmentPopup = () => {
+    setAppointmentPopup(true);
+  };
+
+  const handleCloseAppointmentPopup = () => {
+    setAppointmentPopup(false);
+  };
+
+  const handleOpenHistoryPopup = () => {
+    setHistoryPopupOpen(true);
+  };
+
+  const handleCloseHistoryPopup = () => {
+    setHistoryPopupOpen(false);
+  };
+
+  const ConfirmAppointment = async () => {
+    if (!HN || !appointmentDate) {
+      console.error("กรุณาเลือกวันที่นัดหมาย");
+      return;
+    }
+
+    try {
+      const date = appointmentDate.toISOString().split("T")[0];
+      const time = appointmentDate.toLocaleTimeString("it-IT");
+
+      await axios.post(`http://localhost:5000/api/appointments`, {
+        HN,
+        Queue_Date: date,
+        Queue_Time: time,
+      });
+
+      console.log("บันทึกการนัดหมายสำเร็จ");
+      handleCloseAppointmentPopup();
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดในการบันทึกการนัดหมาย:", error);
+    }
+  };
   useEffect(() => {
     const fetchPatientData = async () => {
       try {
         const response = await axios.get(
           `http://localhost:5000/api/patient/${HN}`
         );
-        setPatientData(response.data.data[0]); 
-        setLoading(false);
+        const patient = response.data.data[0];
+        setPatientData(patient);
+
+        if (patient.Disease_ID) {
+          const diseaseResponse = await axios.get(
+            `http://localhost:5000/api/disease/${patient.Disease_ID}`
+          );
+          setDiseaseName(diseaseResponse.data.diseaseName);
+        }
+
+        if (patient.Allergy_ID) {
+          const allergyResponse = await axios.get(
+            `http://localhost:5000/api/allergy/${patient.Allergy_ID}`
+          );
+          setAllergyDetails(allergyResponse.data.allergyDetails);
+        }
+
+        const treatmentResponse = await axios.get(
+          `http://localhost:5000/api/treatment/${HN}/latest`
+        );
+        if (treatmentResponse.data.data) {
+          setTreatmentData(treatmentResponse.data.data);
+        }
       } catch (error) {
-        console.error("Error fetching patient data:", error);
-        setError("เกิดข้อผิดพลาดในการดึงข้อมูลผู้ป่วย");
-        setLoading(false); 
+        console.error("Error fetching data:", error);
       }
     };
 
@@ -52,30 +124,27 @@ const DoctorPatientDetail = () => {
     return age;
   };
 
-  if (loading) {
-    return (
-      <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center", mt: 4 }}>
-        <Typography color="error">{error}</Typography>
-      </Box>
-    );
-  }
-
+  
   return (
     <Box sx={{ flexGrow: 1, padding: 3 }}>
       <Paper sx={{ padding: 3 }}>
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
           <ButtonGroup variant="outlined" color="primary">
-            <Button onClick={() => navigate(`/doctor_treatmenthistory/${HN}`)}>ไปยังประวัติการรักษา<PlayArrowIcon /></Button>
-            <Button onClick={() => navigate(`/doctor_addtreatment/${HN}`)}>ไปยังบันทึกการรักษา<PlayArrowIcon /><PlayArrowIcon /></Button>
-            <Button onClick={() => navigate(`/doctor_addorder/${HN}`)}>ไปยังรายการจ่ายยา<PlayArrowIcon /><PlayArrowIcon /><PlayArrowIcon /></Button>
+            <Button onClick={() => navigate(`/doctor_treatmenthistory/${HN}`)}>
+              ไปยังประวัติการรักษา
+              <PlayArrowIcon />
+            </Button>
+            <Button onClick={() => navigate(`/doctor_addtreatment/${HN}`)}>
+              ไปยังบันทึกการรักษา
+              <PlayArrowIcon />
+              <PlayArrowIcon />
+            </Button>
+            <Button onClick={() => navigate(`/doctor_addorder/${HN}`)}>
+              ไปยังรายการจ่ายยา
+              <PlayArrowIcon />
+              <PlayArrowIcon />
+              <PlayArrowIcon />
+            </Button>
           </ButtonGroup>
         </Box>
         {patientData ? (
@@ -153,7 +222,7 @@ const DoctorPatientDetail = () => {
                   />
                   <TextField
                     label="อัตราการเต้นหัวใจ"
-                    value={patientData.Heart_Rate || "-"}
+                    value={treatmentData.Heart_Rate || "-"}
                     InputProps={{ readOnly: true }}
                     fullWidth
                     size="small"
@@ -165,7 +234,7 @@ const DoctorPatientDetail = () => {
                 <Grid item xs={12} sm={6}>
                   <TextField
                     label="ความดัน"
-                    value={patientData.Pressure || "-"}
+                    value={treatmentData.Pressure || "-"}
                     InputProps={{ readOnly: true }}
                     fullWidth
                     size="small"
@@ -175,7 +244,7 @@ const DoctorPatientDetail = () => {
                   />
                   <TextField
                     label="อุณหภูมิ"
-                    value={patientData.Temp || "-"}
+                    value={treatmentData.Temp || "-"}
                     InputProps={{ readOnly: true }}
                     fullWidth
                     size="small"
@@ -185,7 +254,7 @@ const DoctorPatientDetail = () => {
                   />
                   <TextField
                     label="น้ำหนัก"
-                    value={patientData.Weight || "-"}
+                    value={treatmentData.Weight || "-"}
                     InputProps={{ readOnly: true }}
                     fullWidth
                     size="small"
@@ -195,7 +264,7 @@ const DoctorPatientDetail = () => {
                   />
                   <TextField
                     label="ส่วนสูง"
-                    value={patientData.Height || "-"}
+                    value={treatmentData.Height || "-"}
                     InputProps={{ readOnly: true }}
                     fullWidth
                     size="small"
@@ -205,7 +274,7 @@ const DoctorPatientDetail = () => {
                   />
                   <TextField
                     label="อาการ"
-                    value={patientData.Symptom || "-"}
+                    value={treatmentData.Symptom || "-"}
                     InputProps={{ readOnly: true }}
                     fullWidth
                     size="small"
