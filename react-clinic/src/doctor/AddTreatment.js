@@ -282,7 +282,7 @@ const AddTreatment = () => {
           />
         </>
       );
-    } else if (treatmentType === "ฉีดยาคุม") {
+    } else if (treatmentType === "ฉีดยาคุม" && (patientData?.Title === 'นาง' || patientData?.Title === 'นางสาว')) {
       return (
         <>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -292,153 +292,153 @@ const AddTreatment = () => {
                   1. ประวัติการคุมกำเนิด
                 </Typography>
               </Grid>
-              
-                <>
-                  <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth margin="dense" size="small">
-                      <InputLabel>ประเภทของการคุมกำเนิด</InputLabel>
-                      <Select
-                        defaultValue=""
-                        label="ประเภทของการคุมกำเนิด"
-                        onChange={(e) =>
-                          setTreatmentData({
-                            ...treatmentData,
-                            Pregnancy_Control_Type: e.target.value,
-                          })
-                        }
-                      >
-                        <MenuItem value="ยาคุมกำเนิด">ยาคุมกำเนิด</MenuItem>
-                        <MenuItem value="ฉีดยาคุม">ฉีดยาคุม</MenuItem>
-                        <MenuItem value="ใส่ห่วงอนามัย">ใส่ห่วงอนามัย</MenuItem>
-                      </Select>
-                    </FormControl>
 
-                    <DatePicker
-                      label="วันที่ฉีดครั้งล่าสุด"
-                      inputFormat="dd/MM/yyyy"
-                      value={treatmentData.Last_Control_Date}
-                      onChange={(date) =>
-                        setTreatmentData({
-                          ...treatmentData,
-                          Last_Control_Date: date,
-                        })
-                      }
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          margin: "dense",
-                          size: "small",
-                        },
-                      }}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth margin="dense" size="small">
-                      <InputLabel>ความถี่ในการฉีดยาคุมกำเนิด</InputLabel>
-                      <Select
-                        defaultValue=""
-                        label="ความถี่ในการฉีดยาคุมกำเนิด"
-                        onChange={(e) =>
-                          setTreatmentData({
-                            ...treatmentData,
-                            Freq_Pregnancies: e.target.value,
-                          })
-                        }
-                      >
-                        <MenuItem value="1 เดือนครั้ง">1 เดือนครั้ง</MenuItem>
-                        <MenuItem value="3 เดือนครั้ง">3 เดือนครั้ง</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <TextField
-                      label="ปัญหาหรืออาการข้างเคียงจากการใช้ยาคุม"
-                      fullWidth
-                      margin="dense"
-                      size="small"
-                      multiline
-                      rows={3}
+              <>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth margin="dense" size="small">
+                    <InputLabel>ประเภทของการคุมกำเนิด</InputLabel>
+                    <Select
+                      defaultValue=""
+                      label="ประเภทของการคุมกำเนิด"
                       onChange={(e) =>
                         setTreatmentData({
                           ...treatmentData,
-                          Pregnancy_Problems: e.target.value,
+                          Pregnancy_Control_Type: e.target.value,
                         })
                       }
-                    />
-                  </Grid>
-                </>
+                    >
+                      <MenuItem value="ยาคุมกำเนิด">ยาคุมกำเนิด</MenuItem>
+                      <MenuItem value="ฉีดยาคุม">ฉีดยาคุม</MenuItem>
+                      <MenuItem value="ใส่ห่วงอนามัย">ใส่ห่วงอนามัย</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <DatePicker
+                    label="วันที่ฉีดครั้งล่าสุด"
+                    inputFormat="dd/MM/yyyy"
+                    value={treatmentData.Last_Control_Date}
+                    onChange={(date) =>
+                      setTreatmentData({
+                        ...treatmentData,
+                        Last_Control_Date: date,
+                      })
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        margin: "dense",
+                        size: "small",
+                      },
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth margin="dense" size="small">
+                    <InputLabel>ความถี่ในการฉีดยาคุมกำเนิด</InputLabel>
+                    <Select
+                      defaultValue=""
+                      label="ความถี่ในการฉีดยาคุมกำเนิด"
+                      onChange={(e) =>
+                        setTreatmentData({
+                          ...treatmentData,
+                          Freq_Pregnancies: e.target.value,
+                        })
+                      }
+                    >
+                      <MenuItem value="1 เดือนครั้ง">1 เดือนครั้ง</MenuItem>
+                      <MenuItem value="3 เดือนครั้ง">3 เดือนครั้ง</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    label="ปัญหาหรืออาการข้างเคียงจากการใช้ยาคุม"
+                    fullWidth
+                    margin="dense"
+                    size="small"
+                    multiline
+                    rows={3}
+                    onChange={(e) =>
+                      setTreatmentData({
+                        ...treatmentData,
+                        Pregnancy_Problems: e.target.value,
+                      })
+                    }
+                  />
+                </Grid>
+              </>
               <Grid item xs={12}>
                 <Typography variant="h6" gutterBottom>
                   2. ประวัติการตั้งครรภ์และการมีบุตร
                 </Typography>
               </Grid>
-                <>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      label="จำนวนการตั้งครรภ์ที่เคยมี"
-                      fullWidth
-                      margin="dense"
-                      size="small"
-                      type="number"
-                      onChange={(e) =>
-                        setTreatmentData({
-                          ...treatmentData,
-                          Total_Pregnancies: e.target.value,
-                        })
-                      }
-                    />
+              <>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="จำนวนการตั้งครรภ์ที่เคยมี"
+                    fullWidth
+                    margin="dense"
+                    size="small"
+                    type="number"
+                    onChange={(e) =>
+                      setTreatmentData({
+                        ...treatmentData,
+                        Total_Pregnancies: e.target.value,
+                      })
+                    }
+                  />
 
-                    <TextField
-                      label="จำนวนการคลอดบุตร"
-                      fullWidth
-                      margin="dense"
-                      size="small"
-                      type="number"
-                      onChange={(e) =>
-                        setTreatmentData({
-                          ...treatmentData,
-                          Total_Children: e.target.value,
-                        })
-                      }
-                    />
-                  </Grid>
+                  <TextField
+                    label="จำนวนการคลอดบุตร"
+                    fullWidth
+                    margin="dense"
+                    size="small"
+                    type="number"
+                    onChange={(e) =>
+                      setTreatmentData({
+                        ...treatmentData,
+                        Total_Children: e.target.value,
+                      })
+                    }
+                  />
+                </Grid>
 
-                  <Grid item xs={12} sm={6}>
-                    <DatePicker
-                      label="การตั้งครรภ์ล่าสุด (ถ้ามี)"
-                      inputFormat="dd/MM/yyyy"
-                      value={treatmentData.Last_Pregnancy_Date}
-                      onChange={(date) =>
-                        setTreatmentData({
-                          ...treatmentData,
-                          Last_Pregnancy_Date: date,
-                        })
-                      }
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          margin: "dense",
-                          size: "small",
-                        },
-                      }}
-                    />
+                <Grid item xs={12} sm={6}>
+                  <DatePicker
+                    label="การตั้งครรภ์ล่าสุด (ถ้ามี)"
+                    inputFormat="dd/MM/yyyy"
+                    value={treatmentData.Last_Pregnancy_Date}
+                    onChange={(date) =>
+                      setTreatmentData({
+                        ...treatmentData,
+                        Last_Pregnancy_Date: date,
+                      })
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        margin: "dense",
+                        size: "small",
+                      },
+                    }}
+                  />
 
-                    <TextField
-                      label="การแท้งบุตรหรือการตั้งครรภ์นอกมดลูก (ถ้ามี)"
-                      fullWidth
-                      margin="dense"
-                      size="small"
-                      onChange={(e) =>
-                        setTreatmentData({
-                          ...treatmentData,
-                          Abortion_History: e.target.value,
-                        })
-                      }
-                    />
-                  </Grid>
-                </>
+                  <TextField
+                    label="การแท้งบุตรหรือการตั้งครรภ์นอกมดลูก (ถ้ามี)"
+                    fullWidth
+                    margin="dense"
+                    size="small"
+                    onChange={(e) =>
+                      setTreatmentData({
+                        ...treatmentData,
+                        Abortion_History: e.target.value,
+                      })
+                    }
+                  />
+                </Grid>
+              </>
               <Grid item xs={12}>
                 <Typography variant="h6" gutterBottom>
                   3. รายละเอียดการรักษา
@@ -458,7 +458,7 @@ const AddTreatment = () => {
                     })
                   }
                 />
-              </Grid>      
+              </Grid>
               <Grid item xs={12}>
                 <Typography variant="h6" gutterBottom>
                   4. บันทึกเพิ่มเติม
@@ -517,7 +517,7 @@ const AddTreatment = () => {
             <Button onClick={() => navigate(`/doctor_addorder/${HN}`)}>ไปยังรายการสั่งยา<PlayArrowIcon /></Button>
           </ButtonGroup>
         </Box>
-        {patientData ? (
+        {(patientData?.Title === 'นาง' || patientData?.Title === 'นางสาว') ? (
           <CardContent>
             <Grid container spacing={2}>
               <Grid item xs={12} style={{ marginTop: "20px" }}>
@@ -583,7 +583,69 @@ const AddTreatment = () => {
             </Grid>
           </CardContent>
         ) : (
-          <p>ไม่พบข้อมูลผู้ป่วย</p>
+          <CardContent>
+            <Grid container spacing={2}>
+              <Grid item xs={12} style={{ marginTop: "20px" }}>
+                <Grid item xs={12}>
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    style={{ flexGrow: 1, textAlign: "center" }}
+                  >
+                    การรักษา - {treatmentData.Treatment_ID}
+                  </Typography>
+                </Grid>
+                <FormControl fullWidth size="small">
+                  <InputLabel id="treatment-type-label" size="small">
+                    ประเภทการรักษา
+                  </InputLabel>
+                  <Select
+                    labelId="treatment-type-label"
+                    id="treatment-type"
+                    value={treatmentType}
+                    label="ประเภทการรักษา"
+                    onChange={(e) => setTreatmentType(e.target.value)}
+                  >
+                    <MenuItem value="ทั่วไป">การรักษาทั่วไป</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} style={{ marginTop: "20px" }}>
+                {renderTreatmentForm()}
+              </Grid>
+              <Grid item xs={12}>
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+                  <Button
+                    variant="outlined"
+                    style={{
+                      color: "#1976d2",
+                      borderColor: "#1976d2",
+                      textTransform: "none",
+                      marginRight: "10px",
+                    }}
+                    onClick={() =>
+                      navigate(`/doctor_treatmenthistory/${patientData.HN}`)
+                    }
+                  >
+                    กลับ
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => {
+                      if (treatmentType === "ทั่วไป") {
+                        handleSubmitGeneralTreatment();
+                      } else if (treatmentType === "ฉีดยาคุม") {
+                        handleSubmitPregnancyTreatment();
+                      }
+                    }}
+                  >
+                    บันทึกการรักษา
+                  </Button>
+                </Box>
+              </Grid>
+            </Grid>
+          </CardContent>
         )}
 
         <Dialog
