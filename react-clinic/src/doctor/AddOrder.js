@@ -26,30 +26,29 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useNavigate, useParams } from "react-router-dom";
 
 const AddOrder = () => {
-  const { HN } = useParams();  // ดึงค่า HN จาก URL
-  const [orderID, setOrderID] = useState(null);  // เก็บค่า Order_ID
-  const [medicines, setMedicines] = useState([]);  // เก็บรายการยาที่ค้นหา
-  const [searchName, setSearchName] = useState("");  // เก็บคำที่ใช้ค้นหา
-  const [selectedMedicine, setSelectedMedicine] = useState(null);  // เก็บยาที่ถูกเลือก
-  const [quantity, setQuantity] = useState(1);  // จำนวนยา
-  const [orderItems, setOrderItems] = useState([]);  // เก็บรายการยาที่จะสั่ง
-  const [treatmentCost, setTreatmentCost] = useState(""); // เพิ่มสำหรับค่ารักษา
-  const [openSnackbar, setOpenSnackbar] = useState(false);  // ควบคุมการแสดง Snackbar
-  const [openMedicineDialog, setOpenMedicineDialog] = useState(false);  // ควบคุมการเปิด Dialog ค้นหายา
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);  // ควบคุมการแสดง Dialog ยืนยันการบันทึก
-  const [openEditDialog, setOpenEditDialog] = useState(false);  // Control dialog visibility
-  const [editIndex, setEditIndex] = useState(null);  // Index of the medicine being edited
-  const [editQuantity, setEditQuantity] = useState(1);  // Temporary quantity being edited
+  const { HN } = useParams(); 
+  const [orderID, setOrderID] = useState(null);
+  const [medicines, setMedicines] = useState([]); 
+  const [searchName, setSearchName] = useState("");  
+  const [selectedMedicine, setSelectedMedicine] = useState(null); 
+  const [quantity, setQuantity] = useState(1); 
+  const [orderItems, setOrderItems] = useState([]); 
+  const [treatmentCost, setTreatmentCost] = useState(""); 
+  const [openSnackbar, setOpenSnackbar] = useState(false); 
+  const [openMedicineDialog, setOpenMedicineDialog] = useState(false); 
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false); 
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [editIndex, setEditIndex] = useState(null);
+  const [editQuantity, setEditQuantity] = useState(1);  
   const navigate = useNavigate();
 
-  // ดึง Order_ID ล่าสุดเมื่อ component โหลด
   useEffect(() => {
     const fetchLatestOrder = async () => {
       try {
         const response = await axios.get(`http://localhost:5000/api/order_medicine?HN=${HN}`);
         if (response.data && response.data.data) {
           const latestOrder = response.data.data;
-          setOrderID(latestOrder.Order_ID);  // ตั้งค่า Order_ID ล่าสุด
+          setOrderID(latestOrder.Order_ID); 
         }
       } catch (error) {
         console.error("เกิดข้อผิดพลาดในการดึง Order ล่าสุด:", error);
@@ -59,7 +58,6 @@ const AddOrder = () => {
     fetchLatestOrder();
   }, [HN]);
 
-  // โหลดข้อมูลจาก localStorage เมื่อเริ่มต้น
   useEffect(() => {
     const savedOrderItems = JSON.parse(localStorage.getItem("orderItems"));
     const savedTreatmentCost = localStorage.getItem("treatmentCost");
@@ -80,7 +78,6 @@ const AddOrder = () => {
     }
   }, []);
 
-  // เก็บข้อมูลใน localStorage เมื่อมีการเปลี่ยนแปลง
   useEffect(() => {
     localStorage.setItem("orderItems", JSON.stringify(orderItems));
     localStorage.setItem("treatmentCost", treatmentCost);
@@ -95,7 +92,7 @@ const AddOrder = () => {
           const response = await axios.get(
             "http://localhost:5000/api/medicines",
             {
-              params: { medicineName: searchName }, // ตรวจสอบว่าค่าที่ส่งเป็นชื่อยาถูกต้อง
+              params: { medicineName: searchName }, 
             }
           );
           setMedicines(response.data.data);
@@ -108,40 +105,37 @@ const AddOrder = () => {
   }, [searchName]);
 
   const handleOpenEditDialog = (index, currentQuantity) => {
-    setEditIndex(index);  // Set the index of the medicine being edited
-    setEditQuantity(currentQuantity);  // Set the current quantity as the initial value for editing
-    setOpenEditDialog(true);  // Open the dialog
+    setEditIndex(index); 
+    setEditQuantity(currentQuantity); 
+    setOpenEditDialog(true); 
   };
 
   const handleConfirmEdit = () => {
     if (editQuantity > 0) {
       const updatedOrderItems = [...orderItems];
-      updatedOrderItems[editIndex].Quantity = editQuantity;  // Update the quantity
-      setOrderItems(updatedOrderItems);  // Update the state with new quantity
-      localStorage.setItem("orderItems", JSON.stringify(updatedOrderItems));  // Save to localStorage
+      updatedOrderItems[editIndex].Quantity = editQuantity; 
+      setOrderItems(updatedOrderItems); 
+      localStorage.setItem("orderItems", JSON.stringify(updatedOrderItems)); 
     }
 
-    setOpenEditDialog(false);  // Close the dialog
+    setOpenEditDialog(false); 
   };
 
 
   const handleAddMedicine = () => {
-    // ตรวจสอบว่าจำนวนที่กรอกเข้ามาต้องมากกว่า 0
     if (selectedMedicine && quantity > 0) {
       const existingItemIndex = orderItems.findIndex(
         (item) => item.Medicine_ID === selectedMedicine.Medicine_ID
       );
   
       if (existingItemIndex !== -1) {
-        // ถ้ามียาในรายการแล้ว บวกจำนวนใหม่กับจำนวนเดิม
         const updatedOrderItems = [...orderItems];
         updatedOrderItems[existingItemIndex].Quantity = 
           parseInt(updatedOrderItems[existingItemIndex].Quantity) + parseInt(quantity);
   
-        setOrderItems(updatedOrderItems); // อัปเดตรายการยาใน state
-        localStorage.setItem("orderItems", JSON.stringify(updatedOrderItems)); // อัปเดต localStorage
+        setOrderItems(updatedOrderItems); 
+        localStorage.setItem("orderItems", JSON.stringify(updatedOrderItems)); 
       } else {
-        // ถ้ายังไม่มียาในรายการ ให้เพิ่มรายการใหม่
         const newItem = {
           Medicine_ID: selectedMedicine.Medicine_ID,
           Medicine_Name: selectedMedicine.Medicine_Name,
@@ -149,67 +143,57 @@ const AddOrder = () => {
         };
         const updatedOrderItems = [...orderItems, newItem];
         setOrderItems(updatedOrderItems);
-        localStorage.setItem("orderItems", JSON.stringify(updatedOrderItems)); // อัปเดต localStorage
+        localStorage.setItem("orderItems", JSON.stringify(updatedOrderItems)); 
       }
   
-      // รีเซ็ตการเลือกยาหลังเพิ่มรายการ
       setSelectedMedicine(null);
       setQuantity(1);
     } else {
-      alert("กรุณากรอกจำนวนมากกว่า 0"); // แจ้งเตือนเมื่อจำนวนที่กรอกน้อยกว่า 1
+      alert("กรุณากรอกจำนวนมากกว่า 0"); 
     }
   };
 
   const handleRemoveItem = (index) => {
     const updatedItems = orderItems.filter((_, i) => i !== index);
     setOrderItems(updatedItems);
-    localStorage.setItem("orderItems", JSON.stringify(updatedItems));  // อัปเดตใน localStorage หลังจากลบยา
+    localStorage.setItem("orderItems", JSON.stringify(updatedItems)); 
   };
 
   const handleConfirmSubmit = async () => {
-    if (!treatmentCost || orderItems.length === 0) {
-      alert("กรุณากรอกราคาค่ารักษาและรายการยาให้ครบถ้วน");
-      return;
-    }
-
     setConfirmDialogOpen(false);
-
+  
     try {
-      if (orderItems.length > 0) {
-        const orderData = {
-          items: orderItems,
-          treatmentCost, // เพิ่มค่ารักษาไปกับข้อมูล
-        };
-
-        if (orderID) {
-          // บันทึกออเดอร์ยาลงฐานข้อมูล
-          await axios.post(
-            `http://localhost:5000/api/orders/${orderID}/items`,
-            orderData
-          );
-
-          // อัปเดตสถานะของคิวเป็น "รอจ่ายยา"
-          await axios.put(`http://localhost:5000/api/walkinqueue/${HN}`, {
-            Status: "รอจ่ายยา",
-          });
-
-          // ลบข้อมูลที่เก็บไว้ใน localStorage
-          localStorage.removeItem("orderItems");
-          localStorage.removeItem("treatmentCost");
-          localStorage.removeItem("selectedMedicine");
-          localStorage.removeItem("quantity");
-
-          setOpenSnackbar(true);
-          setOrderItems([]); // ล้างรายการที่เลือก
-          navigate("/doctor_queue"); // ย้ายไปยังหน้าคิวหลังจากบันทึกสำเร็จ
-        } else {
-          console.error("ไม่พบ Order_ID สำหรับการบันทึกออเดอร์");
-        }
+      const orderData = {
+        items: orderItems, // ส่งรายการยาตามที่มี ไม่ต้องเช็ค
+        treatmentCost, // สามารถเป็นค่าว่างได้ถ้าไม่มี
+      };
+  
+      if (orderID) {
+        await axios.post(
+          `http://localhost:5000/api/orders/${orderID}/items`,
+          orderData
+        );
+  
+        await axios.put(`http://localhost:5000/api/walkinqueue/${HN}`, {
+          Status: "รอจ่ายยา",
+        });
+  
+        localStorage.removeItem("orderItems");
+        localStorage.removeItem("treatmentCost");
+        localStorage.removeItem("selectedMedicine");
+        localStorage.removeItem("quantity");
+  
+        setOpenSnackbar(true);
+        setOrderItems([]); 
+        navigate("/doctor_queue"); 
+      } else {
+        console.error("ไม่พบ Order_ID สำหรับการบันทึกออเดอร์");
       }
     } catch (error) {
       console.error("เกิดข้อผิดพลาดในการบันทึกออเดอร์:", error.message);
     }
   };
+  
 
   const handleSnackbarClose = () => {
     setOpenSnackbar(false);

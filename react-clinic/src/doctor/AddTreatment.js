@@ -56,7 +56,7 @@ const AddTreatment = () => {
     Pregmed_Detail: "",
     Preg_Others: "",
   });
-  const [treatmentType, setTreatmentType] = useState(""); // treatment type select
+  const [treatmentType, setTreatmentType] = useState(""); 
   const [historyPopupOpen, setHistoryPopupOpen] = useState(false);
   const [treatmentHistory, setTreatmentHistory] = useState([]);
   const [isContraceptionVisible, setContraceptionVisible] = useState(false);
@@ -64,11 +64,9 @@ const AddTreatment = () => {
   const [appointmentPopup, setAppointmentPopup] = useState(false);
   const [appointmentDate, setAppointmentDate] = useState(null);
   const navigate = useNavigate();
-
-  // Persist data to localStorage
   useEffect(() => {
     localStorage.setItem("treatmentData", JSON.stringify(treatmentData));
-    localStorage.setItem("treatmentType", treatmentType);  // Save the treatment type
+    localStorage.setItem("treatmentType", treatmentType);
   }, [treatmentData, treatmentType]);
 
   const triangleStyle = {
@@ -79,7 +77,6 @@ const AddTreatment = () => {
     borderRight: '10px solid blue',
   };
 
-  // Restore form data from localStorage on component mount
   useEffect(() => {
     const savedData = JSON.parse(localStorage.getItem("treatmentData"));
     const savedTreatmentType = localStorage.getItem("treatmentType");
@@ -88,7 +85,7 @@ const AddTreatment = () => {
       setTreatmentData(savedData);
     }
     if (savedTreatmentType) {
-      setTreatmentType(savedTreatmentType);  // Restore the treatment type
+      setTreatmentType(savedTreatmentType); 
     }
   }, []);
 
@@ -241,7 +238,7 @@ const AddTreatment = () => {
               margin="dense"
               multiline
               size="small"
-              value={treatmentData.General_Details || ""} // ตรวจสอบและตั้งค่าให้ไม่เป็น undefined
+              value={treatmentData.General_Details || ""} 
               onChange={(e) =>
                 setTreatmentData({ ...treatmentData, General_Details: e.target.value })
               }
@@ -253,7 +250,7 @@ const AddTreatment = () => {
               margin="dense"
               multiline
               rows={10}
-              value={treatmentData.Treatment_Detail || ""} // ตรวจสอบและตั้งค่าให้ไม่เป็น undefined
+              value={treatmentData.Treatment_Detail || ""}
               onChange={(e) =>
                 setTreatmentData({ ...treatmentData, Treatment_Detail: e.target.value })
               }
@@ -275,7 +272,7 @@ const AddTreatment = () => {
             size="small"
             multiline
             rows={5}
-            value={treatmentData.Treatment_Others || ""} // ตรวจสอบและตั้งค่าให้ไม่เป็น undefined
+            value={treatmentData.Treatment_Others || ""} 
             onChange={(e) =>
               setTreatmentData({ ...treatmentData, Treatment_Others: e.target.value })
             }

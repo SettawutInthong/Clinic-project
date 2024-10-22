@@ -35,22 +35,19 @@ const TreatmentHistory = () => {
     open: false,
     selectedOrder: [],
   });
-  const [patientTitle, setPatientTitle] = useState(""); // เก็บคำนำหน้าชื่อผู้ป่วย
+  const [patientTitle, setPatientTitle] = useState(""); 
   const navigate = useNavigate();
 
-  // ดึงข้อมูลการรักษาจาก backend
   useEffect(() => {
     const fetchTreatments = async () => {
       try {
-        // ดึงข้อมูลผู้ป่วยเพื่อตรวจสอบคำนำหน้าชื่อ
         const patientResponse = await axios.get(`http://localhost:5000/api/patient/${HN}`);
         const patientData = patientResponse.data.data;
-        console.log("ข้อมูลผู้ป่วย: ", patientData); // เพิ่ม log เพื่อตรวจสอบข้อมูลผู้ป่วย
-        setPatientTitle(patientData.Title); // เก็บคำนำหน้าผู้ป่วย
+        console.log("ข้อมูลผู้ป่วย: ", patientData); 
+        setPatientTitle(patientData.Title); 
 
-        // ดึงข้อมูลประวัติการรักษา
         const response = await axios.get(`http://localhost:5000/api/treatments/${HN}`);
-        console.log("ข้อมูลประวัติการรักษา: ", response.data.data); // เพิ่ม log เพื่อตรวจสอบข้อมูลการรักษา
+        console.log("ข้อมูลประวัติการรักษา: ", response.data.data); 
         setTreatments(response.data.data || []);
       } catch (error) {
         console.error("เกิดข้อผิดพลาดในการดึงข้อมูลการรักษา:", error);
@@ -65,7 +62,6 @@ const TreatmentHistory = () => {
     const hasPregnancyTreatment = treatment.PregnancyTreatmentID ? "รักษาการตั้งครรภ์" : "";
     const hasMedicineOrder = treatment.Order_ID ? "จ่ายยา" : "";
 
-    // รวมประเภทการรักษาที่มี
     const treatmentTypes = [hasGeneralTreatment, hasPregnancyTreatment, hasMedicineOrder]
       .filter(Boolean)
       .join(", ");
@@ -114,7 +110,7 @@ const TreatmentHistory = () => {
   };
 
   const isFemaleTitle = () => {
-    return ["นาง", "นางสาว"].includes(patientTitle); // Checks if the title indicates female
+    return ["นาง", "นางสาว"].includes(patientTitle); 
   };
 
 
@@ -139,7 +135,6 @@ const TreatmentHistory = () => {
               <TableCell align="center">รายการจ่ายยา</TableCell>
               <TableCell align="center">การรักษาทั่วไป</TableCell>
 
-              {/* Conditionally render header for pregnancy treatment if any treatment has a PregnancyTreatmentID */}
               {treatments.some((treatment) => treatment.PregnancyTreatmentID) && (
                 <TableCell align="center">การรักษาผดุงครรภ์</TableCell>
               )}
@@ -172,7 +167,6 @@ const TreatmentHistory = () => {
                     </Button>
                   </TableCell>
 
-                  {/* Conditionally render cell for pregnancy treatment if the treatment has PregnancyTreatmentID */}
                   {treatments.some((treatment) => treatment.PregnancyTreatmentID) && (
                     <TableCell align="center">
                       <Button
@@ -198,7 +192,6 @@ const TreatmentHistory = () => {
         </Table>
       </TableContainer>
 
-      {/* Popup แสดงรายละเอียดออเดอร์ */}
       <Dialog
         open={dialogState.open}
         onClose={handleCloseOrderDetails}
@@ -224,7 +217,6 @@ const TreatmentHistory = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Popup แสดงรายละเอียดการรักษาทั่วไป */}
       <Dialog
         open={!!selectedGeneralTreatment}
         onClose={handleCloseGeneralTreatment}
@@ -238,7 +230,6 @@ const TreatmentHistory = () => {
         <DialogContent sx={{ paddingX: 4, paddingBottom: 2 }}>
           {selectedGeneralTreatment ? (
             <Box>
-              {/* Diagnosis Section */}
               <Paper elevation={2} sx={{ padding: 2, marginBottom: 2 }}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                   การวินิจฉัยเบื้องต้น:
@@ -248,7 +239,6 @@ const TreatmentHistory = () => {
                 </Typography>
               </Paper>
 
-              {/* Treatment Details Section */}
               <Paper elevation={2} sx={{ padding: 2, marginBottom: 2 }}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                   รายละเอียดการรักษา:
@@ -258,7 +248,6 @@ const TreatmentHistory = () => {
                 </Typography>
               </Paper>
 
-              {/* Additional Notes Section */}
               <Paper elevation={2} sx={{ padding: 2, marginBottom: 2 }}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                   บันทึกเพิ่มเติม:
@@ -296,7 +285,6 @@ const TreatmentHistory = () => {
         <DialogContent sx={{ paddingX: 4, paddingBottom: 2 }}>
           {selectedPregnancyTreatment ? (
             <Box>
-              {/* Contraception Type Section */}
               <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                   ประเภทของการคุมกำเนิด:
@@ -306,7 +294,6 @@ const TreatmentHistory = () => {
                 </Typography>
               </Paper>
 
-              {/* Injection Frequency Section */}
               <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                   ความถี่ในการฉีดยาคุมกำเนิด:
@@ -316,7 +303,6 @@ const TreatmentHistory = () => {
                 </Typography>
               </Paper>
 
-              {/* Problems Section */}
               <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                   ปัญหาหรืออาการข้างเคียงจากการใช้ยาคุม:
@@ -326,7 +312,6 @@ const TreatmentHistory = () => {
                 </Typography>
               </Paper>
 
-              {/* Pregnancy Count Section */}
               <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                   จำนวนครั้งในการตั้งครรภ์:
@@ -336,7 +321,6 @@ const TreatmentHistory = () => {
                 </Typography>
               </Paper>
 
-              {/* Children Count Section */}
               <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                   จำนวนบุตรทั้งหมด:
@@ -346,7 +330,6 @@ const TreatmentHistory = () => {
                 </Typography>
               </Paper>
 
-              {/* Last Pregnancy Date Section */}
               <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                   วันที่การตั้งครรภ์ล่าสุด:
@@ -356,7 +339,6 @@ const TreatmentHistory = () => {
                 </Typography>
               </Paper>
 
-              {/* Abortion History Section */}
               <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                   ประวัติการแท้ง:
@@ -366,7 +348,6 @@ const TreatmentHistory = () => {
                 </Typography>
               </Paper>
 
-              {/* Other Treatment Details Section */}
               <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                   รายละเอียดการรักษา:
@@ -376,7 +357,6 @@ const TreatmentHistory = () => {
                 </Typography>
               </Paper>
 
-              {/* Additional Notes Section */}
               <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                   เพิ่มเติม:
@@ -400,8 +380,6 @@ const TreatmentHistory = () => {
         </DialogActions>
       </Dialog>
 
-
-      {/* ปุ่มกลับและปุ่มต่อไป */}
       <Grid item xs={12}>
         <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
           <Button

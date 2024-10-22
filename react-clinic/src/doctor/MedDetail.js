@@ -35,9 +35,9 @@ const MedDetail = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [editPopup, setEditPopup] = useState(false);
-  const [addPopup, setAddPopup] = useState(false); // สำหรับจัดการ popup เพิ่มยาใหม่
+  const [addPopup, setAddPopup] = useState(false);
   const [editMedicine, setEditMedicine] = useState({});
-  const [newMedicine, setNewMedicine] = useState({}); // สำหรับข้อมูลยาชนิดใหม่
+  const [newMedicine, setNewMedicine] = useState({});
   const itemsPerPage = 10;
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -76,8 +76,8 @@ const MedDetail = () => {
   };
 
   const handleDeleteClick = (medicine) => {
-    setSelectedMedicine(medicine); // เก็บข้อมูลยาที่ต้องการลบ
-    setDeleteDialogOpen(true); // เปิด Dialog เพื่อยืนยันการลบ
+    setSelectedMedicine(medicine);
+    setDeleteDialogOpen(true);
   };
 
   const handleEditChange = (e) => {
@@ -90,9 +90,9 @@ const MedDetail = () => {
   const handleConfirmDelete = async () => {
     try {
       await axios.delete(`http://localhost:5000/api/medicine_stock/${selectedMedicine.Medicine_ID}`);
-      setDeleteDialogOpen(false); // ปิด Dialog หลังลบสำเร็จ
-      setSelectedMedicine(null); // ล้างข้อมูลยาใน state
-      fetchMedicineStock(); // โหลดข้อมูลใหม่หลังจากลบสำเร็จ
+      setDeleteDialogOpen(false);
+      setSelectedMedicine(null);
+      fetchMedicineStock();
     } catch (err) {
       console.error("Error deleting medicine:", err);
       setError(err.message);
@@ -117,9 +117,8 @@ const MedDetail = () => {
 
   const handleDeleteMedicine = async (Medicine_ID) => {
     try {
-      // เรียก API เพื่อลบยา
       await axios.delete(`http://localhost:5000/api/medicine_stock/${Medicine_ID}`);
-      fetchMedicineStock(); // โหลดข้อมูลใหม่หลังจากลบสำเร็จ
+      fetchMedicineStock();
     } catch (err) {
       console.error("Error deleting medicine:", err);
       setError(err.message);
@@ -127,7 +126,6 @@ const MedDetail = () => {
     }
   };
 
-  // ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงของข้อมูลยาชนิดใหม่
   const handleNewMedicineChange = (e) => {
     setNewMedicine({
       ...newMedicine,
@@ -135,7 +133,6 @@ const MedDetail = () => {
     });
   };
 
-  // ฟังก์ชันสำหรับเพิ่มยาชนิดใหม่
   const handleAddSubmit = async () => {
     try {
       await axios.post("http://localhost:5000/api/medicine_stock", newMedicine);
@@ -170,14 +167,13 @@ const MedDetail = () => {
         <Typography variant="h6" gutterBottom>
           ค้นหายา
         </Typography>
-        {/* จัดการ layout ด้วย flexbox */}
         <Box
           sx={{
             display: "flex",
-            alignItems: "center", // จัดให้อยู่ในแนวกลางตามแนวตั้ง
+            alignItems: "center",
             gap: 2,
             mb: 2,
-            flexWrap: "wrap", // เพิ่มการตัดบรรทัดถ้าหน้าจอเล็ก
+            flexWrap: "wrap",
           }}
         >
           <TextField
@@ -186,14 +182,14 @@ const MedDetail = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             fullWidth
-            sx={{ flex: 1 }} // ให้กล่องขยายเต็มพื้นที่
+            sx={{ flex: 1 }}
           />
           <Select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
             displayEmpty
             fullWidth
-            sx={{ flex: 1 }} // ให้กล่องขยายเต็มพื้นที่
+            sx={{ flex: 1 }}
           >
             <MenuItem value="">
               <div>เลือกประเภทยา</div>
@@ -210,25 +206,23 @@ const MedDetail = () => {
             variant="contained"
             color="primary"
             onClick={handleSearch}
-            sx={{ height: "100%" }} // ปรับปุ่มให้มีความสูงเท่ากับกล่อง
+            sx={{ height: "100%" }}
           >
             ค้นหา
           </Button>
-          {/* ปุ่มสำหรับเพิ่มสต็อก */}
           <Button
             variant="contained"
             color="secondary"
             onClick={() => navigate(`/doctor_addstock`)}
-            sx={{ height: "100%" }} // ปรับปุ่มให้มีความสูงเท่ากับกล่อง
+            sx={{ height: "100%" }}
           >
             เพิ่มสต็อก
           </Button>
-          {/* ปุ่มสำหรับเพิ่มยาชนิดใหม่ */}
           <Button
             variant="contained"
             color="success"
-            onClick={() => setAddPopup(true)} // เปิด popup สำหรับเพิ่มยาใหม่
-            sx={{ height: "100%" }} // ปรับปุ่มให้มีความสูงเท่ากับกล่อง
+            onClick={() => setAddPopup(true)} 
+            sx={{ height: "100%" }} 
           >
             เพิ่มยาใหม่
           </Button>
@@ -272,7 +266,7 @@ const MedDetail = () => {
                       variant="outlined"
                       color="error"
                       onClick={() => handleDeleteClick(medicine)}
-                      sx={{ ml: 1 }} // เพิ่มระยะห่างระหว่างปุ่มแก้ไขกับลบ
+                      sx={{ ml: 1 }}
                     >
                       ลบ
                     </Button>
@@ -300,7 +294,6 @@ const MedDetail = () => {
         </Box>
       </TableContainer>
 
-      {/* Edit Medicine Dialog */}
       <Dialog open={editPopup} onClose={() => setEditPopup(false)}>
         <DialogTitle>แก้ไขข้อมูลยา</DialogTitle>
         <DialogContent>
@@ -364,7 +357,7 @@ const MedDetail = () => {
       </Dialog>
       <Dialog
         open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)} // ปิด Dialog เมื่อคลิกปุ่มยกเลิก
+        onClose={() => setDeleteDialogOpen(false)}
       >
         <DialogTitle>ยืนยันการลบ</DialogTitle>
         <DialogContent>
@@ -381,8 +374,6 @@ const MedDetail = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Add New Medicine Dialog */}
       <Dialog open={addPopup} onClose={() => setAddPopup(false)}>
         <DialogTitle>เพิ่มยาชนิดใหม่</DialogTitle>
         <DialogContent>
@@ -400,7 +391,6 @@ const MedDetail = () => {
             onChange={handleNewMedicineChange}
             fullWidth
           />
-          {/* ใช้ FormControl และ InputLabel สำหรับ Select */}
           <FormControl fullWidth margin="normal">
             <InputLabel>ประเภทยา</InputLabel>
             <Select
