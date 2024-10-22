@@ -137,7 +137,7 @@ const NurseBill = () => {
       <ContainerStyled maxWidth="lg">
         <PaperStyled>
           <Typography variant="h6" gutterBottom style={{ textAlign: "center" }}>
-            ใบเสร็จ
+            ใบเสร็จ {orderID}
           </Typography>
           <Typography></Typography>
           <Typography variant="h6" gutterBottom style={{ textAlign: "left" }}>
