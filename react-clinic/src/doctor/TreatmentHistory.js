@@ -42,11 +42,13 @@ const TreatmentHistory = () => {
       try {
         // ดึงข้อมูลผู้ป่วยเพื่อตรวจสอบคำนำหน้าชื่อ
         const patientResponse = await axios.get(`http://localhost:5000/api/patient/${HN}`);
-        setPatientTitle(patientResponse.data.data.Title); // เก็บคำนำหน้าผู้ป่วย
+        const patientData = patientResponse.data.data;
+        console.log("ข้อมูลผู้ป่วย: ", patientData); // เพิ่ม log เพื่อตรวจสอบข้อมูลผู้ป่วย
+        setPatientTitle(patientData.Title); // เก็บคำนำหน้าผู้ป่วย
 
         // ดึงข้อมูลประวัติการรักษา
         const response = await axios.get(`http://localhost:5000/api/treatments/${HN}`);
-        console.log(response.data.data);
+        console.log("ข้อมูลประวัติการรักษา: ", response.data.data); // เพิ่ม log เพื่อตรวจสอบข้อมูลการรักษา
         setTreatments(response.data.data || []);
       } catch (error) {
         console.error("เกิดข้อผิดพลาดในการดึงข้อมูลการรักษา:", error);
@@ -54,6 +56,7 @@ const TreatmentHistory = () => {
     };
     fetchTreatments();
   }, [HN]);
+
 
   const getTreatmentType = (treatment) => {
     const hasGeneralTreatment = treatment.GeneralTreatmentID ? "รักษาทั่วไป" : "";
@@ -109,9 +112,9 @@ const TreatmentHistory = () => {
   };
 
   const isFemaleTitle = () => {
-    // ตรวจสอบคำนำหน้าผู้ป่วยว่าตรงกับเพศหญิงหรือไม่
-    return ["นาง", "นางสาว"].includes(patientTitle);
+    return ["นาง", "นางสาว"].includes(patientTitle); // Checks if the title indicates female
   };
+
 
   return (
     <Paper sx={{ padding: 3, margin: 2 }}>
@@ -133,21 +136,20 @@ const TreatmentHistory = () => {
               <TableCell align="center">ประเภทการรักษา</TableCell>
               <TableCell align="center">รายการจ่ายยา</TableCell>
               <TableCell align="center">การรักษาทั่วไป</TableCell>
-              {isFemaleTitle() && (
-                <TableCell align="center">การรักษาผดุงครรภ์</TableCell> // แสดงคอลัมน์เฉพาะผู้ป่วยหญิง
+
+              {/* Conditionally render header for pregnancy treatment if any treatment has a PregnancyTreatmentID */}
+              {treatments.some((treatment) => treatment.PregnancyTreatmentID) && (
+                <TableCell align="center">การรักษาผดุงครรภ์</TableCell>
               )}
             </TableRow>
           </TableHead>
+
           <TableBody>
             {treatments.length > 0 ? (
               treatments.map((treatment) => (
                 <TableRow key={treatment.Treatment_ID}>
-                  <TableCell>
-                    {new Date(treatment.Treatment_Date).toLocaleDateString("th-TH")}
-                  </TableCell>
-                  <TableCell align="center">
-                    {getTreatmentType(treatment)}
-                  </TableCell>
+                  <TableCell>{new Date(treatment.Treatment_Date).toLocaleDateString()}</TableCell>
+                  <TableCell align="center">{getTreatmentType(treatment)}</TableCell>
                   <TableCell align="center">
                     <Button
                       variant="outlined"
@@ -167,7 +169,9 @@ const TreatmentHistory = () => {
                       {treatment.GeneralTreatmentID ? "ดูการรักษาทั่วไป" : "ไม่มีการรักษาทั่วไป"}
                     </Button>
                   </TableCell>
-                  {isFemaleTitle() && ( // แสดงปุ่มเฉพาะผู้ป่วยหญิง
+
+                  {/* Conditionally render cell for pregnancy treatment if the treatment has PregnancyTreatmentID */}
+                  {treatments.some((treatment) => treatment.PregnancyTreatmentID) && (
                     <TableCell align="center">
                       <Button
                         variant="outlined"
