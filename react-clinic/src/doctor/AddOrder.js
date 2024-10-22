@@ -159,11 +159,6 @@ const AddOrder = () => {
       alert("กรุณากรอกจำนวนมากกว่า 0"); // แจ้งเตือนเมื่อจำนวนที่กรอกน้อยกว่า 1
     }
   };
-  
-  
-  
-
-
 
   const handleRemoveItem = (index) => {
     const updatedItems = orderItems.filter((_, i) => i !== index);
