@@ -404,7 +404,7 @@ const AddTreatment = () => {
 
                 <Grid item xs={12} sm={6}>
                   <DatePicker
-                    label="การตั้งครรภ์ล่าสุด (ถ้ามี)"
+                    label="การตั้งครรภ์ล่าสุด"
                     inputFormat="dd/MM/yyyy"
                     value={treatmentData.Last_Pregnancy_Date}
                     onChange={(date) =>
@@ -423,7 +423,7 @@ const AddTreatment = () => {
                   />
 
                   <TextField
-                    label="การแท้งบุตรหรือการตั้งครรภ์นอกมดลูก (ถ้ามี)"
+                    label="การแท้งบุตรหรือการตั้งครรภ์นอกมดลูก "
                     fullWidth
                     margin="dense"
                     size="small"
