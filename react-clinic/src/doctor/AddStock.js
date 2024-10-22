@@ -158,6 +158,20 @@ const AddStock = () => {
         </TableContainer>
 
         <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
+        <Button
+                    variant="outlined"
+                    style={{
+                      color: "#1976d2",
+                      borderColor: "#1976d2",
+                      textTransform: "none",
+                      marginRight: "10px",
+                    }}
+                    onClick={() =>
+                      navigate(`/doctor_meddetail`)
+                    }
+                  >
+                    กลับ
+                  </Button>
           <Button
             variant="contained"
             color="primary"

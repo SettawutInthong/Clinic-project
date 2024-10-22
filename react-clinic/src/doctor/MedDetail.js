@@ -350,7 +350,7 @@ const MedDetail = () => {
           <Button onClick={() => setEditPopup(false)} color="primary">
             ยกเลิก
           </Button>
-          <Button onClick={handleEditSubmit} color="primary">
+          <Button onClick={handleEditSubmit} color="primary" variant="contained">
             บันทึก
           </Button>
         </DialogActions>
@@ -369,7 +369,7 @@ const MedDetail = () => {
           <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
             ยกเลิก
           </Button>
-          <Button onClick={handleConfirmDelete} color="secondary">
+          <Button onClick={handleConfirmDelete} color="error">
             ลบ
           </Button>
         </DialogActions>

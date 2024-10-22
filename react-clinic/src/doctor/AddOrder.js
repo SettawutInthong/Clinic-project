@@ -426,7 +426,7 @@ const AddOrder = () => {
             >
               ยกเลิก
             </Button>
-            <Button onClick={handleConfirmSubmit} color="secondary">
+            <Button onClick={handleConfirmSubmit} color="primary">
               ยืนยัน
             </Button>
           </DialogActions>
