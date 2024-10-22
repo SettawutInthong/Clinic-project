@@ -37,6 +37,9 @@ const AddOrder = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);  // ควบคุมการแสดง Snackbar
   const [openMedicineDialog, setOpenMedicineDialog] = useState(false);  // ควบคุมการเปิด Dialog ค้นหายา
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);  // ควบคุมการแสดง Dialog ยืนยันการบันทึก
+  const [openEditDialog, setOpenEditDialog] = useState(false);  // Control dialog visibility
+  const [editIndex, setEditIndex] = useState(null);  // Index of the medicine being edited
+  const [editQuantity, setEditQuantity] = useState(1);  // Temporary quantity being edited
   const navigate = useNavigate();
 
   // ดึง Order_ID ล่าสุดเมื่อ component โหลด
@@ -104,23 +107,63 @@ const AddOrder = () => {
     }
   }, [searchName]);
 
+  const handleOpenEditDialog = (index, currentQuantity) => {
+    setEditIndex(index);  // Set the index of the medicine being edited
+    setEditQuantity(currentQuantity);  // Set the current quantity as the initial value for editing
+    setOpenEditDialog(true);  // Open the dialog
+  };
+
+  const handleConfirmEdit = () => {
+    if (editQuantity > 0) {
+      const updatedOrderItems = [...orderItems];
+      updatedOrderItems[editIndex].Quantity = editQuantity;  // Update the quantity
+      setOrderItems(updatedOrderItems);  // Update the state with new quantity
+      localStorage.setItem("orderItems", JSON.stringify(updatedOrderItems));  // Save to localStorage
+    }
+
+    setOpenEditDialog(false);  // Close the dialog
+  };
+
+
   const handleAddMedicine = () => {
+    // ตรวจสอบว่าจำนวนที่กรอกเข้ามาต้องมากกว่า 0
     if (selectedMedicine && quantity > 0) {
-      const newItem = {
-        Medicine_ID: selectedMedicine.Medicine_ID,
-        Medicine_Name: selectedMedicine.Medicine_Name,
-        Quantity: quantity,
-      };
-      const updatedOrderItems = [...orderItems, newItem];
-      setOrderItems(updatedOrderItems);
-
-      // อัปเดต localStorage ทันทีที่เพิ่มยา
-      localStorage.setItem("orderItems", JSON.stringify(updatedOrderItems));
-
+      const existingItemIndex = orderItems.findIndex(
+        (item) => item.Medicine_ID === selectedMedicine.Medicine_ID
+      );
+  
+      if (existingItemIndex !== -1) {
+        // ถ้ามียาในรายการแล้ว บวกจำนวนใหม่กับจำนวนเดิม
+        const updatedOrderItems = [...orderItems];
+        updatedOrderItems[existingItemIndex].Quantity = 
+          parseInt(updatedOrderItems[existingItemIndex].Quantity) + parseInt(quantity);
+  
+        setOrderItems(updatedOrderItems); // อัปเดตรายการยาใน state
+        localStorage.setItem("orderItems", JSON.stringify(updatedOrderItems)); // อัปเดต localStorage
+      } else {
+        // ถ้ายังไม่มียาในรายการ ให้เพิ่มรายการใหม่
+        const newItem = {
+          Medicine_ID: selectedMedicine.Medicine_ID,
+          Medicine_Name: selectedMedicine.Medicine_Name,
+          Quantity: parseInt(quantity),
+        };
+        const updatedOrderItems = [...orderItems, newItem];
+        setOrderItems(updatedOrderItems);
+        localStorage.setItem("orderItems", JSON.stringify(updatedOrderItems)); // อัปเดต localStorage
+      }
+  
+      // รีเซ็ตการเลือกยาหลังเพิ่มรายการ
       setSelectedMedicine(null);
       setQuantity(1);
+    } else {
+      alert("กรุณากรอกจำนวนมากกว่า 0"); // แจ้งเตือนเมื่อจำนวนที่กรอกน้อยกว่า 1
     }
   };
+  
+  
+  
+
+
 
   const handleRemoveItem = (index) => {
     const updatedItems = orderItems.filter((_, i) => i !== index);
@@ -194,7 +237,7 @@ const AddOrder = () => {
         <Typography variant="h6" gutterBottom>
           สั่งยาสำหรับผู้ป่วย HN: {HN}
         </Typography>
-        
+
         <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
           <TextField
             label="ค้นหายา"
@@ -219,6 +262,7 @@ const AddOrder = () => {
                 <TableCell>ชื่อยา</TableCell>
                 <TableCell>จำนวน</TableCell>
                 <TableCell>ลบ</TableCell>
+                <TableCell>แก้ไข</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -226,6 +270,7 @@ const AddOrder = () => {
                 <TableRow key={index}>
                   <TableCell>{item.Medicine_Name}</TableCell>
                   <TableCell>{item.Quantity}</TableCell>
+
                   <TableCell>
                     <IconButton
                       onClick={() => handleRemoveItem(index)}
@@ -234,9 +279,21 @@ const AddOrder = () => {
                       <DeleteIcon />
                     </IconButton>
                   </TableCell>
+
+                  <TableCell>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => handleOpenEditDialog(index, item.Quantity)}
+                    >
+                      แก้ไข
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
+
+
           </Table>
         </TableContainer>
 
@@ -350,6 +407,27 @@ const AddOrder = () => {
               color="primary"
             >
               ปิด
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}>
+          <DialogTitle>แก้ไขจำนวนยา</DialogTitle>
+          <DialogContent>
+            <TextField
+              label="จำนวน"
+              type="number"
+              fullWidth
+              variant="outlined"
+              value={editQuantity}
+              onChange={(e) => setEditQuantity(e.target.value)}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenEditDialog(false)} color="primary">
+              ยกเลิก
+            </Button>
+            <Button onClick={handleConfirmEdit} color="primary">
+              ยืนยัน
             </Button>
           </DialogActions>
         </Dialog>

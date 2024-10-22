@@ -291,14 +291,8 @@ const AddTreatment = () => {
                 <Typography variant="h6" gutterBottom>
                   1. ประวัติการคุมกำเนิด
                 </Typography>
-                <Switch
-                  checked={isContraceptionVisible}
-                  onChange={() =>
-                    setContraceptionVisible(!isContraceptionVisible)
-                  }
-                />
               </Grid>
-              {isContraceptionVisible && (
+              
                 <>
                   <Grid item xs={12} sm={6}>
                     <FormControl fullWidth margin="dense" size="small">
@@ -375,17 +369,11 @@ const AddTreatment = () => {
                     />
                   </Grid>
                 </>
-              )}
               <Grid item xs={12}>
                 <Typography variant="h6" gutterBottom>
                   2. ประวัติการตั้งครรภ์และการมีบุตร
                 </Typography>
-                <Switch
-                  checked={isPregnancyVisible}
-                  onChange={() => setPregnancyVisible(!isPregnancyVisible)}
-                />
               </Grid>
-              {isPregnancyVisible && (
                 <>
                   <Grid item xs={12} sm={6}>
                     <TextField
@@ -451,7 +439,6 @@ const AddTreatment = () => {
                     />
                   </Grid>
                 </>
-              )}
               <Grid item xs={12}>
                 <Typography variant="h6" gutterBottom>
                   3. รายละเอียดการรักษา

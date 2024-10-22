@@ -24,7 +24,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 
-import { ButtonGroup, List, ListItem, ListItemText } from "@mui/material";
+import { ButtonGroup, List, ListItem, ListItemText, Divider } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import ReactSelect from "react-select";
@@ -186,18 +186,18 @@ const DoctorPatient = () => {
   const ViewHistory = async (HN) => {
     try {
       setSelectedHN(HN); // ตั้งค่า selectedHN ก่อน
-  
+
       // ดึงข้อมูลผู้ป่วยตาม HN เพื่อตรวจสอบคำนำหน้า
       const patientResponse = await axios.get(
         `http://localhost:5000/api/patient?HN=${HN}`
       );
-      
+
       const patient = patientResponse.data.data[0];
-      
+
       if (patient) {
         setNewTitle(patient.Title); // ตั้งค่า title ของผู้ป่วย
       }
-      
+
       // ดึงประวัติการรักษา
       const treatmentResponse = await axios.get(
         `http://localhost:5000/api/treatments/${HN}`
@@ -209,7 +209,7 @@ const DoctorPatient = () => {
       showMessage("เกิดข้อผิดพลาดในการดูประวัติการรักษา", "error");
     }
   };
-  
+
 
 
   const handleOpenPregnancyTreatment = async (pregnancyTreatmentID) => {
@@ -1284,19 +1284,57 @@ const DoctorPatient = () => {
               maxWidth="sm"
               fullWidth
             >
-              <DialogTitle>รายละเอียดการรักษาทั่วไป</DialogTitle>
-              <DialogContent>
+              <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem' }}>
+                รายละเอียดการรักษาทั่วไป
+              </DialogTitle>
+
+              <DialogContent sx={{ paddingX: 4, paddingBottom: 2 }}>
                 {selectedGeneralTreatment ? (
                   <Box>
-                    <Typography>การวินิจฉัยเบื้องต้น: {selectedGeneralTreatment.General_Details}</Typography>
-                    <Typography>รายละเอียดการรักษา: {selectedGeneralTreatment.Treatment_Detail}</Typography>
-                    <Typography>บันทึกเพิ่มเติม: {selectedGeneralTreatment.Treatment_Others}</Typography>
+                    {/* Diagnosis Section */}
+                    <Paper elevation={2} sx={{ padding: 2, marginBottom: 2 }}>
+                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                        การวินิจฉัยเบื้องต้น:
+                      </Typography>
+                      <Typography sx={{ paddingLeft: 2 }}>
+                        {selectedGeneralTreatment.General_Details || 'ไม่มีข้อมูลการวินิจฉัย'}
+                      </Typography>
+                    </Paper>
+
+                    {/* Treatment Details Section */}
+                    <Paper elevation={2} sx={{ padding: 2, marginBottom: 2 }}>
+                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                        รายละเอียดการรักษา:
+                      </Typography>
+                      <Typography sx={{ paddingLeft: 2 }}>
+                        {selectedGeneralTreatment.Treatment_Detail || 'ไม่มีรายละเอียดการรักษา'}
+                      </Typography>
+                    </Paper>
+
+                    {/* Additional Notes Section */}
+                    <Paper elevation={2} sx={{ padding: 2, marginBottom: 2 }}>
+                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                        บันทึกเพิ่มเติม:
+                      </Typography>
+                      <Typography sx={{ paddingLeft: 2 }}>
+                        {selectedGeneralTreatment.Treatment_Others || 'ไม่มีบันทึกเพิ่มเติม'}
+                      </Typography>
+                    </Paper>
                   </Box>
                 ) : (
-                  <Typography>ไม่มีข้อมูลการรักษาทั่วไป</Typography>
+                  <Typography sx={{ textAlign: 'center', marginTop: 4 }}>
+                    ไม่มีข้อมูลการรักษาทั่วไป
+                  </Typography>
                 )}
               </DialogContent>
+
+              <DialogActions sx={{ justifyContent: 'center', paddingBottom: 2 }}>
+                <Button onClick={handleCloseGeneralTreatment} variant="contained" color="primary">
+                  ปิด
+                </Button>
+              </DialogActions>
             </Dialog>
+
 
             {/* Popup แสดงรายละเอียดการรักษาการตั้งครรภ์ */}
             <Dialog
@@ -1305,25 +1343,117 @@ const DoctorPatient = () => {
               maxWidth="sm"
               fullWidth
             >
-              <DialogTitle>รายละเอียดการคุมกำเนิด</DialogTitle>
-              <DialogContent>
+              <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem' }}>
+                รายละเอียดการคุมกำเนิด
+              </DialogTitle>
+
+              <DialogContent sx={{ paddingX: 4, paddingBottom: 2 }}>
                 {selectedPregnancyTreatment ? (
                   <Box>
-                    <Typography>ประเภทของการคุมกำเนิด: {selectedPregnancyTreatment.Pregnancy_Control_Type}</Typography>
-                    <Typography>ความถี่ในการฉีดยาคุมกำเนิด: {selectedPregnancyTreatment.Freq_Pregnancies}</Typography>
-                    <Typography>ปัญหาหรืออาการข้างเคียงจากการใช้ยาคุม: {selectedPregnancyTreatment.Pregnancy_Problems}</Typography>
-                    <Typography>จำนวนครั้งในการตั้งครรภ์: {selectedPregnancyTreatment.Total_Pregnancies}</Typography>
-                    <Typography>จำนวนบุตรทั้งหมด: {selectedPregnancyTreatment.Total_Children}</Typography>
-                    <Typography>วันที่การตั้งครรภ์ล่าสุด: {selectedPregnancyTreatment.Last_Pregnancy_Date}</Typography>
-                    <Typography>ประวัติการแท้ง: {selectedPregnancyTreatment.Abortion_History}</Typography>
-                    <Typography>รายละเอียดการรักษา: {selectedPregnancyTreatment.Pregmed_Detail}</Typography>
-                    <Typography>เพิ่มเติม: {selectedPregnancyTreatment.Preg_Others}</Typography>
+                    {/* Contraception Type Section */}
+                    <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
+                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                        ประเภทของการคุมกำเนิด:
+                      </Typography>
+                      <Typography>
+                        {selectedPregnancyTreatment.Pregnancy_Control_Type || 'ไม่มีข้อมูล'}
+                      </Typography>
+                    </Paper>
+
+                    {/* Injection Frequency Section */}
+                    <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
+                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                        ความถี่ในการฉีดยาคุมกำเนิด:
+                      </Typography>
+                      <Typography>
+                        {selectedPregnancyTreatment.Freq_Pregnancies || 'ไม่มีข้อมูล'}
+                      </Typography>
+                    </Paper>
+
+                    {/* Problems Section */}
+                    <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
+                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                        ปัญหาหรืออาการข้างเคียงจากการใช้ยาคุม:
+                      </Typography>
+                      <Typography>
+                        {selectedPregnancyTreatment.Pregnancy_Problems || 'ไม่มีข้อมูล'}
+                      </Typography>
+                    </Paper>
+
+                    {/* Pregnancy Count Section */}
+                    <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
+                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                        จำนวนครั้งในการตั้งครรภ์:
+                      </Typography>
+                      <Typography>
+                        {selectedPregnancyTreatment.Total_Pregnancies || 'ไม่มีข้อมูล'}
+                      </Typography>
+                    </Paper>
+
+                    {/* Children Count Section */}
+                    <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
+                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                        จำนวนบุตรทั้งหมด:
+                      </Typography>
+                      <Typography>
+                        {selectedPregnancyTreatment.Total_Children || 'ไม่มีข้อมูล'}
+                      </Typography>
+                    </Paper>
+
+                    {/* Last Pregnancy Date Section */}
+                    <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
+                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                        วันที่การตั้งครรภ์ล่าสุด:
+                      </Typography>
+                      <Typography>
+                        {selectedPregnancyTreatment.Last_Pregnancy_Date || 'ไม่มีข้อมูล'}
+                      </Typography>
+                    </Paper>
+
+                    {/* Abortion History Section */}
+                    <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
+                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                        ประวัติการแท้ง:
+                      </Typography>
+                      <Typography>
+                        {selectedPregnancyTreatment.Abortion_History || 'ไม่มีข้อมูล'}
+                      </Typography>
+                    </Paper>
+
+                    {/* Other Treatment Details Section */}
+                    <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
+                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                        รายละเอียดการรักษา:
+                      </Typography>
+                      <Typography>
+                        {selectedPregnancyTreatment.Pregmed_Detail || 'ไม่มีรายละเอียดการรักษา'}
+                      </Typography>
+                    </Paper>
+
+                    {/* Additional Notes Section */}
+                    <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
+                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                        เพิ่มเติม:
+                      </Typography>
+                      <Typography>
+                        {selectedPregnancyTreatment.Preg_Others || 'ไม่มีข้อมูลเพิ่มเติม'}
+                      </Typography>
+                    </Paper>
                   </Box>
                 ) : (
-                  <Typography>ไม่มีข้อมูลการรักษาการตั้งครรภ์</Typography>
+                  <Typography sx={{ textAlign: 'center', marginTop: 4 }}>
+                    ไม่มีข้อมูลการรักษาการตั้งครรภ์
+                  </Typography>
                 )}
               </DialogContent>
+
+              <DialogActions sx={{ justifyContent: 'center', paddingBottom: 2 }}>
+                <Button onClick={handleClosePregnancyTreatment} variant="contained" color="primary">
+                  ปิด
+                </Button>
+              </DialogActions>
             </Dialog>
+
 
             <Snackbar
               open={snackbarOpen}
